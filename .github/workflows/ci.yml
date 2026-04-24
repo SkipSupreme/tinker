@@ -18,12 +18,15 @@ env:
 
 jobs:
   # Lightweight detection step — feature gates for jobs that depend on
-  # not-yet-landed streams (eslint config from S6/captain, apps/docs from S7).
+  # not-yet-landed streams. e2e runs only when BOTH apps/docs exists AND
+  # e2e specs have been committed (Stream 8b Wave B). Prevents Stream 7's
+  # landing from tripping a noisy e2e failure until Stream 8b writes specs.
   detect:
     runs-on: ubuntu-latest
     outputs:
       has-docs: ${{ steps.check.outputs.has-docs }}
       has-eslint: ${{ steps.check.outputs.has-eslint }}
+      has-e2e-specs: ${{ steps.check.outputs.has-e2e-specs }}
     steps:
       - uses: actions/checkout@v4
       - id: check
@@ -38,6 +41,11 @@ jobs:
             echo "has-eslint=true" >> "$GITHUB_OUTPUT"
           else
             echo "has-eslint=false" >> "$GITHUB_OUTPUT"
+          fi
+          if find packages/svelte-mafs/tests/e2e/specs -name '*.spec.ts' 2>/dev/null | grep -q .; then
+            echo "has-e2e-specs=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has-e2e-specs=false" >> "$GITHUB_OUTPUT"
           fi
 
   test:
@@ -102,7 +110,7 @@ jobs:
   e2e:
     name: e2e (chromium)
     needs: [detect, test]
-    if: needs.detect.outputs.has-docs == 'true'
+    if: needs.detect.outputs.has-docs == 'true' && needs.detect.outputs.has-e2e-specs == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
