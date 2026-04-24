@@ -7,7 +7,7 @@ import mdx from '@astrojs/mdx';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://svelte-mafs.pages.dev',
+  site: 'https://svelte-mafs-docs.joshhunterduvar.workers.dev',
   integrations: [svelte(), mdx()],
   adapter: cloudflare(),
   output: 'static',
