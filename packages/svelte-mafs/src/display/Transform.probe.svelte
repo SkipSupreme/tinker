@@ -1,7 +1,7 @@
 <script lang="ts">
   import Mafs from "../view/Mafs.svelte";
   import Transform from "./Transform.svelte";
-  import type { Mat3 } from "./Transform.svelte.js";
+  import type { Mat3 } from "./matrix.js";
 
   type Props = {
     matrix?: Mat3;

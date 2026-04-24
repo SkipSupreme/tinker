@@ -1,6 +1,13 @@
 /**
  * 2D affine matrix helpers for <Transform>.
  *
+ * Originally named `Transform.svelte.ts` per the plan's namespace
+ * convention, but TypeScript's "Bundler" resolver prefers a same-basename
+ * `.ts` over Svelte's `*.svelte` wildcard shim — which makes
+ * `import X from "./Transform.svelte"` resolve here instead of to the
+ * component. The rename sidesteps that ambiguity; the module is still
+ * co-located with Transform.svelte.
+ *
  * We store a 3x3 affine matrix as the 6-tuple SVG consumes directly:
  *
  *     [ a c e ]
@@ -85,4 +92,3 @@ const fmt = (n: number): string => {
   return s;
 };
 
-export { default as Transform } from "./Transform.svelte";

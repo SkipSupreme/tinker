@@ -7,7 +7,7 @@ import {
   scale,
   toMatrixString,
   translate,
-} from "./Transform.svelte.js";
+} from "./matrix.js";
 import TransformProbe from "./Transform.probe.svelte";
 
 describe("matrix helpers", () => {
@@ -64,9 +64,11 @@ describe("matrix helpers", () => {
     const C = scale(2, 3);
     const left = compose(compose(A, B), C);
     const right = compose(A, compose(B, C));
-    for (let i = 0; i < 6; i++) {
-      expect(left[i]).toBeCloseTo(right[i], 10);
-    }
+    // noUncheckedIndexedAccess types tuple indices as `T | undefined`, so
+    // use `.forEach` over the first matrix to get non-nullable entries.
+    left.forEach((value, i) => {
+      expect(value).toBeCloseTo(right[i]!, 10);
+    });
   });
 });
 

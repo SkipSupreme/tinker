@@ -1,7 +1,7 @@
 import { render } from "@testing-library/svelte";
 import { flushSync } from "svelte";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { clamp, snapToGrid } from "./constraints.js";
+import { clamp, snapToGrid, type Constraint } from "./constraints.js";
 import MovablePointProbe from "./MovablePoint.probe.svelte";
 
 // Svelte 5 $effect runs in a microtask; flushSync() forces pending effects
@@ -9,6 +9,14 @@ import MovablePointProbe from "./MovablePoint.probe.svelte";
 const after = (el: Element, event: Event) => {
   el.dispatchEvent(event);
   flushSync();
+};
+
+type ProbeProps = {
+  initialX: number;
+  initialY: number;
+  constrain?: Constraint;
+  step?: number;
+  onChange?: (x: number, y: number) => void;
 };
 
 beforeAll(() => {
@@ -30,10 +38,7 @@ beforeEach(() => {
   document.body.replaceChildren();
 });
 
-const mount = (props: Partial<Parameters<typeof MovablePointProbe>[0]> & {
-  initialX: number;
-  initialY: number;
-}) => {
+const mount = (props: ProbeProps) => {
   const onChange = vi.fn();
   const { container } = render(MovablePointProbe, {
     props: { onChange, ...props },

@@ -28,3 +28,21 @@ export type { CoordContext } from "./context/coordinate-context.js";
 // Stream 3 — gesture actions (use:drag, use:panZoom)
 export type { DragOptions, PanZoomOptions } from "./gestures/index.js";
 export { drag, panZoom } from "./gestures/index.js";
+
+// Stream 6 — interaction + display + theme
+export { Text, Transform, Matrix } from "./display/index.js";
+export {
+  MovablePoint,
+  snapToGrid,
+  snapToLine,
+  snapToCurve,
+  type Constraint,
+} from "./interaction/index.js";
+// Re-exported as `clampToBox` to avoid shadowing math.ts's scalar
+// `clamp(value, min, max)`. Shape here is `(bounds) => (p) => p'` — a
+// constraint factory, not a scalar op. Captain: deviates from the
+// literal plan text (`clamp`) due to the name collision.
+export { clamp as clampToBox } from "./interaction/index.js";
+// Theme tokens — `colors.blue` resolves to `var(--mafs-blue)` so
+// components can pass it straight into `fill=` / `stroke=`.
+export { colors, fonts, theme } from "./theme.js";

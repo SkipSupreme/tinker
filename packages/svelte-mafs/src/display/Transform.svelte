@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
-  import { identity, toMatrixString, type Mat3 } from "./Transform.svelte.js";
+  import { identity, toMatrixString, type Mat3 } from "./matrix.js";
 
   type Props = {
     /**
