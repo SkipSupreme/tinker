@@ -8,8 +8,10 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "prebuild": "pnpm docgen",
     "preview": "astro preview",
     "astro": "astro",
+    "docgen": "tsx scripts/docgen.ts",
     "generate-types": "wrangler types"
   },
   "dependencies": {
