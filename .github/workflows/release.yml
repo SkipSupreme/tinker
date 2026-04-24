@@ -49,7 +49,7 @@ jobs:
       # Catches missing dist/ entries, oversized payloads, or accidental
       # secret files in the package tarball.
       - name: Pre-publish sanity check
-        run: pnpm tsx scripts/release-check.ts
+        run: node scripts/release-check.mjs
         env:
           RELEASE_CHECK_MODE: pre
 
