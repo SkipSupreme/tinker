@@ -493,6 +493,7 @@ TASKS:
 7. LICENSE (MIT) + NOTICE (Mafs attribution + KaTeX attribution).
 8. Visual regression baseline workflow — once apps/docs has example pages (from Stream 7 Wave B), add Playwright specs that screenshot each page and compare against committed PNGs in tests/e2e/__screenshots__/. Add CI step that fails on diff >2%, comments on PR with visual diff.
 9. Publish dry-run script — scripts/release-check.ts verifies dist/ contents, types ship, no secret leaks.
+10. **Pinch-zoom e2e (handoff from Stream 3)**: Stream 3 stayed in jsdom for drag + pan + wheel-zoom unit tests, but deferred multi-pointer pinch-zoom to your harness (see TODO comment in `packages/svelte-mafs/src/gestures/pan-zoom.ts` ~line 25). Add a Playwright fixture that dispatches two coordinated pointer sequences to verify pinch triggers `onZoom` with the correct factor and center.
 
 DONE CRITERIA:
 - CI passes on `main` after every stream merge
