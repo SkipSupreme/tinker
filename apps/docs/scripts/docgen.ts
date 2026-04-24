@@ -294,6 +294,7 @@ async function main(): Promise<void> {
   await clearGenerated();
   for (const doc of docs) {
     const out = join(API_PAGES_DIR, `${doc.module}.mdx`);
+    await mkdir(dirname(out), { recursive: true });
     await writeFile(out, renderMdx(doc), 'utf8');
     log(`wrote ${relative(DOCS_ROOT, out)} (${doc.exports.length} exports)`);
   }
