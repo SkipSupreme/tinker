@@ -1,6 +1,6 @@
 {
   "name": "svelte-mafs",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Svelte 5 components for interactive math visualization.",
   "license": "MIT",
   "type": "module",
