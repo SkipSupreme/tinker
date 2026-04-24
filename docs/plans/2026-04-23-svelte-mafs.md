@@ -14,7 +14,7 @@
 - **pnpm workspaces** — monorepo: `packages/svelte-mafs` (lib) + `apps/docs` (SvelteKit demo site)
 - **Changesets** for versioned releases, **ESLint + Prettier** + **tsc --noEmit** in CI
 
-**Naming note (decide before Task 1):** `svelte-mafs` is used throughout this plan. Check npm + trademark before locking in. Alternatives if Mafs author objects or the name is taken: `locus`, `axiom`, `chalkboard`, `plotfield`, `@<your-scope>/mafs`. The Mafs project is MIT, so a port is legally fine; courtesy: open a GitHub issue on mafs naming the port and linking back.
+**Naming note (decide before Task 1):** `svelte-mafs` is used throughout this plan. Check npm before locking in. Alternatives if the name is taken: `locus`, `axiom`, `chalkboard`, `plotfield`, `@<your-scope>/mafs`. Mafs is MIT — a port is legally fine, full stop.
 
 **Scope (in / out):**
 - **IN:** `<Mafs>` root, Cartesian coordinates + grid, `<Plot.OfX/OfY/Parametric/Inequality/VectorField>`, `<Point>`, `<MovablePoint>`, `<Line.Segment/ThroughPoints/Parallel/etc>`, `<Vector>`, `<Circle>`, `<Ellipse>`, `<Polygon>`, `<Text>` (KaTeX), `<Transform>`, theme, pan/zoom, adaptive sampling, SSR-safe mount, a11y for movable points.
@@ -762,7 +762,6 @@ Verify `dist/` contents, exports map resolves, types ship, no source maps leak c
 ### Task 9.5: v0.1.0 tag + announce
 - `pnpm changeset version && pnpm changeset publish`
 - Post on X, r/sveltejs, r/math, HN ("Show HN: Svelte-native port of Mafs")
-- File a courtesy GitHub issue on `stevenpetryk/mafs` linking the port
 
 ---
 
@@ -775,7 +774,7 @@ Verify `dist/` contents, exports map resolves, types ship, no source maps leak c
 | Adaptive sampling has edge cases (discontinuities, vertical asymptotes) | Med | Dedicated test suite with pathological fns (tan, 1/x, step); borrow Mafs' algorithm verbatim |
 | Bundle size blows past 20 KB | Low | `sideEffects: false`, named exports only, no barrel-re-export of KaTeX |
 | KaTeX as dep adds 280 KB | Known | Keep as peerDep, document in README, consider build-time static rendering for docs site |
-| Mafs author dislikes "svelte-mafs" name | Low | Have fallback (`locus` / `axiom`) ready; open courtesy issue early in Phase 0 |
+| `svelte-mafs` name unavailable on npm | Low | Fallbacks ready: `locus`, `axiom`, `plotfield`, or scoped `@<you>/mafs` |
 | You run out of steam at Phase 4 (Plot) | Med | Phases 1–3 alone ship a useful lib (points, lines, polygons, circles, axes) — that's already past MVP for many Brilliant-style problems |
 
 ---
