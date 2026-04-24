@@ -11,7 +11,7 @@
 - **Vite** (library mode for package build, app mode for demo site)
 - **Vitest** (unit + component), **@testing-library/svelte** (DOM queries), **Playwright** (visual regression + drag e2e)
 - **KaTeX 0.16** (build-time rendering for static labels, runtime for dynamic)
-- **pnpm workspaces** — monorepo: `packages/svelte-mafs` (lib) + `apps/docs` (SvelteKit demo site)
+- **pnpm workspaces** — monorepo: `packages/svelte-mafs` (lib) + `apps/docs` (**Astro 6 + @astrojs/svelte** demo site)
 - **Changesets** for versioned releases, **ESLint + Prettier** + **tsc --noEmit** in CI
 
 **Naming note (decide before Task 1):** `svelte-mafs` is used throughout this plan. Check npm before locking in. Alternatives if the name is taken: `locus`, `axiom`, `chalkboard`, `plotfield`, `@<your-scope>/mafs`. Mafs is MIT — a port is legally fine, full stop.
@@ -80,7 +80,7 @@ svelte-mafs/
 │       ├── vite.config.ts
 │       └── vitest.config.ts
 └── apps/
-    └── docs/                               # SvelteKit demo site
+    └── docs/                               # Astro 6 demo site
 ```
 
 ---
@@ -312,19 +312,19 @@ git commit -m "chore(svelte-mafs): scaffold lib with vite + vitest + playwright"
 
 ---
 
-### Task 0.3: Scaffold `apps/docs` (SvelteKit demo site) — defer details
+### Task 0.3: Scaffold `apps/docs` (Astro 6 demo site) — defer details
 
-Placeholder SvelteKit app. We fully populate it in Phase 8; Phase 0 just gets a running app that imports the lib so we can `pnpm dev` and eyeball components as we build.
+Placeholder Astro 6 app with the Svelte integration. We fully populate it in Phase 8; Phase 0 just gets a running app that imports the lib so we can `pnpm dev` and eyeball components as we build.
 
 ```bash
-cd apps && pnpm create svelte@latest docs
-# skeleton project, TypeScript yes, no ESLint/Prettier (we'll add monorepo-level)
+cd apps && pnpm create astro@latest docs -- --template minimal --typescript strict --no-install --no-git
+cd docs && pnpm add @astrojs/svelte svelte@^5 && pnpm astro add svelte
 ```
 
 Wire `"svelte-mafs": "workspace:*"` into `apps/docs/package.json`. Commit:
 ```bash
 git add apps/docs
-git commit -m "chore(docs): scaffold SvelteKit demo app"
+git commit -m "chore(docs): scaffold Astro 6 demo app with Svelte integration"
 ```
 
 ---
@@ -723,7 +723,7 @@ Real pointer drag over `MovablePoint` fixtures — assert final position, keyboa
 
 ## Phase 8 — Docs Site (Days 17–20)
 
-SvelteKit app at `apps/docs`:
+Astro 6 app at `apps/docs` (content-first pages + `client:visible` Svelte islands for interactive demos):
 - **Home**: hero with 3 live examples from Phase 7 fixtures
 - **Getting Started**: install, first component, pitfalls
 - **API**: one page per component, auto-generated from JSDoc via `@svelte-docgen/cli`

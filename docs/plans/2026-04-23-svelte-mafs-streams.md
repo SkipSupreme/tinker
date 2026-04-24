@@ -388,16 +388,18 @@ Invoke superpowers:executing-plans. Begin.
 
 ---
 
-## Stream 7 — Docs Site (SvelteKit on Cloudflare Pages)
+## Stream 7 — Docs Site (Astro 6 + @astrojs/svelte on Cloudflare Pages)
 
 ```
 You are Stream 7 of an 8-stream parallel build of `svelte-mafs`. Stream 1 must land before you start. Your work has two waves: (A) site chassis can ship immediately after Stream 1; (B) example pages backfill as Streams 4–6 merge.
+
+STACK CHOICE: Astro 6 with @astrojs/svelte integration. Not SvelteKit. Reason: docs sites are content-first (MDX, syntax highlighting, static output) and Astro's island architecture means each interactive Mafs demo is its own hydrated bundle — non-interactive pages ship zero JS. Use `client:visible` or `client:idle` on Svelte components.
 
 READ FIRST:
 - /Users/joshhd/Documents/tinker/docs/plans/2026-04-23-svelte-mafs.md (Phase 8)
 - /Users/joshhd/Documents/tinker/docs/plans/2026-04-23-svelte-mafs-streams.md
 
-GATE: Stream 1's apps/docs scaffold must be on main.
+GATE: Stream 1 merged and v0.0.0-scaffold tagged. Note: Stream 1's initial `apps/docs` scaffold was torn down by captain before Stream 7 started — you create the Astro project fresh.
 
 SETUP:
 Invoke superpowers:using-git-worktrees for
@@ -405,35 +407,41 @@ Invoke superpowers:using-git-worktrees for
 on branch `stream/7-docs` based on latest `main`.
 
 SCOPE (exclusive):
-- apps/docs/** (everything under)
+- apps/docs/** (everything under — create from scratch)
 - docs/examples/*.md (content source — raw text examples for the gallery)
 
 STAY OUT OF: packages/svelte-mafs/**. If you need a feature the lib doesn't expose, open an issue and tag the owning stream. Never edit lib source to unblock docs.
 
 TASKS (Wave A — independent):
-1. Configure SvelteKit with @sveltejs/adapter-cloudflare. Set site metadata.
-2. Layout: top nav (Home / Getting Started / API / Examples / GitHub), dark-mode toggle persisted to localStorage, responsive.
-3. Home page: hero headline, 2–3 live code examples (start with placeholders, swap in real Mafs demos as components land).
-4. Getting Started page: install (`pnpm add svelte-mafs`), first `<Mafs>` snippet, theming, a11y notes.
-5. API reference page: one page per exported component, auto-generated via @sveltejs/package's type exports + a small docgen script reading .svelte files and their JSDoc.
-6. Theme playground: CSS custom property editor with live preview.
-7. Deploy config: Cloudflare Pages build command `pnpm -F docs build`, output `apps/docs/.svelte-kit/cloudflare`. Document in README.
+1. Scaffold Astro 6 + Svelte:
+   ```
+   cd apps && pnpm create astro@latest docs -- --template minimal --typescript strict --no-install --no-git
+   cd docs && pnpm astro add svelte && pnpm astro add cloudflare && pnpm astro add mdx
+   ```
+   Add `"svelte-mafs": "workspace:*"` to `apps/docs/package.json`. Pin Svelte to ^5 matching the lib's peerDep.
+2. Layout (`src/layouts/Base.astro`): top nav (Home / Getting Started / API / Examples / GitHub), dark-mode toggle persisted to localStorage, responsive. Layout is pure Astro; dark-mode toggle is a tiny `<script>` block, no hydration needed.
+3. Home page (`src/pages/index.astro`): hero headline + 2–3 Mafs demos rendered as Svelte islands with `client:visible`.
+4. Getting Started page (MDX): install (`pnpm add svelte-mafs`), first `<Mafs>` snippet, theming, a11y notes. Shiki via `@astrojs/mdx` for syntax highlighting.
+5. API reference pages (MDX, one per exported component): auto-generated via a small docgen script that reads `packages/svelte-mafs/dist/*.d.ts` + JSDoc blocks from `.svelte` files. Write the script under `apps/docs/scripts/docgen.ts`, run in `prebuild`.
+6. Theme playground (`src/pages/playground.astro` with a Svelte island): CSS custom property editor with live preview.
+7. Deploy config: `@astrojs/cloudflare` adapter, output `apps/docs/dist/`. Document Cloudflare Pages build command `pnpm -F docs build` in README.
 
 TASKS (Wave B — backfill as components land):
-8. As each primitive/plot/interactive component merges to main, add an examples page under apps/docs/src/routes/examples/<slug>/+page.svelte with a live interactive demo + copy-paste code block.
-9. Port Mafs homepage examples (mafs.dev): coordinates grid, parametric curves, vector field, draggable points exercise, bezier curve editor. One per route.
+8. As each primitive/plot/interactive component merges to main, add an examples page at `apps/docs/src/pages/examples/<slug>.mdx` with a live interactive Svelte island (`client:visible`) + copy-paste code block.
+9. Port Mafs homepage examples (mafs.dev): coordinates grid, parametric curves, vector field, draggable points exercise, bezier curve editor. One MDX file per.
 
 DESIGN NOTES:
-- Use Shiki (or similar) for syntax highlighting, build-time.
-- "Copy code" button on every snippet.
-- Dark mode default matches OS pref.
-- Ensure every example is keyboard-accessible (draft an a11y checklist in apps/docs/A11Y.md).
+- Shiki is built into @astrojs/mdx — use it for syntax highlighting. No runtime highlighter.
+- "Copy code" button on every snippet (tiny inline script, no framework).
+- Dark mode default matches OS pref; toggle persists to localStorage.
+- Every interactive demo: `client:visible` to defer hydration until scrolled into view.
+- Ensure every example is keyboard-accessible (draft `apps/docs/A11Y.md`).
 
 DONE CRITERIA (Wave A):
 - Site runs locally: `pnpm -F docs dev`
-- Builds clean: `pnpm -F docs build`
-- Deploys to a preview Cloudflare Pages project (user may need to provide the Pages project name/token — ask before attempting deploy)
-- PR opened: "Stream 7: docs site chassis"
+- Builds clean: `pnpm -F docs build` → `apps/docs/dist/`
+- Deploys to a preview Cloudflare Pages project (user may need to provide Pages project name/token — ask before attempting deploy)
+- PR opened: "Stream 7: Astro 6 docs site chassis"
 
 DONE CRITERIA (Wave B, per-component):
 - Incremental PRs like "Stream 7: example page for Plot.OfX" — merged after the underlying component is on main.
@@ -476,7 +484,7 @@ SCOPE (exclusive):
 DO NOT TOUCH src/ of the lib or apps/docs/ source (add e2e specs that *import* from docs dev server but don't edit its source).
 
 TASKS:
-1. Playwright config — chromium + iphone-14 projects, webServer pinned to docs dev server on port 5173. Baseline threshold 2%.
+1. Playwright config — chromium + iphone-14 projects, webServer pinned to Astro docs dev server (`pnpm -F docs dev`, default port 4321). Baseline threshold 2%.
 2. CI workflow — matrix Node 20 + 22. Jobs: lint, typecheck, test:unit, test:e2e (headless chromium), build. Cache pnpm store. Post coverage to GitHub Pages or codecov.
 3. Changesets — `pnpm changeset init`, configure baseBranch: main, access: public.
 4. Release workflow — on push to main after PR merge, `changesets/action@v1` creates a "Version Packages" PR or publishes to npm.
