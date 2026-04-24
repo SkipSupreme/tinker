@@ -25,6 +25,7 @@
     "wrangler": "^4.84.1"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.8",
     "tsx": "^4.19.0"
   },
   "overrides": {

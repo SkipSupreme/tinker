@@ -8,8 +8,8 @@ interface ManifestEntry {
   exports: { name: string; kind: 'value' | 'type' }[];
 }
 
-const modules: ManifestEntry[] = manifest.modules;
-const generatedAt = new Date(manifest.generatedAt).toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
+// JSON imports widen string-literal unions to `string`; narrow at the boundary.
+const modules = manifest.modules as ManifestEntry[];
 ---
 
 <Base
@@ -19,8 +19,7 @@ const generatedAt = new Date(manifest.generatedAt).toISOString().replace('T', ' 
 >
   <h1>API reference</h1>
   <p class="meta">
-    Auto-generated from <code>packages/svelte-mafs/src/*</code>.
-    Last regenerated {generatedAt}.
+    Auto-generated from <code>packages/svelte-mafs/src/*</code> at build time.
   </p>
 
   {

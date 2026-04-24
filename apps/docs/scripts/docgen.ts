@@ -299,7 +299,6 @@ async function main(): Promise<void> {
   }
 
   const manifest = {
-    generatedAt: new Date().toISOString(),
     modules: docs.map((d) => ({
       module: d.module,
       description: d.description?.split('\n')[0] ?? null,
