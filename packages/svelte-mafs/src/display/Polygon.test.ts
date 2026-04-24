@@ -1,10 +1,9 @@
 import { render } from "@testing-library/svelte";
+import type { ComponentProps } from "svelte";
 import { describe, expect, it } from "vitest";
 import Harness from "./Polygon.harness.svelte";
 
-const getPolygon = (
-  props: Parameters<typeof render<typeof Harness>>[1]["props"],
-) => {
+const getPolygon = (props: ComponentProps<typeof Harness>) => {
   const { container } = render(Harness, { props });
   const p = container.querySelector("polygon");
   if (!p) throw new Error("no <polygon> rendered");

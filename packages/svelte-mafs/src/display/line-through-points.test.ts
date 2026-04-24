@@ -1,10 +1,9 @@
 import { render } from "@testing-library/svelte";
+import type { ComponentProps } from "svelte";
 import { describe, expect, it } from "vitest";
 import Harness from "./line-through-points.harness.svelte";
 
-const readLine = (
-  props: Parameters<typeof render<typeof Harness>>[1]["props"],
-) => {
+const readLine = (props: ComponentProps<typeof Harness>) => {
   const { container } = render(Harness, { props });
   const line = container.querySelector("line");
   return line;

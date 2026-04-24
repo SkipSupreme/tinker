@@ -1,8 +1,9 @@
 import { render } from "@testing-library/svelte";
+import type { ComponentProps } from "svelte";
 import { describe, expect, it } from "vitest";
 import Harness from "./line-segment.harness.svelte";
 
-const getLine = (props: Parameters<typeof render<typeof Harness>>[1]["props"]) => {
+const getLine = (props: ComponentProps<typeof Harness>) => {
   const { container } = render(Harness, { props });
   const line = container.querySelector("line");
   if (!line) throw new Error("no <line> rendered");

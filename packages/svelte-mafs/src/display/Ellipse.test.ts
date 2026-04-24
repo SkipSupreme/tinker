@@ -1,10 +1,9 @@
 import { render } from "@testing-library/svelte";
+import type { ComponentProps } from "svelte";
 import { describe, expect, it } from "vitest";
 import Harness from "./Ellipse.harness.svelte";
 
-const getEllipse = (
-  props: Parameters<typeof render<typeof Harness>>[1]["props"],
-) => {
+const getEllipse = (props: ComponentProps<typeof Harness>) => {
   const { container } = render(Harness, { props });
   const el = container.querySelector("ellipse");
   if (!el) throw new Error("no <ellipse> rendered");

@@ -1,8 +1,9 @@
 import { render } from "@testing-library/svelte";
+import type { ComponentProps } from "svelte";
 import { describe, expect, it } from "vitest";
 import Harness from "./Point.harness.svelte";
 
-const getCircle = (props: Parameters<typeof render<typeof Harness>>[1]["props"]) => {
+const getCircle = (props: ComponentProps<typeof Harness>) => {
   const { container } = render(Harness, { props });
   const circle = container.querySelector("circle");
   if (!circle) throw new Error("no <circle> rendered");

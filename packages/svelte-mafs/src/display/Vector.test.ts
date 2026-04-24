@@ -1,8 +1,9 @@
 import { render } from "@testing-library/svelte";
+import type { ComponentProps } from "svelte";
 import { describe, expect, it } from "vitest";
 import Harness from "./Vector.harness.svelte";
 
-const mount = (props: Parameters<typeof render<typeof Harness>>[1]["props"]) => {
+const mount = (props: ComponentProps<typeof Harness>) => {
   const { container } = render(Harness, { props });
   const line = container.querySelector("line");
   const marker = container.querySelector("marker");
