@@ -162,4 +162,22 @@ describe("inferLabels", () => {
   it("empty range returns single label", () => {
     expect(inferLabels(5, 5, 5)).toEqual([5]);
   });
+
+  it("picks 5x-power step when ratio falls in [3.5, 7.5)", () => {
+    // range 50 / target 10 → raw step 5 → ratio=5 → step=5
+    const labels = inferLabels(0, 50, 10);
+    expect(labels).toEqual([0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]);
+  });
+
+  it("picks 10x-power step when ratio exceeds 7.5", () => {
+    // range 40 / target 5 → raw step 8, power=1, ratio=8 → step=10
+    const labels = inferLabels(0, 40, 5);
+    expect(labels).toEqual([0, 10, 20, 30, 40]);
+  });
+
+  it("picks 1x-power step when ratio is below 1.5", () => {
+    // range 10 / target 10 → raw step 1, power=1, ratio=1 → step=1
+    const labels = inferLabels(0, 10, 10);
+    expect(labels).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  });
 });
