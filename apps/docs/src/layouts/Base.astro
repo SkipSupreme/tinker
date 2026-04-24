@@ -2,17 +2,23 @@
 import Nav from '../components/Nav.astro';
 import '../styles/global.css';
 
-export interface Props {
-  title: string;
+interface Frontmatter {
+  title?: string;
   description?: string;
   prose?: boolean;
 }
 
-const {
-  title,
-  description = 'Svelte 5 components for interactive math visualization.',
-  prose = false,
-} = Astro.props;
+export interface Props extends Frontmatter {
+  frontmatter?: Frontmatter;
+}
+
+const fm = Astro.props.frontmatter ?? {};
+const title = Astro.props.title ?? fm.title ?? 'svelte-mafs';
+const description =
+  Astro.props.description ??
+  fm.description ??
+  'Svelte 5 components for interactive math visualization.';
+const prose = Astro.props.prose ?? fm.prose ?? false;
 
 const titleWithSuffix = title === 'svelte-mafs' ? title : `${title} · svelte-mafs`;
 ---
