@@ -50,7 +50,7 @@ export async function getLatestAnswers(
     .select()
     .from(exerciseAnswer)
     .where(and(eq(exerciseAnswer.userId, userId), eq(exerciseAnswer.lessonSlug, lessonSlug)))
-    .orderBy(desc(exerciseAnswer.createdAt));
+    .orderBy(desc(exerciseAnswer.attemptNo), desc(exerciseAnswer.createdAt));
   // Keep only the latest per exerciseId
   const seen = new Set<string>();
   const out: Array<{ exerciseId: string; answerJson: unknown; isCorrect: boolean | null; attemptNo: number; createdAt: Date }> = [];
