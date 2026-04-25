@@ -10,6 +10,7 @@ test-results/
 .env*
 !.env.example
 .gstack/
+.worktrees/
 
 /*.png
 /*.jpg
