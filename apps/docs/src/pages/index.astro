@@ -8,7 +8,7 @@ import Base from '../layouts/Base.astro';
   description="Learn math, physics, and computer science the way 3Blue1Brown wishes Brilliant worked. Rigorous, visual, and built for adults who actually want to understand."
 >
   <section class="hero">
-    <p class="eyebrow">In development · Coming 2026</p>
+    <p class="eyebrow">🌱 Alpha · 1 course live · new modules every week</p>
     <h1>Learn by building intuition, not memorizing steps.</h1>
     <p class="lede">
       Tinker is a new kind of learning app for math, physics, and computer
@@ -17,19 +17,15 @@ import Base from '../layouts/Base.astro';
       For adults who want rigor and intuition in the same product.
     </p>
 
-    <form class="waitlist" method="POST" action="#" data-waitlist>
-      <label class="sr-only" for="waitlist-email">Email address</label>
-      <input
-        id="waitlist-email"
-        type="email"
-        name="email"
-        placeholder="you@example.com"
-        autocomplete="email"
-        required
-      />
-      <button type="submit">Get on the waitlist</button>
-    </form>
-    <p class="form-note">No spam. One email when there's something real to show.</p>
+    <div class="cta-row">
+      <a class="btn primary" href="/signup">Sign up — it's free</a>
+      <a class="btn secondary" href="/courses/ml-math">Explore the course</a>
+    </div>
+    <p class="form-note">
+      One course live today: <a href="/courses/ml-math">Math for Machine Learning</a>.
+      New modules ship weekly. Sign up to track progress, save notes,
+      and get the heads-up when new courses drop.
+    </p>
   </section>
 
   <section class="pitch" aria-labelledby="pitch-heading">
@@ -78,9 +74,8 @@ import Base from '../layouts/Base.astro';
       Actively being built in the open. Source:
       <a href="https://github.com/SkipSupreme/svelte-mafs" rel="noopener">
         github.com/SkipSupreme/svelte-mafs
-      </a>.
-      Follow along on the waitlist and I'll ping you when the first wedge
-      (Math for ML) is ready to dogfood.
+      </a>. Sign up — alpha is open and the first course (Math for ML)
+      is live. New modules every week.
     </p>
   </section>
 </Base>
@@ -112,43 +107,40 @@ import Base from '../layouts/Base.astro';
     margin: 0 0 2rem;
   }
 
-  .waitlist {
+  .cta-row {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.65rem;
     flex-wrap: wrap;
-    max-width: 32rem;
-    margin: 0 0 0.5rem;
+    margin: 0 0 0.85rem;
   }
-  .waitlist input[type="email"] {
-    flex: 1 1 14rem;
-    padding: 0.75rem 0.9rem;
-    border: 1px solid var(--site-border);
+  .btn {
+    display: inline-block;
+    padding: 0.75rem 1.25rem;
     border-radius: var(--radius-md);
-    background: var(--site-surface);
-    color: var(--site-fg);
     font: inherit;
-  }
-  .waitlist input[type="email"]:focus {
-    outline: 2px solid var(--site-accent);
-    outline-offset: 2px;
-  }
-  .waitlist button {
-    padding: 0.75rem 1.1rem;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--site-accent);
-    background: var(--site-accent);
-    color: var(--site-accent-fg);
-    font: inherit;
-    font-weight: 550;
+    font-weight: 600;
+    text-decoration: none;
     cursor: pointer;
     transition: transform 120ms ease;
   }
-  .waitlist button:hover { transform: translateY(-1px); }
+  .btn.primary {
+    background: var(--site-accent);
+    color: var(--site-accent-fg);
+    border: 1px solid var(--site-accent);
+  }
+  .btn.secondary {
+    background: var(--site-surface);
+    color: var(--site-fg);
+    border: 1px solid var(--site-border);
+  }
+  .btn:hover { transform: translateY(-1px); }
   .form-note {
-    font-size: 0.82rem;
+    font-size: 0.92rem;
     color: var(--site-fg-muted);
     margin: 0.25rem 0 0;
+    max-width: 36rem;
   }
+  .form-note a { color: var(--site-fg); }
 
   .pitch, .status {
     padding: 2.75rem 0;
@@ -198,22 +190,3 @@ import Base from '../layouts/Base.astro';
   }
 </style>
 
-<script>
-  // Waitlist form stub — intercepts submit so the form doesn't 404 on a
-  // non-existent endpoint. When a real provider (Beehiiv / Buttondown /
-  // ConvertKit) is wired up, swap this for a real POST and remove the stub.
-  const form = document.querySelector<HTMLFormElement>('form[data-waitlist]');
-  if (form) {
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const input = form.querySelector<HTMLInputElement>('input[type="email"]');
-      if (!input?.value) return;
-      const btn = form.querySelector<HTMLButtonElement>('button');
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = 'Noted — real signup coming soon';
-      }
-      console.log('[waitlist stub]', input.value);
-    });
-  }
-</script>
