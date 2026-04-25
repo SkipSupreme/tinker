@@ -4,8 +4,9 @@ import { eq } from 'drizzle-orm';
 import Base from '../../../layouts/Base.astro';
 import { requireAdmin } from '../../../server/admin';
 import { emailDrop } from '../../../server/schema';
+import { getEnv } from '../../../server/env';
 
-const env = Astro.locals.runtime.env;
+const env = getEnv();
 const guard = await requireAdmin(Astro.request, {
   DB: env.DB,
   BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,

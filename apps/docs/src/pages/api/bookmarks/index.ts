@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireSession, requireCsrf, jsonError, jsonOk } from '../../../server/middleware';
 import { checkRateLimit } from '../../../server/ratelimit';
 import { createBookmark, listBookmarks } from '../../../server/bookmarks';
+import { getEnv } from '../../../server/env';
 
 export const prerender = false;
 
@@ -12,7 +13,7 @@ const Body = z.object({
 });
 
 export const POST: APIRoute = async ({ request, locals }) => {
-  const env = (locals as App.Locals).runtime.env;
+  const env = getEnv();
   const csrf = requireCsrf(request);
   if (csrf) return csrf;
 
@@ -44,7 +45,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 };
 
 export const GET: APIRoute = async ({ request, locals }) => {
-  const env = (locals as App.Locals).runtime.env;
+  const env = getEnv();
   const ctx = await requireSession(request, env);
   if ('error' in ctx) return ctx.error;
   const list = await listBookmarks(ctx.db, ctx.session.user.id);

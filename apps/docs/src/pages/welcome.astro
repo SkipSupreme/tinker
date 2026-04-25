@@ -6,8 +6,9 @@ import { createAuth, getSession } from '../server/auth';
 import { getDb } from '../server/db';
 import { userProfile } from '../server/schema';
 import { sendWelcomeEmail } from '../server/email';
+import { getEnv } from '../server/env';
 
-const env = Astro.locals.runtime.env;
+const env = getEnv();
 const auth = createAuth({
   DB: env.DB,
   BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
@@ -38,7 +39,7 @@ if (firstTime) {
     marketingOptIn: false,
   });
   if (env.RESEND_API_KEY) {
-    Astro.locals.runtime.ctx.waitUntil(
+    Astro.locals.cfContext.waitUntil(
       sendWelcomeEmail(env.RESEND_API_KEY, session.user.email).catch((e) =>
         console.error('welcome email failed:', e),
       ),

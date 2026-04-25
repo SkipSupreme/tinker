@@ -1,4 +1,3 @@
-/// <reference path="../.astro/types.d.ts" />
 /// <reference types="astro/client" />
 /// <reference types="@cloudflare/workers-types" />
 
@@ -17,8 +16,6 @@ interface Env {
   PUBLIC_SITE_URL: string;
 }
 
-type Runtime = import('@astrojs/cloudflare').Runtime<Env>;
-
-declare namespace App {
-  interface Locals extends Runtime {}
+declare module 'cloudflare:workers' {
+  export const env: Env;
 }

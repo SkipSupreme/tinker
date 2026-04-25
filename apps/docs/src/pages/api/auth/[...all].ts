@@ -1,10 +1,11 @@
 import type { APIRoute } from 'astro';
 import { createAuth } from '../../../server/auth';
+import { getEnv } from '../../../server/env';
 
 export const prerender = false;
 
 const handler: APIRoute = async ({ request, locals }) => {
-  const env = (locals as App.Locals).runtime.env;
+  const env = getEnv();
   const auth = createAuth({
     DB: env.DB,
     BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,

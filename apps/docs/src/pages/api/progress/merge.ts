@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireSession, requireCsrf, jsonError, jsonOk } from '../../../server/middleware';
 import { checkRateLimit } from '../../../server/ratelimit';
 import { mergeAnonProgress } from '../../../server/progress';
+import { getEnv } from '../../../server/env';
 
 export const prerender = false;
 
@@ -21,7 +22,7 @@ const Body = z.object({
 });
 
 export const POST: APIRoute = async ({ request, locals }) => {
-  const env = (locals as App.Locals).runtime.env;
+  const env = getEnv();
   const csrf = requireCsrf(request);
   if (csrf) return csrf;
 

@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '../../server/db';
 import { userProfile } from '../../server/schema';
 import { verifyUnsubscribeToken } from '../../server/email';
+import { getEnv } from '../../server/env';
 
 export const prerender = false;
 
@@ -23,7 +24,7 @@ ${status === 'ok'
 </main></body></html>`;
 
 export const GET: APIRoute = async ({ url, locals }) => {
-  const env = (locals as App.Locals).runtime.env;
+  const env = getEnv();
   const token = url.searchParams.get('token');
   if (!token || !env.UNSUBSCRIBE_HMAC_SECRET) {
     return new Response(PAGE('bad'), { status: 400, headers: { 'content-type': 'text/html; charset=utf-8' } });

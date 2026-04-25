@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireSession, requireCsrf, jsonError, jsonOk } from '../../../server/middleware';
 import { checkRateLimit } from '../../../server/ratelimit';
 import { upsertNote, getNote, NOTE_MAX_BYTES } from '../../../server/notes';
+import { getEnv } from '../../../server/env';
 
 export const prerender = false;
 
@@ -11,7 +12,7 @@ const Body = z.object({
 });
 
 export const PUT: APIRoute = async ({ request, params, locals }) => {
-  const env = (locals as App.Locals).runtime.env;
+  const env = getEnv();
   const csrf = requireCsrf(request);
   if (csrf) return csrf;
 
@@ -48,7 +49,7 @@ export const PUT: APIRoute = async ({ request, params, locals }) => {
 };
 
 export const GET: APIRoute = async ({ request, params, locals }) => {
-  const env = (locals as App.Locals).runtime.env;
+  const env = getEnv();
   const ctx = await requireSession(request, env);
   if ('error' in ctx) return ctx.error;
   const lessonSlug = params.lesson;

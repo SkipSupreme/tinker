@@ -5,11 +5,12 @@ import { lessonView } from '../../../server/schema';
 import { listBookmarks } from '../../../server/bookmarks';
 import { listNoteIndex } from '../../../server/notes';
 import { getLatestAnswers } from '../../../server/exercises';
+import { getEnv } from '../../../server/env';
 
 export const prerender = false;
 
 export const GET: APIRoute = async ({ request, locals, url }) => {
-  const env = (locals as App.Locals).runtime.env;
+  const env = getEnv();
   const ctx = await requireSession(request, env);
   if ('error' in ctx) return ctx.error;
 

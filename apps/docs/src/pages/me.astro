@@ -5,8 +5,9 @@ import Base from '../layouts/Base.astro';
 import { createAuth, getSession } from '../server/auth';
 import { getDb } from '../server/db';
 import { userProfile } from '../server/schema';
+import { getEnv } from '../server/env';
 
-const env = Astro.locals.runtime.env;
+const env = getEnv();
 const auth = createAuth({
   DB: env.DB,
   BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,

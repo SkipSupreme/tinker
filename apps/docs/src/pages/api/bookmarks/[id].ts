@@ -1,11 +1,12 @@
 import type { APIRoute } from 'astro';
 import { requireSession, requireCsrf, jsonError, jsonOk } from '../../../server/middleware';
 import { deleteBookmark } from '../../../server/bookmarks';
+import { getEnv } from '../../../server/env';
 
 export const prerender = false;
 
 export const DELETE: APIRoute = async ({ request, params, locals }) => {
-  const env = (locals as App.Locals).runtime.env;
+  const env = getEnv();
   const csrf = requireCsrf(request);
   if (csrf) return csrf;
 

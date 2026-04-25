@@ -3,11 +3,12 @@ import { eq } from 'drizzle-orm';
 import { user } from '../../../server/schema';
 import { requireSession, jsonError } from '../../../server/middleware';
 import { sendAccountDeletedEmail } from '../../../server/email';
+import { getEnv } from '../../../server/env';
 
 export const prerender = false;
 
 export const DELETE: APIRoute = async ({ request, locals }) => {
-  const env = (locals as App.Locals).runtime.env;
+  const env = getEnv();
   const ctx = await requireSession(request, env);
   if ('error' in ctx) return ctx.error;
   const { session, db, auth } = ctx;
@@ -34,7 +35,7 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
   }
 
   if (env.RESEND_API_KEY) {
-    (locals as App.Locals).runtime.ctx.waitUntil(
+    (locals as App.Locals).cfContext.waitUntil(
       sendAccountDeletedEmail(env.RESEND_API_KEY, originalEmail).catch((e) =>
         console.error('account-deleted email failed:', e),
       ),

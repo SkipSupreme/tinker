@@ -5,6 +5,7 @@ import { requireCsrf, jsonError, jsonOk } from '../../../server/middleware';
 import { requireAdmin } from '../../../server/admin';
 import { user as userTbl, userProfile, emailDrop } from '../../../server/schema';
 import { sendDropEmail, signUnsubscribeToken } from '../../../server/email';
+import { getEnv } from '../../../server/env';
 
 export const prerender = false;
 
@@ -23,7 +24,7 @@ interface AudienceRow {
 }
 
 export const POST: APIRoute = async ({ request, locals }) => {
-  const env = (locals as App.Locals).runtime.env;
+  const env = getEnv();
   const csrf = requireCsrf(request);
   if (csrf) return csrf;
 
