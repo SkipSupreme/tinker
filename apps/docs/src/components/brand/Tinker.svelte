@@ -11,6 +11,7 @@
   import { prefersReducedMotion } from 'svelte/motion';
   import { play } from '../../lib/sound';
   import { burst } from '../../lib/confetti';
+  import { eggs } from '../../lib/easterEggs.svelte';
 
   interface Props {
     /** Mascot width. Number = px; string = any CSS length, e.g. "clamp(180px, 38vw, 380px)". */
@@ -79,6 +80,15 @@
     } catch {
       /* ignore */
     }
+    eggs.init();
+  });
+
+  $effect(() => {
+    // bouncePulse is reactive; reading it here subscribes the effect.
+    if (eggs.bouncePulse === 0) return; // skip initial 0
+    bouncing = true;
+    setTimeout(() => (bouncing = false), 240);
+    if (root) burst(root, { count: 8 });
   });
 
   function onPointerMove(e: PointerEvent) {
