@@ -1,6 +1,7 @@
 ---
 import Base from './Base.astro';
 import TinkerHop from '../components/celebrate/TinkerHop.svelte';
+import SrAnnouncer from '../components/lesson/SrAnnouncer.svelte';
 import 'katex/dist/katex.min.css';
 
 interface Props {
@@ -57,6 +58,8 @@ const moduleLabel = module.replace(/-/g, ' ');
         <button type="button" class="reset-btn" data-reset>Reset progress</button>
       </div>
     </footer>
+
+    <SrAnnouncer client:idle />
   </div>
 </Base>
 
@@ -373,9 +376,8 @@ const moduleLabel = module.replace(/-/g, ' ');
 
 <script>
   import { play } from '../lib/sound';
-  import { burst } from '../lib/confetti';
-  import { awardXp, vibrate, XP_AWARD } from '../lib/xp';
-  import { celebrateCorrect, celebrateWrong } from '../lib/celebrate';
+  import { awardXp, XP_AWARD } from '../lib/xp';
+  import { celebrateCorrect, celebrateLesson, celebrateWrong } from '../lib/celebrate';
 
   type CheckData = { answer: number; tolerance: number };
 
@@ -427,20 +429,24 @@ const moduleLabel = module.replace(/-/g, ' ');
       if (unlocked < total || total === 0) return;
       lessonCompleteFired = true;
       try { localStorage.setItem(completionKey, '1'); } catch { /* ignore */ }
-      play('chime');
-      vibrate(50);
-      awardXp(XP_AWARD.lessonComplete, `lesson:${slug}`);
-      // Big confetti from the celebration card.
+      // Route the entire endgame through the orchestrator: spring fill +
+      // math-symbol burst + XP tween + TinkerHop event + chime + vibrate +
+      // sweep-green class + aria-live announce. One call, one tuned chain.
       if (completeCard) {
-        burst(completeCard, { count: 22, spread: 1.5 });
+        void celebrateLesson(completeCard);
+      } else {
+        // No card in DOM (shouldn't happen) — fall back to bare XP so the
+        // user still gets credit for finishing the lesson.
+        awardXp(XP_AWARD.lessonComplete, `lesson:${slug}`);
       }
-      window.dispatchEvent(
-        new CustomEvent('tinker:celebrate', { detail: { level: 'lesson' } }),
-      );
       // Scroll to the celebration card so the user sees the moment.
       setTimeout(() => {
         completeCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 240);
+      // TODO(alive-layer): wire module-complete celebrateModule when
+      // SkillTreeMap mastery hook lands. Lesson MDX needs frontmatter
+      // (e.g. `isFinalLessonOfModule: true` + `nodeId` + `nextModuleName`)
+      // before this branch can fire deterministically.
     }
 
     function advance(fromIndex: number) {
