@@ -2,6 +2,7 @@
 import Base from './Base.astro';
 import TinkerHop from '../components/celebrate/TinkerHop.svelte';
 import SrAnnouncer from '../components/lesson/SrAnnouncer.svelte';
+import StuckHint from '../components/lesson/StuckHint.svelte';
 import 'katex/dist/katex.min.css';
 
 interface Props {
@@ -60,6 +61,7 @@ const moduleLabel = module.replace(/-/g, ' ');
     </footer>
 
     <SrAnnouncer client:idle />
+    <StuckHint client:idle />
   </div>
 </Base>
 
