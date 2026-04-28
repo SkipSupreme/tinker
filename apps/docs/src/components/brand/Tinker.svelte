@@ -45,12 +45,33 @@
   let bouncing = $state(false);
   let petCount = $state(0);
   let cursorTilt = $state(0);
+  let sleeping = $state(false);
 
   const PET_LS_KEY = 'tinker:pet-count';
   const PET_THRESHOLD = 10;
   const HOVER_TILT_RANGE_DEG = 3;
+  const SLEEP_MS = 60_000;
+  let sleepTimer: number | null = null;
 
   const reducedMotion = $derived(prefersReducedMotion.current);
+
+  function resetSleep() {
+    sleeping = false;
+    if (sleepTimer) clearTimeout(sleepTimer);
+    sleepTimer = window.setTimeout(() => {
+      sleeping = true;
+    }, SLEEP_MS);
+  }
+
+  $effect(() => {
+    resetSleep();
+    const evts = ['pointermove', 'keydown', 'scroll'] as const;
+    for (const ev of evts) document.addEventListener(ev, resetSleep, { passive: true });
+    return () => {
+      if (sleepTimer) clearTimeout(sleepTimer);
+      for (const ev of evts) document.removeEventListener(ev, resetSleep);
+    };
+  });
 
   onMount(() => {
     try {
@@ -104,6 +125,7 @@
   class="tinker"
   class:tinker--bouncing={bouncing}
   class:tinker--reduced={reducedMotion}
+  class:tinker--sleeping={sleeping && !reducedMotion}
   style="--tinker-size: {sizeCss}; --tinker-tilt: {tilt}deg; --tinker-cursor-tilt: {cursorTilt}deg;"
   onpointermove={onPointerMove}
   onpointerleave={onPointerLeave}
@@ -141,6 +163,9 @@
       <path d="M0,-9 L2,-2 L9,0 L2,2 L0,9 L-2,2 L-9,0 L-2,-2 Z" transform="translate(286, 100)" />
     </g>
   </svg>
+  {#if sleeping && !reducedMotion}
+    <span class="tinker-z" aria-hidden="true">z</span>
+  {/if}
 </div>
 
 <style>
@@ -251,4 +276,20 @@
   .tinker-sparkles .sp-2 { animation-delay: 1.5s; }
   .tinker-sparkles .sp-3 { animation-delay: 3s; }
   .tinker--reduced .tinker-sparkles .sp { animation: none; opacity: 0.6; }
+
+  .tinker-z {
+    position: absolute;
+    top: -8%;
+    right: 14%;
+    font-family: 'Fraunces', Georgia, serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 1.6rem;
+    color: var(--site-fg-muted);
+    animation: tinker-z-rise 2.4s ease-out infinite;
+    z-index: 3;
+  }
+  .tinker--sleeping .tinker-img {
+    animation-duration: 7s;
+  }
 </style>
