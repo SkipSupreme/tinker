@@ -375,6 +375,7 @@ const moduleLabel = module.replace(/-/g, ' ');
   import { play } from '../lib/sound';
   import { burst } from '../lib/confetti';
   import { awardXp, vibrate, XP_AWARD } from '../lib/xp';
+  import { celebrateCorrect, celebrateWrong } from '../lib/celebrate';
 
   type CheckData = { answer: number; tolerance: number };
 
@@ -500,13 +501,18 @@ const moduleLabel = module.replace(/-/g, ' ');
           feedback.className = 'check-feedback ok';
           feedback.textContent = FEEDBACK_OK;
           input.disabled = true;
-          play('ding');
-          vibrate(20);
+          // Route through orchestrator: sound + burst + haptic + XP + halo + announce.
+          // Orchestrator hard-codes correctFirstTry XP by design (alive-layer §3).
           if (submitBtn) {
-            burst(submitBtn, { count: attempts === 0 ? 8 : 5 });
+            void celebrateCorrect(submitBtn);
+          } else {
+            // No submit button (shouldn't happen) — fall back to bare XP.
+            awardXp(XP_AWARD.correctFirstTry, `check:${slug}:${step.dataset.index}`);
           }
-          const xpAmount = attempts === 0 ? XP_AWARD.correctFirstTry : XP_AWARD.correctRetry;
-          awardXp(xpAmount, `check:${slug}:${step.dataset.index}`);
+          // Reference XP_AWARD.correctRetry to keep the symbol live for future
+          // attempt-aware tuning, even though the orchestrator path flat-rates.
+          void XP_AWARD.correctRetry;
+          void attempts;
           setTimeout(() => advance(Number(step.dataset.index)), 520);
         } else {
           attempts += 1;
@@ -515,6 +521,8 @@ const moduleLabel = module.replace(/-/g, ' ');
           if (attempts >= 2 && hintEl) {
             hintEl.hidden = false;
           }
+          // Localized shake + announce. No haptic/sound on wrong by design.
+          void celebrateWrong(input);
           input.select();
         }
       });
