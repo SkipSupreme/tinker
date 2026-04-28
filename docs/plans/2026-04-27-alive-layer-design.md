@@ -8,7 +8,7 @@
 
 ## 1. Overview, scope, non-goals
 
-A coordinated "alive layer" pass across five surfaces, all backed by the same shared primitive set: keep custom `lib/confetti.ts` (math symbols) and `lib/sound.ts` (sine palette), add Svelte 5 `Spring`/`Tween` runes from `svelte/motion`, add `tw-animate-css` for ambient loops, use the new reactive `prefersReducedMotion` from `svelte/motion`. Five surfaces, one design language, one shared primitive set.
+A coordinated "alive layer" pass across five surfaces, all backed by the same shared primitive set: keep custom `lib/confetti.ts` (math symbols) and `lib/sound.ts` (sine palette), add Svelte 5 `Spring`/`Tween` runes from `svelte/motion`, hand-roll new `@keyframes` in `global.css` for the ambient loops, use the new reactive `prefersReducedMotion` from `svelte/motion`. Five surfaces, one design language, one shared primitive set.
 
 **Surfaces.**
 
@@ -16,7 +16,7 @@ A coordinated "alive layer" pass across five surfaces, all backed by the same sh
 2. **Lesson + module complete sequences** — multi-stage `async/await` chains (Spring fill → Tween XP tick → TinkerHop → confetti → chime).
 3. **Mascot backlog burndown** — Konami code sunglasses, "type tinker" anywhere, proactive hint pokes, milestone badges, birthday hat.
 4. **Hero/landing ambient life** — floating math-symbol decorations drift, sparkle marks pulse, mascot gets a sleepy yawn after long inactivity.
-5. **XP counter + streak chip polish** — Tween-driven counter (`Math.round(display.current)`), smoother +N floater, streak flame flicker via `tw-animate-css`.
+5. **XP counter + streak chip polish** — Tween-driven counter (`Math.round(display.current)`), smoother +N floater, streak flame flicker via a custom `flame-flicker` keyframe.
 
 **Non-goals (locked).**
 
@@ -27,7 +27,7 @@ A coordinated "alive layer" pass across five surfaces, all backed by the same sh
 - No new color tokens; `--ink-red` stays primary, no purple, no introductions.
 - No paid asset generation. No timeline estimates anywhere in the doc.
 
-**Adds to `package.json`.** One: `tw-animate-css`. Everything else is already on the box.
+**Adds to `package.json`.** None — `Spring`/`Tween`/`prefersReducedMotion` are already in `svelte/motion` (Svelte 5.55+). The codebase has no Tailwind integration and isn't gaining one for this pass; ambient motion lives in hand-rolled `@keyframes`, consistent with the existing `global.css` + CSS-variable token system in `DESIGN.md`.
 
 **Adds to `global.css`.** Six new keyframes (sparkle-flicker, tinker-z-rise, flame-flicker, sweep-green, halo-pulse, wrong-shake). No new tokens.
 
@@ -42,7 +42,7 @@ The whole design boils down to four primitives mapped to four motion archetypes.
 | `Tween` | `svelte/motion` | **Numeric reveals.** XP counter ticking, score reveal, lesson-progress percent. Read `Math.round(t.current)` in template; set `t.target = N` to animate. |
 | `Spring` | `svelte/motion` | **Physical-feeling overshoots.** Progress bar fills (`stiffness: 0.12`, `damping: 0.4` for the Duolingo bounce), widget-jiggle scale on correct, hint-poke entry. |
 | `prefersReducedMotion.current` | `svelte/motion` (reactive, replaces manual `matchMedia`) | **Single source of truth for reduced motion.** Migrate `Tinker.svelte:54-59` to read this rune; the local `reducedMotion` `$state` and `onMount` block both go away. |
-| `tw-animate-css` classes | new dep | **Ambient loops.** `animate-pulse` on sparkle marks, custom keyframes for streak-flame flicker, sleepy-yawn, sparkle-shimmer. CSS-only, zero JS. |
+| Hand-rolled `@keyframes` | `global.css` + per-component `<style>` | **Ambient loops.** Six new keyframes (`sparkle-flicker`, `tinker-z-rise`, `flame-flicker`, `sweep-green`, `halo-pulse`, `wrong-shake`) plus `drift-x/y` local to FloatingMath. CSS-only, zero JS, zero new deps. Aligned with the existing `global.css` + token system. |
 | `lib/confetti.ts` | existing | **Earned-state visual rewards.** Stays. |
 | `lib/sound.ts` | existing | **Earned-state audio rewards.** Stays. |
 | `lib/xp.ts` | existing | **State + event bus.** Stays. Already emits `tinker:xp` and `tinker:streak` window events. |
@@ -74,11 +74,11 @@ async function celebrateCorrect(checkBtn: HTMLElement) {
 }
 ```
 
-`jiggleSpring` is a `Spring(1, { stiffness: 0.18, damping: 0.55 })` mounted on the widget root. Step exposes `--widget-scale: {jiggleSpring.current}` to the wrapping `<div>`. The halo is a `tw-animate-css`-driven `::after` pseudo-element with `animate-ping`-style scale + opacity decay.
+`jiggleSpring` is a `Spring(1, { stiffness: 0.18, damping: 0.55 })` mounted on the widget root. Step exposes `--widget-scale: {jiggleSpring.current}` to the wrapping `<div>`. The halo is a `::after` pseudo-element driven by the `halo-pulse` keyframe (scale + opacity decay, 320ms one-shot).
 
 **Wrong StepCheck answer.** New behavior. `DESIGN.md` §A11y: "localized shake or border-color shift, not a full-screen red." Implement as `wrongShake` CSS keyframe (10px horizontal, 6 frames, 240ms) on the input + a 320ms border color shift to `--ink-coral` (NOT red — coral is the interactive token, red is the brand mascot color). No haptic, no sound — wrong answers are quiet by design. Aria-live announces "Try again. Read the hint."
 
-**Step advance.** Currently `Step.astro` with `EndgameCallback.astro` plays tick. Add a Svelte `transition:slide` (existing `svelte/transition`) with `easing: cubicOut, duration: 280` on the new step, plus a green ✓ flash via `tw-animate-css` `animate-flash` on the prev-step's number badge. The `tick` sound and 10ms haptic stay where they are.
+**Step advance.** Currently `Step.astro` with `EndgameCallback.astro` plays tick. Add a Svelte `transition:slide` (existing `svelte/transition`) with `easing: cubicOut, duration: 280` on the new step, plus a green ✓ flash via a small one-shot CSS keyframe (`step-flash`, opacity + color, ~280ms) on the prev-step's number badge. The `tick` sound and 10ms haptic stay where they are.
 
 **Widget interactions.** New shared `useDragSpring()` factory exported from `packages/svelte-mafs` — wraps `MovablePoint.svelte` drag in a `Spring` with low stiffness for snap-back when constraint-clamped. Optional, opt-in per widget.
 
@@ -124,7 +124,7 @@ export async function celebrateModule(card: HTMLElement, nodeId: string, nextMod
 }
 ```
 
-The `glowMasteredNode` call mutates the skill-tree node from `drafting` → `mastered` per `DESIGN.md` §Mastery, with a `tw-animate-css`-driven one-time pulse on the new state.
+The `glowMasteredNode` call mutates the skill-tree node from `drafting` → `mastered` per `DESIGN.md` §Mastery, with a one-time pulse driven by a local CSS keyframe on the new state.
 
 **Reduced-motion fork (one branch in each function).** When `prefersReducedMotion.current` is true: `progressSpring.set(1, { instant: true })`, `scoreTween` set instant, `burst()` is already a no-op, `TinkerHop` is gated already. Sound + haptic still fire — they're deliberate user-earned responses, not ambient.
 
@@ -217,13 +217,7 @@ Reads `streak` from a server-passed prop (`session.streak`). Hidden when `streak
 
 ## 8. Architecture summary
 
-**`package.json` delta.** One line:
-
-```jsonc
-"tw-animate-css": "^1"
-```
-
-Spring/Tween/`prefersReducedMotion` are already on the box (`svelte/motion`).
+**`package.json` delta.** None. `Spring`/`Tween`/`prefersReducedMotion` are already on the box (`svelte/motion`, Svelte 5.55+).
 
 **`global.css` additions.** Six new keyframes (no new tokens):
 
@@ -256,7 +250,6 @@ MODIFIED
   apps/docs/src/components/Nav.astro                ← strip inline, mount XpCounter + StreakFlame
   apps/docs/src/pages/index.astro                   ← mount FloatingMath in hero band
   apps/docs/src/styles/global.css                   ← six new keyframes
-  apps/docs/package.json                            ← +tw-animate-css
 
 REMOVED
   Inline XP/streak markup + listener script in Nav.astro
@@ -264,7 +257,7 @@ REMOVED
 
 **Build order.** Phased, no calendar dates. Each step is independently shippable and reversible.
 
-1. Add dep, wire global.css keyframes.
+1. Wire global.css keyframes.
 2. Build `lib/celebrate.ts` + `SrAnnouncer.svelte`.
 3. Promote XpCounter + StreakFlame, swap into Nav.
 4. Wire StepCheck to celebrateCorrect/celebrateWrong + stuck timer.
@@ -330,7 +323,6 @@ Not blocking; resolve during implementation.
 | Keep `lib/confetti.ts` math-symbol burst, do NOT swap to `canvas-confetti` | Math-symbol confetti is brand identity, locked in `DESIGN.md` Decisions Log 2026-04-24 pivot v2 ("make the confetti like math symbols and shit"). |
 | Keep `lib/sound.ts` Web Audio sine palette, do NOT swap to Howler + Kenney | Tonal progression (660→880→1320 Hz) literally encodes "finishing." Zero bundle. Brand-load-bearing. |
 | Add `Spring`/`Tween`/`prefersReducedMotion` from `svelte/motion` | Pure upside, no brand collision. Powers XP counter, progress bars, widget jiggle, hint slide-in. |
-| Add `tw-animate-css` for ambient classes | Zero-JS pulse/wiggle/shimmer surfaces. Replaces `tailwindcss-animate` (deprecated 2025-03). |
 | Migrate `Tinker.svelte` from manual `matchMedia` to the new `prefersReducedMotion` rune | Reactive rune flips live on OS toggle without reload; one source of truth across all components. |
 | Promote `XpCounter` and `StreakFlame` from Nav-inline to standalone Svelte components | Tween/transition needs Svelte component context. Trigger met per `DESIGN.md` §Components: "promote when it grows beyond what fits in Nav." |
 | Orchestrate celebrations in `lib/celebrate.ts` rather than inline in `Lesson.astro`/`StepCheck.astro` | Tuning the lesson-complete feel becomes a one-line edit in one file. |
