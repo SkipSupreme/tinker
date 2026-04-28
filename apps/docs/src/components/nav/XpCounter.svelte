@@ -34,12 +34,21 @@
   <span class="xp-num">XP {shown.toLocaleString()}</span>
   <span class="xp-floaters" aria-hidden="true">
     {#each floaters as f (f.id)}
-      <span
-        class="xp-float"
-        in:fly={{ y: -28, duration: 700, easing: cubicOut }}
-        out:fade={{ duration: 700 }}
-        onintroend={() => setTimeout(() => remove(f.id), 700)}
-      >+{f.amount}</span>
+      {#if prefersReducedMotion.current}
+        <span
+          class="xp-float"
+          in:fade={{ duration: 700 }}
+          out:fade={{ duration: 700 }}
+          onintroend={() => setTimeout(() => remove(f.id), 700)}
+        >+{f.amount}</span>
+      {:else}
+        <span
+          class="xp-float"
+          in:fly={{ y: -28, duration: 700, easing: cubicOut }}
+          out:fade={{ duration: 700 }}
+          onintroend={() => setTimeout(() => remove(f.id), 700)}
+        >+{f.amount}</span>
+      {/if}
     {/each}
   </span>
   <span class="sr-only">{shown}</span>
