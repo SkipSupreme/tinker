@@ -130,6 +130,17 @@
     height={NATURAL_H}
     draggable="false"
   />
+  <svg class="tinker-sparkles" viewBox="0 0 432 477" aria-hidden="true">
+    <g class="sp sp-1" style="--c: var(--ink-orange);">
+      <path d="M0,-10 L2,-2 L10,0 L2,2 L0,10 L-2,2 L-10,0 L-2,-2 Z" transform="translate(110, 96)" />
+    </g>
+    <g class="sp sp-2" style="--c: var(--ink-teal);">
+      <path d="M0,-8 L2,-2 L8,0 L2,2 L0,8 L-2,2 L-8,0 L-2,-2 Z" transform="translate(196, 70)" />
+    </g>
+    <g class="sp sp-3" style="--c: var(--ink-red);">
+      <path d="M0,-9 L2,-2 L9,0 L2,2 L0,9 L-2,2 L-9,0 L-2,-2 Z" transform="translate(286, 100)" />
+    </g>
+  </svg>
 </div>
 
 <style>
@@ -222,4 +233,22 @@
   .tinker--reduced.tinker--bouncing .tinker-img {
     animation: tinker-bounce 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
+
+  .tinker-sparkles {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .tinker-sparkles .sp {
+    fill: var(--c);
+    opacity: 0;
+    animation: sparkle-flicker 4.6s ease-in-out infinite;
+  }
+  .tinker-sparkles .sp-1 { animation-delay: 0s; }
+  .tinker-sparkles .sp-2 { animation-delay: 1.5s; }
+  .tinker-sparkles .sp-3 { animation-delay: 3s; }
+  .tinker--reduced .tinker-sparkles .sp { animation: none; opacity: 0.6; }
 </style>
