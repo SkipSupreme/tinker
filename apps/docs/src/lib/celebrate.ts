@@ -54,7 +54,11 @@ export async function celebrateLesson(card: HTMLElement) {
   }
   await wait(120);
   burst(card, { count: 14 });
-  scoreTween.target = scoreTween.current + XP_AWARD.lessonComplete;
+  if (prefersReducedMotion.current) {
+    scoreTween.set(scoreTween.current + XP_AWARD.lessonComplete, { duration: 0 });
+  } else {
+    scoreTween.target = scoreTween.current + XP_AWARD.lessonComplete;
+  }
   if (typeof window !== 'undefined') {
     window.dispatchEvent(
       new CustomEvent('tinker:celebrate', { detail: { level: 'lesson' } }),
@@ -81,7 +85,11 @@ export async function celebrateModule(
   }
   await wait(180);
   burst(card, { count: 28, spread: 1.6 });
-  scoreTween.target = scoreTween.current + XP_AWARD.moduleComplete;
+  if (prefersReducedMotion.current) {
+    scoreTween.set(scoreTween.current + XP_AWARD.moduleComplete, { duration: 0 });
+  } else {
+    scoreTween.target = scoreTween.current + XP_AWARD.moduleComplete;
+  }
   play('anthem');
   vibrate([50, 100, 50]);
   awardXp(XP_AWARD.moduleComplete, 'module-complete');
