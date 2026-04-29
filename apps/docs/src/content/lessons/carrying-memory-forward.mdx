@@ -1,0 +1,147 @@
+---
+title: Carrying memory forward — the RNN
+module: m14-sequence-models
+summary: A vector that gets overwritten each timestep replaces the fixed window. The same cell — same W_x, same W_h, same b — runs at every step. Weight sharing is the entire trick.
+estimatedMinutes: 16
+order: 5
+prereqs:
+  - why-bigrams-arent-enough
+conceptsCovered:
+  - rnn-cell
+  - rnn-as-lm
+  - hidden-state-as-vector
+  - weight-sharing
+  - unrolling
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import UnrolledRNN from '../../components/demos/UnrolledRNN.svelte';
+
+<Step title="The wall, restated">
+The Bengio MLP needs $W_1$ to grow with the context window $k$. Twice the context, twice the parameters. That works at $k = 8$ but not at $k = 80$ — the model gets too big to fit, too slow to train, and too data-hungry to learn.
+
+We want context that scales without exploding parameters. The recurrent neural network's answer: instead of storing the context as a *concatenation* of the last $k$ characters, store it as a *single vector* that gets updated at every step.
+
+Same parameters, every step. The vector remembers; the parameters don't change.
+</Step>
+
+<Step title="The cell, in one line">
+The RNN cell takes the current input and the previous hidden state, and produces a new hidden state:
+
+$$
+\boxed{\;\mathbf{h}_t \;=\; \tanh(W_x\, \mathbf{x}_t \;+\; W_h\, \mathbf{h}_{t-1} \;+\; \mathbf{b})\;}
+$$
+
+That's the whole architecture.
+
+- $\mathbf{x}_t$ is the input at step $t$ — for us, a one-hot character vector.
+- $\mathbf{h}_{t-1}$ is the hidden state carried over from the previous step. $\mathbf{h}_0$ is initialized to zeros (or, sometimes, learned).
+- $W_x$, $W_h$, $\mathbf{b}$ are learned parameters. **Same $W_x$, same $W_h$, same $\mathbf{b}$ at every timestep.**
+- $\tanh$ keeps each component of $\mathbf{h}_t$ bounded in $[-1, 1]$.
+
+Note one quiet thing: because $\mathbf{x}_t$ is one-hot, $W_x \mathbf{x}_t$ is just *one column of $W_x$* — the column indexed by the character. So $W_x$ acts as the input-side embedding lookup, exactly like the embedding matrix $C$ in the Bengio MLP.
+</Step>
+
+<Step title="Roll. Then unroll.">
+<UnrolledRNN client:visible />
+
+There is one cell. *One.* The widget starts in "rolled" view — a single box with a self-loop, because the output of the cell becomes its own next input. That self-loop is the recurrence.
+
+Press **Unrolled** and the widget redraws the same recurrence as a chain of cells, one per timestep. *They are the same cell.* They share their parameters. The `cell` boxes you see in the unrolled view are not separate models — they're the same model evaluated at different times. The arrow between them is the wire that carries $\mathbf{h}_t$ forward.
+
+This is *unrolling*. It's how we draw an RNN for the purpose of running backprop on it: take the temporal recurrence and lay it out spatially as a deep feedforward graph. Once it's flat, the chain rule from m12 applies to it without modification.
+
+Scrub the timestep cursor. Notice that $\mathbf{h}_t$ — the bar vector under each cell — gets *overwritten* every step. There is no growing memory bank. There is one vector that the cell rewrites each time it sees a new input.
+</Step>
+
+<StepCheck
+  title="One cell, by hand"
+  prompt="h_t[0] = "
+  answer={0.478}
+  tolerance={0.005}
+  hint="Pre-activation = W_x[:,a]·1 + W_h·h_{t-1} + b. Component 0: 0.5 + (0.2·0.1 + 0·-0.2) + 0 = 0.52. tanh(0.52) ≈ 0.478."
+>
+The cell has hidden dim $d = 2$. Suppose:
+
+$$
+\mathbf{h}_{t-1} = (0.1,\, -0.2),\quad
+\mathbf{x}_t = \mathrm{onehot}(a) \in \mathbb{R}^{27},\quad
+W_x[:,\mathrm{idx}(a)] = (0.5,\, 0.0),\quad
+W_h = \begin{pmatrix} 0.2 & 0 \\ 0 & 0.2 \end{pmatrix},\quad
+\mathbf{b} = \mathbf{0}.
+$$
+
+Compute the *first* component of $\mathbf{h}_t$. (Use $\tanh$.) Round to three decimals.
+</StepCheck>
+
+<Step title="Hidden state is just a vector">
+A common misconception is that the "hidden state" of an RNN is some special, mystical "memory" object — different in kind from a layer activation in a feedforward network.
+
+It is not. Look at the unrolled graph above. $\mathbf{h}_t$ is the output of one tanh layer of one cell. It's a vector of $d$ numbers. The next "layer" — the cell at step $t+1$ — happens to be the same cell that produced it. That's the only special thing.
+
+The bars under each cell in the widget make this concrete. There is no growing memory bank. There is no list of past tokens kept somewhere. There is one vector of $d$ numbers, and at each step the cell does:
+
+$$
+\text{new vector} \;=\; \tanh(W_x \cdot \text{this step's input} \;+\; W_h \cdot \text{old vector} \;+\; \mathbf{b})
+$$
+
+…and writes it on top of the old vector. That is the entire memory mechanism. Anything the model "remembers" about timestep 1 by timestep 50 has had to survive 49 such overwrites.
+
+That last point is going to matter a lot in the next lesson.
+</Step>
+
+<Step title="The output: one more matrix">
+The hidden state is the model's *internal* state. To turn it into a prediction over the next character, project to vocabulary size and softmax:
+
+$$
+\boxed{\;P_\theta(x_{t+1} \mid x_{1:t}) \;=\; \mathrm{softmax}(W_y\, \mathbf{h}_t \;+\; \mathbf{b}_y)\;}
+$$
+
+$W_y$ is shape $|V| \times d$. Notice the output also has shape-$|V|$ — a row of probabilities, like every model in this course. That row is what we sample from at generation time and what we evaluate the NLL loss against at training time.
+
+Total parameters of the whole RNN-LM:
+
+- $W_x$: $|V| \times d$ (the input-side embedding lookup)
+- $W_h$: $d \times d$ (the recurrence)
+- $\mathbf{b}$: $d$
+- $W_y$: $|V| \times d$ (the output projection)
+- $\mathbf{b}_y$: $|V|$
+
+The total is $O(d \cdot |V|)$, *independent of how long the sequence is*. That's the entire payoff for switching from the Bengio MLP — the parameter count no longer scales with context window.
+</Step>
+
+<StepCheck
+  title="W_y parameter count"
+  prompt="W_y params = "
+  answer={3456}
+  tolerance={1}
+  hint="W_y has shape |V| × d = 27 × 128 = 3456."
+>
+For a character-level RNN with $|V| = 27$ and hidden size $d = 128$, **how many parameters are in just the output projection $W_y$?**
+</StepCheck>
+
+<Step title="The forward pass, all together">
+Putting it together for a sequence $x_1, x_2, \ldots, x_T$:
+
+```python
+h = zeros(d)                          # h_0
+loss = 0
+for t in 1..T:
+    x_t = onehot(token[t])
+    h   = tanh(W_x @ x_t + W_h @ h + b)
+    p   = softmax(W_y @ h + b_y)
+    loss += -log(p[target[t]])         # NLL of this step
+loss /= T
+```
+
+That's the whole forward pass of an RNN language model. Notice three things.
+
+**One:** `W_x`, `W_h`, `b`, `W_y`, `b_y` are referenced *inside the loop*. The same five tensors get used at every iteration. Weight sharing falls out of writing the recurrence, you don't have to enforce it manually.
+
+**Two:** `h` gets reassigned every iteration. The recurrence overwrites it. There is no list of past hidden states stored unless we ask for one (which we will, in order to backprop through them — but that's bookkeeping, not memory).
+
+**Three:** The loss accumulates additively across timesteps. We're predicting *every* next character, so each step contributes its own NLL.
+
+This is the model. Next lesson: how to train it (BPTT) and what catastrophically goes wrong with it on long sequences (the bottleneck that motivates attention).
+</Step>
