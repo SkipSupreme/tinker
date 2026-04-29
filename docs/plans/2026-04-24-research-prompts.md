@@ -199,6 +199,19 @@ NEXT_MODULE: m13-training-dynamics (stabilizing the training of deep nets — Ba
 ENDGAME: You just built micrograd. Every deep-learning framework on earth is a fancier version of what you now understand end-to-end. loss.backward() is no longer magic — it's your code.
 ```
 
+### M14 — Sequence Modeling: Bigrams to RNNs
+
+```
+ORDER: 14
+TITLE: Sequence Modeling — Bigrams to RNNs
+ARC: Arc 3 — Language Models
+MINUTES: 390
+PRIOR: Linear algebra, matmul, softmax (m7). Gradient descent, Adam, schedules (m10). MLP forward/backward (m11). Backprop on a computational graph (m12). Training dynamics — initialization, normalization, residuals, regularization (m13).
+CONCEPTS: characters/tokens as a vocabulary, sequence as a sample from a joint distribution, factoring P(sequence) via the chain rule of probability, bigram language model as a lookup table of next-token probabilities, training a bigram by counting AND by gradient descent on a single embedding-then-softmax layer (showing they converge to the same thing), negative log-likelihood as the loss, perplexity as exp(loss) and what it intuitively measures, sampling from a categorical distribution (greedy vs temperature vs top-k), context windows and the bigram→trigram→n-gram explosion, replacing the n-gram table with a small MLP (Bengio 2003-style) that consumes a fixed-width context of token embeddings, the embedding matrix as a learned lookup, fixed-context limitations, recurrent neural networks: a hidden state that ingests one token at a time and carries information forward, the RNN cell as h_t = tanh(W_x x_t + W_h h_{t-1} + b), training RNNs with backprop-through-time (intuition; concrete unrolling for a 3-step example), vanishing and exploding gradients in long sequences (callback to m13), the sequential-bottleneck failure mode that motivates attention
+NEXT_MODULE: m15-attention (queries, keys, values; scaled dot-product attention; multi-head attention)
+ENDGAME: We started with a table that knew one character of context, expanded it to a window of k characters, then to a vector that — in theory — carries everything. In practice it carries about ten characters before fading. Next, we stop trying to carry the past and learn to query it instead.
+```
+
 ---
 
 ## Widget research template (fire per interactive widget)

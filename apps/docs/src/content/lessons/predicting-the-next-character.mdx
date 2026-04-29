@@ -1,0 +1,149 @@
+---
+title: Predicting the next character
+module: m14-sequence-models
+summary: A language model is just a table — one row per "what came before," one column per "what could come next." Learn the table by counting; sample from a row to generate text.
+estimatedMinutes: 14
+order: 1
+prereqs:
+  - tricks-that-make-depth-possible
+conceptsCovered:
+  - token-vocab
+  - sequence-as-joint
+  - chain-rule-prob
+  - markov-assumption
+  - bigram-table
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import BigramHeatmap from '../../components/demos/BigramHeatmap.svelte';
+
+<Step title="A language model, with no neural anything">
+We will build a language model in the next ten minutes. No tensors, no GPUs, no gradient descent. Just counting.
+
+The corpus is a list of 32,000 baby names. The model will read it and learn one fact: *given a character, which character tends to come next.* That fact is a table — and that table is the model.
+
+Start small. Type a name into the box below. Watch every two-character pair you typed light up a cell of the matrix.
+
+<BigramHeatmap
+  client:visible
+  corpus={[]}
+  editable={true}
+  showDistribution={false}
+  hint="Try 'emma'. Each adjacent pair — including the start/end token · — adds 1 to a cell."
+/>
+
+The dot `·` is the start/end marker. So `emma` becomes `·emma·` — five characters, four bigrams: `·→e`, `e→m`, `m→m`, `m→a`, `a→·`. Add a few more names and you can already see structure: `a` shows up in a lot of last-character-of-name positions, so the column under `·` is dense in that row.
+</Step>
+
+<Step title="The vocabulary">
+A *token* is a unit our model knows about. For this whole lesson, a token is one character: the 26 lowercase letters, plus a special start/end marker `·`.
+
+So our vocabulary has $|V| = 27$ tokens. That gives us a $27 \times 27$ matrix of "this token, then that token" pairs — 729 cells. Every name in the corpus contributes a handful of bigrams; the matrix is just the running count.
+
+Why a single start/end marker for both? Because then `·a` is "the model sees a name starting with `a`" and `a·` is "the model sees a name ending with `a`." One token does both jobs, and it lets the model learn endings as gracefully as it learns beginnings.
+</Step>
+
+<Step title="Sequences need the chain rule of probability">
+We want the model to assign a probability to a *whole sequence* of characters — a whole word like `ada`. Not to single characters in isolation. Probability of a word, not probability of a letter.
+
+The trick is one identity from probability class: the joint probability of a sequence factors into a product of conditionals.
+
+$$
+P(x_1, x_2, \ldots, x_T) = \prod_{t=1}^{T} P(x_t \mid x_1, \ldots, x_{t-1}).
+$$
+
+That is exact — no approximation. The probability of `ada` (treated as the sequence `·, a, d, a, ·`) is the probability of the first token, times the probability of the second given the first, times the probability of the third given the first two, and so on.
+
+The factorization buys us something important: instead of needing the probability of every possible word — there are infinitely many — we only need to know one thing per step: *given what I've seen so far, what's likely to come next.*
+</Step>
+
+<StepCheck
+  title="A short sequence, by hand"
+  prompt="P(ad) = "
+  answer={0.00832}
+  tolerance={0.0005}
+  hint="Multiply the three conditionals: P(a|·) × P(d|a) × P(·|d) = 0.13 × 0.16 × 0.40."
+>
+A model gives you these three conditional probabilities:
+
+$$
+P(a \mid \cdot) = 0.13, \qquad P(d \mid a) = 0.16, \qquad P(\cdot \mid d) = 0.40.
+$$
+
+The full sequence for `ad` is `·, a, d, ·`. Use the chain rule to compute the joint probability $P(\,\text{`ad'}\,)$. Round to four decimals.
+</StepCheck>
+
+<Step title="The Markov assumption — context shrunk to one token">
+The chain rule has a problem in practice: $P(x_t \mid x_1, \ldots, x_{t-1})$ depends on the whole history. As soon as the history is long, no corpus on earth contains every possible history often enough to estimate that conditional reliably.
+
+So we cheat. We *truncate* the history to just the most recent token:
+
+$$
+P(x_t \mid x_1, \ldots, x_{t-1}) \;\approx\; P(x_t \mid x_{t-1}).
+$$
+
+This is the **Markov assumption**, and a model that uses it is a **bigram model**. "Bigram" because the conditional only ever looks at pairs.
+
+It is a real approximation — `e` after `m` in `emma` does not actually depend only on the `m`. But it's tractable: we can fill in $P(x_t \mid x_{t-1})$ for every pair $(x_{t-1}, x_t)$ from the corpus by counting. That is what the matrix you've been building is.
+</Step>
+
+<Step title="A row is a probability distribution">
+Click any row label on the left of the matrix below. The row lights up, and a bar chart appears showing $P(\,\cdot\,|\,\text{row letter}\,)$ — the probability of every possible next character given that the current character is the row letter.
+
+<BigramHeatmap
+  client:visible
+  corpus={['emma','olivia','ava','isabella','sophia','charlotte','amelia','mia','harper','evelyn','abigail','emily','ella','elizabeth','sofia','avery','scarlett','grace','chloe','victoria','riley','aria','lily','aubrey','zoey','penelope','lillian','addison','layla','natalie','camila','hannah','brooklyn','zoe','nora','leah','savannah','audrey','claire','eleanor','skylar','ellie','samantha','stella','paisley','violet','mila','allison','alexa','anna']}
+  editable={false}
+  showDistribution={true}
+  focusOnLoad="a"
+  hint="Click a different row label (m, e, ·) to see how its distribution changes."
+/>
+
+Three things to notice. First, the bars in the row sum to 1 — every row of the matrix, after dividing by its row sum, *is* a categorical probability distribution. Second, that distribution has structure: after `a` comes `n` and `r` and `·` (end of name) more often than `q` or `z`. Third, every row is a *different* distribution; the model knows that what follows `a` is different from what follows `q`.
+
+The row is the model's answer to "what's likely to come after this character." Pick any row, and you've picked the model's prediction.
+</Step>
+
+<Step title="The model is the matrix">
+There is no fancier statement of what a bigram language model is. It is one matrix:
+
+$$
+N \in \mathbb{R}^{|V| \times |V|}, \qquad N_{ij} = \text{number of times token } j \text{ followed token } i \text{ in the corpus}.
+$$
+
+You sample text from it like this. Start with `·`. Look at row `·`. That row, normalized, is a distribution over what comes first. Sample one character from that distribution — say it's `a`. Now look at row `a`. Sample again — say it's `n`. Look at row `n`. Sample again. Keep going until you sample `·`, which means "stop." That's a generated name.
+
+That's the entire algorithm. Counting builds the table; sampling reads from it. There are no parameters to learn beyond what counting gives you, and there are no neural networks anywhere. We will spend the next few lessons making this model strictly better, but the *shape* will not change much: we will always be predicting the next token from a row of probabilities.
+</Step>
+
+<StepCheck
+  title="Read a probability off the matrix"
+  prompt="P(a | m) = "
+  answer={0.5}
+  tolerance={0.001}
+  hint="Look at row m. Two cells are nonzero: m→m and m→a. The row sum is 2."
+>
+Here's a tiny corpus of four names: `emma`, `olivia`, `ava`, `ada`. Click the row for `m` in the matrix below, and read off the probability of the next character being `a`.
+
+<BigramHeatmap
+  client:visible
+  corpus={['emma','olivia','ava','ada']}
+  editable={false}
+  showDistribution={true}
+  focusOnLoad="m"
+  hint="Row m has only one source name (emma). Two bigrams: m→m and m→a."
+/>
+
+Express your answer as a decimal.
+</StepCheck>
+
+<Step title="Why this matters past this lesson">
+Two things will return.
+
+First, the row-of-a-matrix-as-distribution shape is the *output* shape of every language model we will ever build in this course — including the transformer at the end. The transformer's last operation is `softmax(logits)` applied to a vector of length $|V|$. That vector is a row. We will get fancier about how we *compute* that row — eventually it will depend on thousands of previous tokens through layers of attention — but it will still be a row, and it will still be sampled from in exactly the way we sampled from a bigram row.
+
+Second, the *attention weights* inside the transformer are themselves rows of a matrix, normalized to sum to 1, that tell the model "given that I'm at position $t$, how much should I look at each earlier position?" The mental move you just made — "this row is a categorical distribution; the column with the most mass is the one most likely to be picked" — is the same mental move you'll make when you read your first attention heatmap.
+
+The neural networks come next. The matrix view does not go away.
+</Step>
