@@ -1,0 +1,92 @@
+---
+title: Multi-head — parallel subspaces, same budget
+summary: A single attention head averages — that's its job. Several heads, run in parallel on disjoint subspaces of the same model dimension, give the layer a way to attend in several different patterns at once. Same total parameters, same total FLOPs, structural diversity for free.
+module: m15-attention
+estimatedMinutes: 10
+order: 5
+prereqs:
+  - position-three-ways
+conceptsCovered:
+  - multi-head-split
+  - multi-head-concat-and-Wo
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import MultiHeadSplitter from '../../components/demos/MultiHeadSplitter.svelte';
+
+<Step title="A single head only does one thing">
+The attention layer you have built so far computes one weighted average per query. That weighted average can emphasize different keys for different queries — but the *kind* of relationship it captures (syntactic agreement? coreference? long-range topic? next-token continuation?) is one fixed thing per layer.
+
+Trained transformers, when probed, turn out to want several attention patterns at once. One head specializes in attending to the previous token. Another tracks subject-verb agreement. Another keeps an eye on the start-of-sequence token. A single head can't do all of these simultaneously because softmax is a *single* probability distribution per query.
+
+The fix is to run several attention heads in parallel, each operating on a different subspace of the same input.
+</Step>
+
+<Step title="Reshape, don't widen">
+Take the model dimension $d$ and split it into $h$ equal chunks of width $d_k = d / h$. Each chunk is one head's working subspace.
+
+$$
+X \in \mathbb{R}^{T \times d} \;\longrightarrow\; h \;\text{heads}\;\times\; \mathbb{R}^{T \times d_k}
+$$
+
+Each head gets its own $W_Q^{(j)}, W_K^{(j)}, W_V^{(j)}$, each of shape $(d, d_k)$. Per head, the operation is exactly the scaled dot-product attention from the last lesson — just operating in a smaller subspace.
+
+<MultiHeadSplitter client:visible />
+
+Click through $h = 1, 2, 4, 8$ and watch the shape passport at the top of the widget update. The model dimension stays at 24; what changes is how many heads slice it. The mini-heatmap for each head shows that head's attention pattern on the same input — *they look different*, because each head sees a different subspace and attends accordingly.
+</Step>
+
+<Step title="Concat the heads, project them down">
+After each head computes its $(T, d_k)$ output, concatenate along the feature axis:
+
+$$
+\mathrm{Concat}(\mathrm{head}_1, \ldots, \mathrm{head}_h) \in \mathbb{R}^{T \times d}
+$$
+
+Then mix them through a learned output projection $W_O \in \mathbb{R}^{d \times d}$:
+
+$$
+\mathrm{MHA}(X) = \mathrm{Concat}(\mathrm{head}_1, \ldots, \mathrm{head}_h)\, W_O
+$$
+
+That's the whole multi-head attention layer. Output shape: $(T, d)$ — same as the input, ready to feed into a residual connection.
+
+The role of $W_O$ is small but real. It is the only place where information from different heads can mix; without it, each head's output would live in its own block of the feature axis forever, and downstream layers would have no way to combine them. Most practical implementations make $W_O$ slightly bigger than necessary so the mixing has some capacity to play with.
+</Step>
+
+<StepCheck
+  title="Per-head dimension"
+  prompt="dₖ = "
+  answer={64}
+  tolerance={0.5}
+  hint="dₖ = d_model / h. Here 512 / 8 = 64."
+>
+With $d_{\text{model}} = 512$ and $h = 8$ heads, **what is $d_k$ per head?**
+</StepCheck>
+
+<StepCheck
+  title="Param count is conserved"
+  prompt="ratio = "
+  answer={1}
+  tolerance={0.01}
+  hint="Each head's W_Q is (d, d/h). Summed over h heads: h · d · (d/h) = d². Same as one big W_Q at d_k = d."
+>
+**What is the ratio of total $W_Q$ parameters in $h$-head attention to $W_Q$ parameters in single-head attention** (with $d_k = d_{\text{model}}$)? Multiply across all heads.
+</StepCheck>
+
+<Step title="Why this is free">
+Notice from the widget what doesn't change as you crank $h$ up: the parameter count.
+
+Each head's $W_Q$ is $(d, d/h)$, so the total $W_Q$ across all heads is $h \cdot d \cdot (d/h) = d^2$. Identical to a single head with $d_k = d$. Same for $W_K$ and $W_V$. The FLOPs for the attention computation also work out the same: each head does $T^2 \cdot d_k$ work, and there are $h$ of them, giving $h \cdot T^2 \cdot d_k = T^2 \cdot d$.
+
+So multi-head doesn't cost more parameters or compute than a single big head. What it gives you is *several attention patterns operating in parallel*. Empirically this matters — single-head transformers underperform multi-head transformers at the same total compute. The patterns that emerge across heads are more diverse than what a single softmax can capture, even one with the same total dimension to play with.
+
+A small caveat: this lesson said "*free*", but there is a subtle cost. With $h = 64$, each head's $d_k = d/64$ might be too small to have rich enough subspaces — you'd be pinching the per-head capacity below what it needs to model the relationships you want. Most production transformers settle on $h$ between 8 and 32, with $d_k$ between 64 and 128. There is a sweet spot, and it isn't at the extremes.
+</Step>
+
+<Step title="What's left">
+You now have the entire single-block attention operation: scaled dot-product, packed into matrix form, masked when needed, position-aware via PE, and run in parallel across $h$ heads. That is *the* core operation of a transformer.
+
+What the next (and final) lesson of this module covers: how much this operation actually *costs* to run, and the one inference trick — the KV-cache — that makes streaming generation feasible at production sequence lengths.
+</Step>
