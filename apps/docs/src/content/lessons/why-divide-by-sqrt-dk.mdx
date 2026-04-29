@@ -1,0 +1,100 @@
+---
+title: Why divide by √dₖ
+module: m15-attention
+summary: At high dimension, the dot product q·k has a large variance. Without correction, softmax saturates to one-hot and gradients to all but the argmax die. Divide by √dₖ and the score variance returns to 1 — the model can keep learning.
+estimatedMinutes: 12
+order: 2
+prereqs:
+  - soft-dictionary-lookup
+conceptsCovered:
+  - softmax-saturation-problem
+  - 1-over-sqrt-dk-scale
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import SoftmaxSatExplorer from '../../components/demos/SoftmaxSatExplorer.svelte';
+
+<Step title="The harmless-looking constant">
+The boxed equation from the last lesson had a $\sqrt{d_k}$ in the denominator that we waved off. Today's lesson is about why it's there.
+
+When you read transformer code for the first time, $\sqrt{d_k}$ looks like the kind of magic constant you skim past — yet another normalization fiddle, like an Adam $\epsilon$ or a layer-norm $\gamma$. It is not. Without it, attention silently breaks at any reasonable model dimension, and the failure mode is invisible until you go looking for it.
+
+The argument is one paragraph of probability theory and one slider on a widget.
+</Step>
+
+<Step title="The variance of a dot product">
+Suppose the components of $q$ and $k$ are independent, with mean 0 and variance 1. (At initialization this is approximately true for any sensibly-initialized linear projection — Xavier or He from m13.) Then:
+
+$$
+\mathbb{E}[q\cdot k] \;=\; \sum_{i=1}^{d_k} \mathbb{E}[q_i]\,\mathbb{E}[k_i] \;=\; 0
+$$
+
+The expectation is zero. So far so quiet. But the variance is not:
+
+$$
+\mathrm{Var}(q\cdot k) \;=\; \sum_{i=1}^{d_k} \mathrm{Var}(q_i k_i) \;=\; \sum_{i=1}^{d_k} 1 \;=\; d_k
+$$
+
+The standard deviation grows like $\sqrt{d_k}$. At $d_k = 2$ it's about 1.4. At $d_k = 64$ it's 8. At $d_k = 512$ — typical for a real transformer — it's roughly 22.
+
+Now feed numbers with standard deviation 22 into a softmax.
+</Step>
+
+<StepCheck
+  title="Stdev of an unscaled score"
+  prompt="stdev = "
+  answer={8}
+  tolerance={0.05}
+  hint="Var(q·k) = dₖ for unit-variance components, so stdev = √dₖ. Here √64."
+>
+At $d_k = 64$ with components $\sim \mathcal{N}(0, 1)$, **what is the standard deviation of an unscaled score $q\cdot k$?**
+</StepCheck>
+
+<Step title="Watch the softmax die">
+Softmax of a vector with very large magnitude collapses to a one-hot — the argmax position approaches 1, everything else approaches 0. Once that happens, the gradient through the softmax with respect to all non-argmax positions is essentially zero. Those keys can no longer learn from the loss. They're frozen.
+
+<SoftmaxSatExplorer client:visible />
+
+Start with $d_k = 8$ and the scale **off**. The softmax is reasonably diffuse — most positions are getting a nonzero weight, the entropy is healthy. Now drag $d_k$ up. At $d_k = 64$ the distribution starts pulling toward one position. By $d_k = 256$ it's almost a one-hot. The "gradient survival" indicator drops from *healthy* through *fading* to *dying* and finally *dead*. Resample to convince yourself it isn't a fluke.
+
+That is what a real transformer's attention layer does at typical model dimensions, *if you forget the scale*. Most of the gradient signal disappears, and only one key per query trains. The model learns nothing from the rest of the sequence.
+</Step>
+
+<Step title="The patch">
+Divide the scores by $\sqrt{d_k}$ before the softmax. That is the entirety of the fix:
+
+$$
+\alpha_j \;=\; \mathrm{softmax}_j\!\left(\frac{q\cdot k_j}{\sqrt{d_k}}\right)
+$$
+
+What the scale does, at the level of the variance argument:
+
+$$
+\mathrm{Var}\!\left(\tfrac{q\cdot k}{\sqrt{d_k}}\right) \;=\; \frac{\mathrm{Var}(q\cdot k)}{d_k} \;=\; 1
+$$
+
+The variance is now $1$ regardless of $d_k$. The softmax sees roughly the same magnitude of input at every model size. Saturation does not happen at scale; entropy does not collapse; gradients survive on every key.
+
+Flip the toggle in the widget to **÷ √dₖ** and ramp $d_k$ all the way up. The softmax stays diffuse. The argmax-favoring concentration that was killing gradients disappears.
+</Step>
+
+<StepCheck
+  title="Variance after the scale"
+  prompt="Var = "
+  answer={1}
+  tolerance={0.01}
+  hint="Var(X/c) = Var(X)/c². Here c² = dₖ and Var(q·k) = dₖ, so the ratio is 1."
+>
+With the $1/\sqrt{d_k}$ scale, **what is the variance of the score $\, q\cdot k / \sqrt{d_k}\,$** (assuming unit-variance components)?
+</StepCheck>
+
+<Step title="Why this scale, of all the scales">
+A working scale needs to fix the variance to a constant. Several choices accomplish that — dividing by the magnitude of each key, adding a learned per-layer temperature, or replacing the dot product with an additive scoring function $\mathbf{w}^\top\tanh(W_q q + W_k k)$ (Bahdanau-style). All of them have been tried.
+
+Scaled dot-product attention won for two reasons. First, it is *cheap*: a single multiply-add per element, vs. an MLP per pair for additive attention. Second, the scaling factor $\sqrt{d_k}$ is *static* — no learned parameters, no per-batch statistics, no eval-vs-train asymmetry. You set it once at architecture time and it is correct forever.
+
+The whole derivation rests on one assumption: that the components of $q$ and $k$ are roughly unit-variance. If your initialization or layer norm strays from that, the scale stops being correct. This is one of the quiet reasons that initialization and normalization (m13) and attention (this module) are pieces of the same puzzle: they are jointly responsible for keeping pre-softmax magnitudes well-behaved at every depth.
+
+Next lesson: now that the scaled dot product is locked in, we widen the operation. One query against $T$ keys becomes $T$ queries against $T$ keys — the matrix form, computed in parallel, with three linear projections of the same input.
+</Step>
