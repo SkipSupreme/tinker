@@ -17,6 +17,15 @@ export interface AuthEnv {
 
 export type Auth = ReturnType<typeof createAuth>;
 
+function isLocalhost(siteUrl: string): boolean {
+  try {
+    const host = new URL(siteUrl).hostname;
+    return host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0';
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Create a Better Auth instance for the current request.
  * Configured here are: D1-backed Drizzle adapter, magic-link plugin,
@@ -61,11 +70,15 @@ export function createAuth(env: AuthEnv) {
         disableSignUp: false,
         sendMagicLink: async ({ email, url }) => {
           if (!env.RESEND_API_KEY) {
-            // In local dev without Resend, log to console so the
-            // developer can paste the URL directly. In tests we mock fetch
-            // so this branch only runs when no key is set.
-            console.log('[magic-link] (no RESEND_API_KEY set) ', email, url);
-            return;
+            // Without a Resend key we have to fall back to console — but only
+            // for localhost. Anywhere else (preview, prod) this would log a
+            // sign-in URL into Cloudflare's tail logs and effectively become
+            // an account-takeover surface for anyone with logs access.
+            if (isLocalhost(env.PUBLIC_SITE_URL)) {
+              console.log('[magic-link] (no RESEND_API_KEY set) ', email, url);
+              return;
+            }
+            throw new Error('RESEND_API_KEY is required to send magic links in production');
           }
           await sendMagicLinkEmail(env.RESEND_API_KEY, email, url);
         },

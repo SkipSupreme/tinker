@@ -1,21 +1,22 @@
 <script lang="ts">
+  import { getCsrf } from '../../lib/csrf-client';
+
   let { lessonSlug } = $props<{ lessonSlug: string }>();
 
   let open = $state(false);
   let body = $state('');
   let status = $state<'idle' | 'loading' | 'saving' | 'saved' | 'error'>('idle');
+  let errorContext = $state<'load' | 'save' | null>(null);
   let lastSavedAt = $state<Date | null>(null);
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
-
-  function getCsrf(): string {
-    const m =
-      document.cookie.match(/(?:^|;\s*)__Secure-tinker\.csrf_token=([^;]+)/) ??
-      document.cookie.match(/(?:^|;\s*)tinker\.csrf_token=([^;]+)/);
-    return m?.[1] ? decodeURIComponent(m[1]) : '';
-  }
+  // Abort the in-flight save when a newer keystroke triggers another save.
+  // Without this a slow request can land AFTER a fresher one and overwrite
+  // the user's latest text with stale content.
+  let inFlightSave: AbortController | null = null;
 
   async function load() {
     status = 'loading';
+    errorContext = null;
     try {
       const res = await fetch('/api/notes/' + encodeURIComponent(lessonSlug), {
         credentials: 'same-origin',
@@ -27,11 +28,16 @@
       status = 'idle';
     } catch {
       status = 'error';
+      errorContext = 'load';
     }
   }
 
   async function save() {
+    if (inFlightSave) inFlightSave.abort();
+    const controller = new AbortController();
+    inFlightSave = controller;
     status = 'saving';
+    errorContext = null;
     try {
       const res = await fetch('/api/notes/' + encodeURIComponent(lessonSlug), {
         method: 'PUT',
@@ -41,13 +47,23 @@
           'x-tinker-csrf': getCsrf(),
         },
         body: JSON.stringify({ body }),
+        signal: controller.signal,
       });
       if (!res.ok) throw new Error('save failed');
       const data = (await res.json()) as { updatedAt: string };
-      lastSavedAt = new Date(data.updatedAt);
-      status = 'saved';
-    } catch {
-      status = 'error';
+      // Only update if this is still the most recent save in flight.
+      if (inFlightSave === controller) {
+        lastSavedAt = new Date(data.updatedAt);
+        status = 'saved';
+        inFlightSave = null;
+      }
+    } catch (err) {
+      if ((err as Error)?.name === 'AbortError') return; // superseded by newer save
+      if (inFlightSave === controller) {
+        status = 'error';
+        errorContext = 'save';
+        inFlightSave = null;
+      }
     }
   }
 
@@ -87,7 +103,10 @@
       {:else if status === 'saved' && lastSavedAt}
         <span class="status">Saved {lastSavedAt.toLocaleTimeString()}</span>
       {:else if status === 'error'}
-        <span class="status err">Couldn't save. <button onclick={save}>Retry</button></span>
+        <span class="status err">
+          {errorContext === 'load' ? "Couldn't load notes." : "Couldn't save."}
+          <button onclick={errorContext === 'load' ? load : save}>Retry</button>
+        </span>
       {:else if lastSavedAt}
         <span class="status">Last saved {lastSavedAt.toLocaleString()}</span>
       {/if}
@@ -117,7 +136,7 @@
     z-index: 50;
     display: flex;
     flex-direction: column;
-    box-shadow: -8px 0 24px rgba(0,0,0,0.06);
+    box-shadow: var(--shadow-drawer);
   }
   header {
     display: flex;
@@ -153,7 +172,7 @@
     color: var(--site-fg-muted);
     font-size: 0.8rem;
   }
-  .status.err { color: #b91c1c; }
+  .status.err { color: var(--site-error); }
   .status button {
     background: none;
     border: none;

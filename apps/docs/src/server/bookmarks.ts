@@ -1,4 +1,4 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 import { bookmark } from './schema';
 import type { DB } from './db';
 
@@ -22,7 +22,9 @@ export async function createBookmark(
     .onConflictDoNothing({ target: [bookmark.userId, bookmark.lessonSlug, bookmark.anchor] })
     .returning({ id: bookmark.id });
   if (inserted.length > 0) return { id: inserted[0].id, created: true };
-  // Already existed — fetch the original
+  // Already existed — fetch the original. If a parallel transaction deleted
+  // it between our insert and select we'd see null here; treat that the same
+  // as "fresh insert raced and lost".
   const existing = await db
     .select()
     .from(bookmark)
@@ -30,11 +32,12 @@ export async function createBookmark(
       and(
         eq(bookmark.userId, userId),
         eq(bookmark.lessonSlug, lessonSlug),
-        anchor === null ? eq(bookmark.anchor as never, null as never) : eq(bookmark.anchor, anchor),
+        anchor === null ? isNull(bookmark.anchor) : eq(bookmark.anchor, anchor),
       ),
     )
     .get();
-  return { id: existing!.id, created: false };
+  if (!existing) return { id, created: false };
+  return { id: existing.id, created: false };
 }
 
 export async function deleteBookmark(

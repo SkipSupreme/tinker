@@ -1,17 +1,12 @@
 <script lang="ts">
+  import { getCsrf } from '../../lib/csrf-client';
+
   let { lessonSlug, courseSlug, moduleSlug, isAuthed } = $props<{
     lessonSlug: string;
     courseSlug: string;
     moduleSlug: string;
     isAuthed: boolean;
   }>();
-
-  function getCsrf(): string {
-    const m =
-      document.cookie.match(/(?:^|;\s*)__Secure-tinker\.csrf_token=([^;]+)/) ??
-      document.cookie.match(/(?:^|;\s*)tinker\.csrf_token=([^;]+)/);
-    return m?.[1] ? decodeURIComponent(m[1]) : '';
-  }
 
   async function postAuthed() {
     try {

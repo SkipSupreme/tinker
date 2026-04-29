@@ -18,8 +18,12 @@
         body: JSON.stringify({ email, callbackURL: '/welcome' }),
       });
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || 'Could not send sign-in link');
+        // Don't echo the server response back — it can leak Better Auth or
+        // Resend internals. 429 is the only status we map to a custom string.
+        if (res.status === 429) {
+          throw new Error('Too many sign-in requests. Try again in a minute.');
+        }
+        throw new Error("Couldn't send sign-in link. Try again.");
       }
       status = 'sent';
     } catch (e) {
@@ -184,7 +188,7 @@
   button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
   button[type="submit"]:not(:disabled):hover { transform: translateY(-1px); }
   .err {
-    color: #b91c1c;
+    color: var(--site-error);
     font-size: 0.9rem;
     margin: 0;
   }

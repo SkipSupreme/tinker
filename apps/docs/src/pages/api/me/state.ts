@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { eq, and } from 'drizzle-orm';
-import { requireSession, jsonOk } from '../../../server/middleware';
+import { requireSession, jsonError, jsonOk } from '../../../server/middleware';
+import { checkRateLimit } from '../../../server/ratelimit';
 import { lessonView } from '../../../server/schema';
 import { listBookmarks } from '../../../server/bookmarks';
 import { listNoteIndex } from '../../../server/notes';
@@ -13,6 +14,12 @@ export const GET: APIRoute = async ({ request, locals, url }) => {
   const env = getEnv();
   const ctx = await requireSession(request, env);
   if ('error' in ctx) return ctx.error;
+
+  const rl = await checkRateLimit(ctx.db, `me:state:${ctx.session.user.id}`, {
+    limit: 60,
+    windowMs: 60_000,
+  });
+  if (!rl.allowed) return jsonError(429, 'rate_limited', 'Too many requests');
 
   const courseSlug = url.searchParams.get('course');
   const userId = ctx.session.user.id;

@@ -48,9 +48,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f3f4f6;
-    border: 2px dashed #9ca3af;
-    color: #374151;
+    background: var(--site-surface);
+    border: 2px dashed var(--site-fg-muted);
+    color: var(--site-fg);
     font-size: 14px;
     touch-action: none; /* let pointer events fire without browser gestures */
     user-select: none;

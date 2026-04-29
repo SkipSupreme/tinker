@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { eq } from 'drizzle-orm';
 import { user } from '../../../server/schema';
-import { requireSession, jsonError } from '../../../server/middleware';
+import { requireSession, requireCsrf, jsonError } from '../../../server/middleware';
 import { sendAccountDeletedEmail } from '../../../server/email';
 import { getEnv } from '../../../server/env';
 
@@ -9,22 +9,18 @@ export const prerender = false;
 
 export const DELETE: APIRoute = async ({ request, locals }) => {
   const env = getEnv();
+  const csrf = requireCsrf(request);
+  if (csrf) return csrf;
+
   const ctx = await requireSession(request, env);
   if ('error' in ctx) return ctx.error;
   const { session, db, auth } = ctx;
 
-  const placeholder = `deleted-${crypto.randomUUID()}@deleted.local`;
   const originalEmail = session.user.email;
 
-  await db
-    .update(user)
-    .set({
-      email: placeholder,
-      name: null,
-      image: null,
-      updatedAt: new Date(),
-    })
-    .where(eq(user.id, session.user.id));
+  // Hard delete. ON DELETE CASCADE wipes session, account, user_profile,
+  // lesson_view, exercise_answer, bookmark, note. GDPR right-to-be-forgotten.
+  await db.delete(user).where(eq(user.id, session.user.id));
 
   // Sign out via Better Auth (clears session cookie + DB row).
   try {

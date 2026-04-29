@@ -7,39 +7,87 @@ import { getEnv } from '../../server/env';
 
 export const prerender = false;
 
-const PAGE = (status: 'ok' | 'bad') => `<!doctype html>
-<html lang="en"><head>
-<meta charset="utf-8" />
-<title>Unsubscribed</title>
-<style>
-  html { font-family: ui-sans-serif, system-ui, sans-serif; }
+const HTML_HEADERS = { 'content-type': 'text/html; charset=utf-8' };
+
+const STYLES = `
+  html { font-family: ui-sans-serif, system-ui, sans-serif; background: #fdfdfc; color: #17181a; }
   main { max-width: 480px; margin: 4rem auto; padding: 2rem; text-align: center; }
   h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-  p { color: #666; }
-</style>
-</head><body><main>
-${status === 'ok'
-  ? '<h1>You\'re unsubscribed.</h1><p>You won\'t receive any more module-launch emails from Tinker. Sign-in and account emails will still go through. <a href="/me">Visit your account</a> to opt back in any time.</p>'
-  : '<h1>This link is no longer valid.</h1><p>If you\'d still like to unsubscribe, <a href="/me">visit your account page</a>.</p>'}
-</main></body></html>`;
+  p { color: #585a60; }
+  button { font: inherit; padding: 0.7rem 1.25rem; border-radius: 999px; border: 1.5px solid #17181a; background: #17181a; color: #fdfdfc; cursor: pointer; }
+  button:hover { transform: translateY(-1px); }
+  a { color: #17181a; }
+`;
 
-export const GET: APIRoute = async ({ url, locals }) => {
+function page(body: string, status = 200): Response {
+  return new Response(
+    `<!doctype html><html lang="en"><head><meta charset="utf-8" /><title>Unsubscribe</title><style>${STYLES}</style></head><body><main>${body}</main></body></html>`,
+    { status, headers: HTML_HEADERS },
+  );
+}
+
+const BAD = page(
+  `<h1>This link is no longer valid.</h1><p>If you'd still like to unsubscribe, <a href="/me">visit your account page</a>.</p>`,
+  400,
+);
+
+// GET shows a confirmation form. We deliberately do NOT mutate state on GET so
+// link prefetchers (Outlook safe-link, Gmail prefetch, anti-virus URL scanners,
+// browser link previews) can't unsubscribe people. RFC 8058 specifies POST for
+// the one-click endpoint via the `List-Unsubscribe-Post` header.
+export const GET: APIRoute = async ({ url }) => {
   const env = getEnv();
   const token = url.searchParams.get('token');
-  if (!token || !env.UNSUBSCRIBE_HMAC_SECRET) {
-    return new Response(PAGE('bad'), { status: 400, headers: { 'content-type': 'text/html; charset=utf-8' } });
-  }
+  if (!token || !env.UNSUBSCRIBE_HMAC_SECRET) return BAD;
   const userId = await verifyUnsubscribeToken(token, env.UNSUBSCRIBE_HMAC_SECRET);
-  if (!userId) {
-    return new Response(PAGE('bad'), { status: 400, headers: { 'content-type': 'text/html; charset=utf-8' } });
-  }
-  const db = getDb(env.DB);
-  await db
-    .update(userProfile)
-    .set({ marketingOptIn: false })
-    .where(eq(userProfile.userId, userId));
-  return new Response(PAGE('ok'), { status: 200, headers: { 'content-type': 'text/html; charset=utf-8' } });
+  if (!userId) return BAD;
+  // Don't echo userId back to the client; just confirm the token is valid.
+  return page(
+    `<h1>Unsubscribe from module-launch emails?</h1>
+     <p>Sign-in and account emails will still go through.</p>
+     <form method="POST" action="/api/unsubscribe">
+       <input type="hidden" name="token" value="${escapeAttr(token)}" />
+       <button type="submit">Confirm unsubscribe</button>
+     </form>
+     <p style="margin-top:2rem;font-size:0.85rem"><a href="/me">Or manage email preferences in your account</a></p>`,
+  );
 };
 
-// One-click unsubscribe POST per RFC 8058
-export const POST = GET;
+export const POST: APIRoute = async ({ request, url }) => {
+  const env = getEnv();
+  if (!env.UNSUBSCRIBE_HMAC_SECRET) return BAD;
+
+  // RFC 8058 sends `List-Unsubscribe=One-Click` as form data. Browser form
+  // submissions also use form data. JSON or query-string clients also work.
+  let token = url.searchParams.get('token');
+  if (!token) {
+    const ct = request.headers.get('content-type') ?? '';
+    if (ct.includes('application/x-www-form-urlencoded') || ct.includes('multipart/form-data')) {
+      const form = await request.formData();
+      token = (form.get('token') as string | null) ?? null;
+    } else if (ct.includes('application/json')) {
+      try {
+        const body = (await request.json()) as { token?: string };
+        token = body?.token ?? null;
+      } catch {
+        token = null;
+      }
+    }
+  }
+  if (!token) return BAD;
+
+  const userId = await verifyUnsubscribeToken(token, env.UNSUBSCRIBE_HMAC_SECRET);
+  if (!userId) return BAD;
+
+  const db = getDb(env.DB);
+  await db.update(userProfile).set({ marketingOptIn: false }).where(eq(userProfile.userId, userId));
+
+  return page(
+    `<h1>You're unsubscribed.</h1>
+     <p>You won't receive any more module-launch emails from Tinker. Sign-in and account emails will still go through. <a href="/me">Visit your account</a> to opt back in any time.</p>`,
+  );
+};
+
+function escapeAttr(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}

@@ -77,11 +77,27 @@ jobs:
         if: needs.detect.outputs.has-eslint == 'true'
         run: pnpm -r lint
 
-      - name: Typecheck
+      - name: Typecheck (svelte-mafs)
         run: pnpm -F svelte-mafs typecheck
 
-      - name: Unit tests with coverage
+      - name: Generate Cloudflare Worker types (docs)
+        if: needs.detect.outputs.has-docs == 'true'
+        run: pnpm -F docs generate-types
+
+      - name: Typecheck (docs)
+        if: needs.detect.outputs.has-docs == 'true'
+        run: pnpm -F docs exec astro check
+
+      - name: Unit tests with coverage (svelte-mafs)
         run: pnpm -F svelte-mafs exec vitest run --coverage
+
+      - name: Unit + integration tests (docs)
+        if: needs.detect.outputs.has-docs == 'true'
+        run: pnpm -F docs test
+
+      - name: Build (docs)
+        if: needs.detect.outputs.has-docs == 'true'
+        run: pnpm -F docs build
 
       # Build is gated continue-on-error until the lib's build script is
       # corrected (svelte-package needs `-i src` because Stream 1 flattened

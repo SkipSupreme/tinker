@@ -1,0 +1,28 @@
+# Wrangler reads ./apps/docs/.dev.vars when running `wrangler dev` locally.
+# Copy this to `.dev.vars` (gitignored) and fill in real values from
+# `secret.md` / Cloudflare dashboard / each provider.
+
+# Better Auth — used to sign sessions. Generate with `openssl rand -hex 32`.
+BETTER_AUTH_SECRET=
+
+# Resend — transactional email. Get a domain-scoped API key from resend.com.
+RESEND_API_KEY=
+
+# OAuth providers (optional; the social buttons hide if these are unset).
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+
+# HMAC for unsubscribe-link signing. Independent from BETTER_AUTH_SECRET so
+# we can rotate them on different cadences. Generate with `openssl rand -hex 32`.
+UNSUBSCRIBE_HMAC_SECRET=
+
+# Optional Cloudflare Turnstile — invisible bot check on the signup form.
+TURNSTILE_SITE_KEY=
+TURNSTILE_SECRET_KEY=
+
+# Public site origin used by Better Auth redirects + magic-link URL building.
+# Set to http://localhost:4321 for local dev. Production sets this in
+# wrangler.jsonc -> vars.
+PUBLIC_SITE_URL=http://localhost:4321

@@ -1,14 +1,18 @@
 ---
 import ThemeToggle from './ThemeToggle.astro';
 import UserMenu from './auth/UserMenu.svelte';
+import XpCounter from './nav/XpCounter.svelte';
+import StreakFlame from './nav/StreakFlame.svelte';
+import { createAuth } from '../server/auth';
 
 let user: { name: string; email: string } | null = null;
 try {
   const { env } = await import('cloudflare:workers');
-  if (env?.DB) {
-    const auth = createAuth(env);
+  const e = env as unknown as Env;
+  if (e?.DB) {
+    const auth = createAuth(e);
     const session = await auth.api.getSession({ headers: Astro.request.headers });
-    if (session) user = { name: session.user.name, email: session.user.email };
+    if (session) user = { name: session.user.name ?? '', email: session.user.email };
   }
 } catch {
   user = null;

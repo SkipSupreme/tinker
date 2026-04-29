@@ -9,11 +9,23 @@
   --site-code-bg: #f5f5f2;
   --site-code-fg: #17181a;
   --site-focus: #2f6fed;
+  --site-error: #b91c1c;
+  --site-error-bg: #fef2f2;
+
+  /* Shadow scale. Token-based so dark mode can swap to deeper inks without
+     hunting through every demo + drawer. Use color-mix where a tinted shadow
+     is still required (e.g., glow under the apple mascot). */
+  --shadow-hairline: 0 1px 0 rgba(0, 0, 0, 0.04);
+  --shadow-xs: 0 2px 6px rgba(0, 0, 0, 0.06);
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 18px 36px -20px rgba(0, 0, 0, 0.18);
+  --shadow-xl: 0 24px 48px -28px rgba(0, 0, 0, 0.25);
+  --shadow-drawer: -8px 0 24px rgba(0, 0, 0, 0.06);
 
   /* Pastel full-bleed section bands (Brilliant-inspired). */
   --band-white: #fdfdfc;
   --band-cream: #faf6ef;
-  --band-lavender: #ecebfb;
   --band-mint: #e6f3e8;
   --band-sky: #e6eff8;
   --band-butter: #fbf2dc;
@@ -86,10 +98,22 @@
      still read as distinct, but sit on a near-black base for long reads. */
   --band-white:    #0f1012;
   --band-cream:    #171410;
-  --band-lavender: #151429;
   --band-mint:     #0f1a13;
   --band-sky:      #0e1620;
   --band-butter:   #1a1610;
+
+  /* Brighter error red in dark for AA contrast. */
+  --site-error:    #f87171;
+  --site-error-bg: #1a0e0e;
+
+  /* Deeper shadows under dark surfaces. */
+  --shadow-hairline: 0 1px 0 rgba(0, 0, 0, 0.32);
+  --shadow-xs: 0 2px 6px rgba(0, 0, 0, 0.45);
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 18px 36px -20px rgba(0, 0, 0, 0.55);
+  --shadow-xl: 0 24px 48px -28px rgba(0, 0, 0, 0.65);
+  --shadow-drawer: -8px 0 24px rgba(0, 0, 0, 0.55);
   --band-dark:     #08090b;
   --band-dark-fg:    #f2f2ef;
   --band-dark-muted: #9ea0a6;

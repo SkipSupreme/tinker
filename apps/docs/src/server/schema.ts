@@ -36,9 +36,7 @@ export const account = sqliteTable('account', {
   password: text('password'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
-}, (t) => ({
-  uniqProvider: unique().on(t.providerId, t.accountId),
-}));
+}, (t) => [unique().on(t.providerId, t.accountId)]);
 
 export const verification = sqliteTable('verification', {
   id: text('id').primaryKey(),
@@ -65,10 +63,10 @@ export const lessonView = sqliteTable('lesson_view', {
   lastSeenAt: integer('last_seen_at', { mode: 'timestamp_ms' }).notNull(),
   viewCount: integer('view_count').notNull().default(1),
   completedAt: integer('completed_at', { mode: 'timestamp_ms' }),
-}, (t) => ({
-  pk: primaryKey({ columns: [t.userId, t.lessonSlug] }),
-  byCourseRecency: index('lesson_view_by_course_recency').on(t.userId, t.courseSlug, t.lastSeenAt),
-}));
+}, (t) => [
+  primaryKey({ columns: [t.userId, t.lessonSlug] }),
+  index('lesson_view_by_course_recency').on(t.userId, t.courseSlug, t.lastSeenAt),
+]);
 
 export const exerciseAnswer = sqliteTable('exercise_answer', {
   id: text('id').primaryKey(),
@@ -79,9 +77,7 @@ export const exerciseAnswer = sqliteTable('exercise_answer', {
   isCorrect: integer('is_correct', { mode: 'boolean' }),
   attemptNo: integer('attempt_no').notNull().default(1),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-}, (t) => ({
-  byUserLesson: index('exercise_answer_by_user_lesson').on(t.userId, t.lessonSlug),
-}));
+}, (t) => [index('exercise_answer_by_user_lesson').on(t.userId, t.lessonSlug)]);
 
 export const bookmark = sqliteTable('bookmark', {
   id: text('id').primaryKey(),
@@ -89,18 +85,14 @@ export const bookmark = sqliteTable('bookmark', {
   lessonSlug: text('lesson_slug').notNull(),
   anchor: text('anchor'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-}, (t) => ({
-  uniq: unique().on(t.userId, t.lessonSlug, t.anchor),
-}));
+}, (t) => [unique().on(t.userId, t.lessonSlug, t.anchor)]);
 
 export const note = sqliteTable('note', {
   userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
   lessonSlug: text('lesson_slug').notNull(),
   body: text('body').notNull().default(''),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
-}, (t) => ({
-  pk: primaryKey({ columns: [t.userId, t.lessonSlug] }),
-}));
+}, (t) => [primaryKey({ columns: [t.userId, t.lessonSlug] })]);
 
 export const emailDrop = sqliteTable('email_drop', {
   id: text('id').primaryKey(),

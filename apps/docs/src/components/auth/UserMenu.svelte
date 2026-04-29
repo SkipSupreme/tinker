@@ -127,7 +127,7 @@
     background: var(--site-bg);
     border: 1px solid var(--site-border);
     border-radius: var(--radius-md);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    box-shadow: var(--shadow-md);
     list-style: none;
     padding: 0.4rem;
     margin: 0;

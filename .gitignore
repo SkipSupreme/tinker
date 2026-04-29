@@ -17,5 +17,7 @@ secret.md
 /*.jpg
 /*.jpeg
 .dev.vars
+!.dev.vars.example
+worker-configuration.d.ts
 .context/
 .playwright-mcp/
