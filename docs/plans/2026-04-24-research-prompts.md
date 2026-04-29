@@ -212,6 +212,18 @@ NEXT_MODULE: m15-attention (queries, keys, values; scaled dot-product attention;
 ENDGAME: We started with a table that knew one character of context, expanded it to a window of k characters, then to a vector that — in theory — carries everything. In practice it carries about ten characters before fading. Next, we stop trying to carry the past and learn to query it instead.
 ```
 
+### M15 — Attention
+
+```
+ORDER: 15
+TITLE: Attention
+ARC: Arc 3 — Language Models
+PRIOR: Linear algebra — matmul, dot product as similarity, softmax, broadcasting (m7-linear-algebra). Gradient descent, Adam, LR schedules (m10-optimization). MLP forward/backward (m11-neural-networks). Backprop on a computational graph (m12-backpropagation). Training dynamics — Xavier/He init, layer/batch norm, residual connections, dropout, weight decay (m13-training-dynamics). Everything from m14-sequence-modeling: token vocab, NLL loss, perplexity, the embedding matrix as a learned lookup, the bigram-as-one-layer-NN equivalence, the Bengio-2003 fixed-context MLP, the RNN cell h_t = tanh(W_x x_t + W_h h_{t-1} + b), backprop-through-time, vanishing/exploding gradients, and the sequential-bottleneck failure mode that motivates attention.
+CONCEPTS: attention as a soft / differentiable dictionary lookup, query-key-value triple, scoring via scaled dot product, the 1/sqrt(d_k) scale and why softmax saturation makes it necessary, softmax over the time axis to produce attention weights, the weighted sum of values as the output, the three learned projections W_q / W_k / W_v and what each subspace conceptually represents, self-attention vs cross-attention, causal (autoregressive) masking via the upper-triangular −∞ trick, the full attention(Q, K, V) = softmax(QK^T / sqrt(d_k) + M) V formula and its shape calculus, multi-head attention (split heads → parallel attentions → concat → output projection) and the motivation for multiple heads, why attention without positional information is permutation-equivariant and therefore broken for sequences, positional encoding (sinusoidal, learned absolute, RoPE — intuition only, no derivations), computational complexity (O(T² d) — the quadratic context cost that defines modern LLM economics), KV-cache during autoregressive inference and what it actually saves
+NEXT_MODULE: m16-transformer-block (residual connections + layer norm + the feed-forward MLP + multi-head attention assembled into the canonical transformer block, then stacked N times)
+ENDGAME: Attention is the operation. The rest of a transformer — residuals, layer norm, an MLP on top — is plumbing around this single core idea: every position broadcasts a query, every position offers a key, and the softmax-weighted match decides whose values you pull back. You are now one layer of glue away from the real thing.
+```
+
 ---
 
 ## Widget research template (fire per interactive widget)
