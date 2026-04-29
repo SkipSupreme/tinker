@@ -1,0 +1,92 @@
+---
+title: Why pre-LN
+module: m16-transformer-block
+summary: Two transformer-block architectures differ by one wire — whether LayerNorm sits before each sub-layer or after the residual add. One trains without warmup at any depth. The other doesn't. Find out why.
+estimatedMinutes: 14
+order: 2
+prereqs:
+  - one-block-top-to-bottom
+conceptsCovered:
+  - pre-ln-block
+  - post-ln-block
+  - pre-vs-post-ln-gradient
+  - final-layer-norm
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import LnPlacementGrad from '../../components/demos/LnPlacementGrad.svelte';
+import BuildTheBlock from '../../components/demos/BuildTheBlock.svelte';
+
+<Step title="Two architectures, one wire of difference">
+There are two canonical wirings for the transformer block. Both have a residual + LayerNorm + sub-layer pattern around each of the two sub-layers. They differ in *which side of the residual add* the LayerNorm sits on.
+
+**Pre-LN** (modern default):
+$$
+x \;\to\; x + \mathrm{Sub}(\mathrm{LN}(x))
+$$
+
+**Post-LN** (the original 2017 wiring):
+$$
+x \;\to\; \mathrm{LN}(x + \mathrm{Sub}(x))
+$$
+
+In pre-LN the residual *trunk* (the unmodified $x$) is never normalized between blocks. The LayerNorm is upstream of the sub-layer's input — a "private" normalization just for that sub-layer's computation. In post-LN, the LN sits on the trunk after each residual add, normalizing every block's accumulated state.
+
+You can read which architecture a piece of code is by asking one question: *does $x$ ever pass through an LN before the next residual add?* If no, pre-LN. If yes, post-LN.
+</Step>
+
+<StepCheck
+  title="Read off the architecture"
+  prompt="0 = no, 1 = yes: "
+  answer={0}
+  tolerance={0.01}
+  hint="Pre-LN's residual trunk is never normalized between blocks. The LN is upstream of the sub-layer, not on the trunk."
+>
+In a pre-LN block, **does the residual trunk $x$ pass through any LayerNorm before the next block's residual add?** Enter `0` for no, `1` for yes.
+</StepCheck>
+
+<Step title="Watch the gradients diverge">
+The architectural difference would be a footnote if it didn't have a sharp empirical consequence. It does. Xiong et al. (2020) proved that at depth $L$:
+
+- Post-LN's expected gradient norm at the *top* of the stack is $\Theta(\ln L)$, growing with depth.
+- Pre-LN's is $\Theta(\ln L \,/\, \sqrt{L})$ — *shrinking* with depth.
+
+In plain words: the deeper a post-LN model is, the bigger the gradient pulse on its last block at step zero. That pulse is what blows up training unless you ramp the learning rate up gradually with a warmup schedule. Pre-LN doesn't have the pulse — its gradient norm stays bounded (and small) at every depth.
+
+<LnPlacementGrad client:visible />
+
+Drag the depth slider. At $L = 4$, the two curves are similar — both architectures train fine. At $L = 12$, post-LN's profile starts climbing toward the output. By $L = 24$, the ratio is past 3× and the verdict flips: warmup is required to keep post-LN stable. By $L = 48$, pre-LN's curve has flattened into the floor while post-LN's ramp has gotten steeper.
+
+This is the entire reason modern open-weight LLMs (GPT-2/3, LLaMA, every Mistral, Qwen, Gemma, etc.) use pre-LN. They train deep with constant or simply-scheduled learning rates. Post-LN at the same depth would need careful warmup tuning to avoid divergence in the first hundred steps.
+</Step>
+
+<Step title="The price pre-LN pays">
+There is no free lunch and pre-LN has a small, real cost.
+
+Because pre-LN's residual trunk is never normalized between blocks, the magnitude of the residual stream tends to grow as more blocks are stacked — each block's delta is added to whatever came before, with no rescaling. Without intervention, the activations entering the language-modeling head are at an unbounded scale.
+
+The fix is a single LayerNorm at the *very top* of the stack, after the last block, before the unembedding. Just one — not one per block. Pre-LN models always include it. Post-LN models don't need it because every block's output is already normalized by construction.
+
+A second cost: very-well-tuned post-LN models can sometimes reach slightly lower final loss than pre-LN at moderate depth. With aggressive warmup and careful hyperparameter sweeps, post-LN's normalized trunk is mathematically more expressive (every layer's input lives at a stable scale by construction). The trade is depth scalability for one half-percentage point of final perplexity. Modern recipes overwhelmingly take depth.
+</Step>
+
+<StepCheck
+  title="Spot the post-LN model"
+  prompt="GPT-2=1, BERT-original=2, T5=3, LLaMA-2=4: "
+  answer={2}
+  tolerance={0.01}
+  hint="GPT-2, T5, and the LLaMA family all use pre-LN. The original BERT (2018) is post-LN."
+>
+Of these four widely-deployed models — GPT-2, BERT-original, T5, LLaMA-2 — **which one uses post-LN**?
+</StepCheck>
+
+<Step title="Build it yourself">
+The block has four wires you can choose: where each sub-layer's LayerNorm sits, and whether each sub-layer's residual is connected. Three of these four wires are commonly debated; the residual switches are not — turning either residual off breaks the gradient highway and the model becomes untrainable above a few layers.
+
+<BuildTheBlock client:visible />
+
+Walk through the obvious ones first. Set everything to *pre + on* — the verdict says *✓ pre-LN block*. Switch both LNs to *post* — *✓ post-LN block*. Then experiment: mix one pre with one post; turn off a residual; turn off a LayerNorm. Each broken combination shows you specifically what fails. The mixed pre/post case isn't strictly "broken" but no real transformer ships with it — it inherits the warmup-required cost of post-LN without getting the normalized-output benefit.
+
+The takeaway: modern transformers settle on pre-LN with both residuals on. That decision sits in three places of the model file (two per block, one at the top of the stack) and propagates through everything: optimizer schedule, training stability, depth scalability, even the logit-lens trick we'll use in the next lesson. Cells with high gradient norms in the wrong place are how thousands of training runs have ended early.
+</Step>
