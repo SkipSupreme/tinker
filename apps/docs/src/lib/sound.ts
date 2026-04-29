@@ -1,37 +1,65 @@
 /**
- * Tinker sound palette — Web Audio sine tones with attack/decay envelopes.
- * Spec lives in DESIGN.md §Sound. Tones progress up the scale so finishing
- * a lesson sounds like finishing.
+ * Tinker sound palette.
+ *
+ * Was: 4 hand-rolled Web Audio sine tones. The synth pings sounded like a
+ * 1980s alarm clock. Replaced with curated CC0 freesound mp3s in
+ * `apps/docs/public/`. Same `play()` API; call sites unchanged.
  *
  * Mute toggle persists to localStorage (`tinker:sound-muted`). Default is
  * unmuted, EXCEPT when the user prefers reduced motion — then mute is on
  * by default per DESIGN.md §Sound rules.
  *
- * If AudioContext fails to construct (older Safari, locked-down env), every
- * call is a silent no-op. We never throw from this module.
+ * If audio fails to load or play (older browsers, autoplay block before
+ * the first user gesture), each call is a silent no-op. We never throw.
+ *
+ * To swap a sound: drop a new mp3 into `apps/docs/public/` and edit the
+ * PALETTE entry. Volume is 0..1; tweak per-sound to balance loudness
+ * across the four events. The other 5 mp3s in /public/ are unused at
+ * the moment but available for future events (woosh for transitions,
+ * cartoon-jump for the mascot, etc).
  */
 
-export type SoundName = 'tick' | 'ding' | 'chime' | 'anthem';
+export type SoundName = 'tick' | 'ding' | 'chime' | 'anthem' | 'jump';
 
 const LS_MUTED = 'tinker:sound-muted';
 
-let ctx: AudioContext | null = null;
-let mutedCached: boolean | null = null;
+type SoundDef = { src: string; volume: number };
 
-function getCtx(): AudioContext | null {
-  if (ctx) return ctx;
-  if (typeof window === 'undefined') return null;
-  try {
-    const Ctor =
-      window.AudioContext ??
-      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!Ctor) return null;
-    ctx = new Ctor();
-    return ctx;
-  } catch {
-    return null;
-  }
-}
+/**
+ * Event → file mapping. Tones progress up the celebration ladder so
+ * finishing a lesson sounds like finishing.
+ */
+const PALETTE: Record<SoundName, SoundDef> = {
+  // Step advance, widget snap, continue click. Soft, frequent, doesn't
+  // get annoying.
+  tick: {
+    src: '/humordome-soft-ui-pop-light-minimal-click-451232.mp3',
+    volume: 0.45,
+  },
+  // Correct answer feedback. Literally named "ui correct button" upstream.
+  ding: {
+    src: '/freesound_community-ui_correct_button2-103167.mp3',
+    volume: 0.55,
+  },
+  // Lesson complete. A reflective chime.
+  chime: {
+    src: '/freesound_community-melancholy-ui-chime-47804.mp3',
+    volume: 0.6,
+  },
+  // Module complete. The biggest pay-off.
+  anthem: {
+    src: '/freesound_community-success-1-6297.mp3',
+    volume: 0.6,
+  },
+  // Mascot bounce. Plays when the user clicks Tinker the apple.
+  jump: {
+    src: '/freesound_community-cartoon-jump-6462.mp3',
+    volume: 0.5,
+  },
+};
+
+let mutedCached: boolean | null = null;
+const audios: Partial<Record<SoundName, HTMLAudioElement>> = {};
 
 function readMuted(): boolean {
   if (mutedCached !== null) return mutedCached;
@@ -73,50 +101,34 @@ export function toggleMuted(): boolean {
   return next;
 }
 
-function tone(freq: number, duration: number, startOffset = 0, gain = 0.18): void {
-  const c = getCtx();
-  if (!c) return;
-  const osc = c.createOscillator();
-  const env = c.createGain();
-  osc.type = 'sine';
-  osc.frequency.value = freq;
-  const t = c.currentTime + startOffset;
-  env.gain.setValueAtTime(0, t);
-  env.gain.linearRampToValueAtTime(gain, t + 0.005);
-  env.gain.exponentialRampToValueAtTime(0.001, t + duration);
-  osc.connect(env).connect(c.destination);
-  osc.start(t);
-  osc.stop(t + duration + 0.05);
+function getAudio(name: SoundName): HTMLAudioElement | null {
+  if (typeof window === 'undefined') return null;
+  const cached = audios[name];
+  if (cached) return cached;
+  const def = PALETTE[name];
+  try {
+    const a = new Audio(def.src);
+    a.volume = def.volume;
+    a.preload = 'auto';
+    audios[name] = a;
+    return a;
+  } catch {
+    return null;
+  }
 }
 
 export function play(name: SoundName): void {
   if (readMuted()) return;
-  const c = getCtx();
-  if (!c) return;
-  // Browsers may suspend the context before the first user gesture. The
-  // first call to play() is itself triggered by a click/keydown, so resume
-  // is safe here.
-  if (c.state === 'suspended') {
-    void c.resume().catch(() => {});
-  }
-  switch (name) {
-    case 'tick':
-      tone(880, 0.06, 0, 0.14);
-      return;
-    case 'ding':
-      tone(880, 0.12, 0, 0.16);
-      tone(1320, 0.12, 0, 0.12);
-      return;
-    case 'chime':
-      tone(660, 0.18, 0.0, 0.15);
-      tone(880, 0.18, 0.13, 0.15);
-      tone(1320, 0.22, 0.26, 0.13);
-      return;
-    case 'anthem':
-      tone(523, 0.28, 0.0, 0.16);
-      tone(659, 0.28, 0.22, 0.16);
-      tone(784, 0.28, 0.44, 0.16);
-      tone(1047, 0.36, 0.66, 0.14);
-      return;
+  const a = getAudio(name);
+  if (!a) return;
+  // Reset to start so rapid back-to-back plays restart instead of being
+  // ignored. Browsers may reject play() before the first user gesture;
+  // silently swallow that — every Tinker trigger is itself a user gesture
+  // so subsequent calls work.
+  try {
+    a.currentTime = 0;
+    void a.play().catch(() => {});
+  } catch {
+    /* ignore */
   }
 }

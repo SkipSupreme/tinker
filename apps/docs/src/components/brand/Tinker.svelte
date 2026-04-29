@@ -2,10 +2,16 @@
   /**
    * Tinker the Apple — the live mascot. Spec in DESIGN.md §Mascot.
    *
-   * Idle behavior: always-on bob (±2px) + cursor-aware tilt. Click triggers
-   * a bounce, a tick sound, and a math-symbol burst. Every 10th click is a
-   * bigger milestone burst. Reduced motion freezes ambient animation; the
-   * click bounce still fires because it's a deliberate user response.
+   * Idle behavior: always-on bob (±6px) + cursor-aware tilt. Every 6–18s
+   * Tinker also self-initiates a tiny wiggle or a hop so the mascot reads
+   * as alive instead of merely animated. Idle actions pause while the user
+   * is touching the page, while sleeping, or under reduced motion — and
+   * are silent (no jump sound), since they aren't user-driven.
+   *
+   * Click triggers a bounce, the cartoon-jump sound, and a math-symbol
+   * burst. Every 10th click is a bigger milestone burst. Reduced motion
+   * freezes ambient animation; the click bounce still fires because it's
+   * a deliberate user response.
    */
   import { onMount } from 'svelte';
   import { prefersReducedMotion } from 'svelte/motion';
@@ -53,12 +59,18 @@
   let petCount = $state(0);
   let cursorTilt = $state(0);
   let sleeping = $state(false);
+  let idleAction = $state<'none' | 'wiggle' | 'hop' | 'lean'>('none');
 
   const PET_LS_KEY = 'tinker:pet-count';
   const PET_THRESHOLD = 10;
   const HOVER_TILT_RANGE_DEG = 3;
   const SLEEP_MS = 60_000;
+  // Random window for the next self-initiated idle action.
+  const IDLE_MIN_MS = 6_000;
+  const IDLE_MAX_MS = 18_000;
   let sleepTimer: number | null = null;
+  let idleTimer: number | null = null;
+  let idleClearTimer: number | null = null;
 
   const reducedMotion = $derived(prefersReducedMotion.current);
 
@@ -68,14 +80,46 @@
     sleepTimer = window.setTimeout(() => {
       sleeping = true;
     }, SLEEP_MS);
+    // Push idle action back too — Tinker shouldn't twitch while the user
+    // is touching the page.
+    scheduleIdleAction();
+  }
+
+  function scheduleIdleAction() {
+    if (idleTimer) clearTimeout(idleTimer);
+    if (idleClearTimer) clearTimeout(idleClearTimer);
+    if (typeof window === 'undefined') return;
+    if (reducedMotion) return;
+    const delay = IDLE_MIN_MS + Math.random() * (IDLE_MAX_MS - IDLE_MIN_MS);
+    idleTimer = window.setTimeout(fireIdleAction, delay);
+  }
+
+  function fireIdleAction() {
+    if (sleeping || reducedMotion || bouncing) {
+      scheduleIdleAction();
+      return;
+    }
+    // Weighted pick: small wiggle most often, hop occasionally, lean rarely.
+    const r = Math.random();
+    const action: 'wiggle' | 'hop' | 'lean' =
+      r < 0.55 ? 'wiggle' : r < 0.85 ? 'hop' : 'lean';
+    idleAction = action;
+    const duration = action === 'lean' ? 1600 : action === 'hop' ? 720 : 520;
+    idleClearTimer = window.setTimeout(() => {
+      idleAction = 'none';
+      scheduleIdleAction();
+    }, duration);
   }
 
   $effect(() => {
     resetSleep();
+    scheduleIdleAction();
     const evts = ['pointermove', 'keydown', 'scroll'] as const;
     for (const ev of evts) document.addEventListener(ev, resetSleep, { passive: true });
     return () => {
       if (sleepTimer) clearTimeout(sleepTimer);
+      if (idleTimer) clearTimeout(idleTimer);
+      if (idleClearTimer) clearTimeout(idleClearTimer);
       for (const ev of evts) document.removeEventListener(ev, resetSleep);
     };
   });
@@ -121,7 +165,7 @@
     bouncing = true;
     setTimeout(() => (bouncing = false), 240);
 
-    play('tick');
+    play('jump');
 
     const target = (e.currentTarget as HTMLElement) ?? root;
     if (target) {
@@ -142,6 +186,9 @@
   class:tinker--bouncing={bouncing}
   class:tinker--reduced={reducedMotion}
   class:tinker--sleeping={sleeping && !reducedMotion}
+  class:tinker--wiggle={idleAction === 'wiggle'}
+  class:tinker--hop={idleAction === 'hop'}
+  class:tinker--lean={idleAction === 'lean'}
   style="--tinker-size: {sizeCss}; --tinker-tilt: {tilt}deg; --tinker-cursor-tilt: {cursorTilt}deg;"
   onpointermove={onPointerMove}
   onpointerleave={onPointerLeave}
@@ -289,6 +336,53 @@
     0%   { scale: 1; }
     35%  { scale: 1.06; }
     100% { scale: 1; }
+  }
+
+  /* === Self-initiated idle behaviors ===
+     Layered on top of the perpetual bob via the `rotate` and `scale`
+     properties (independent of `transform`/`translate`, which are already
+     used by the static tilt and the bob). Silent — no sound on these,
+     since they aren't user-driven. */
+
+  /* Wiggle — quick "what was that" head shake. Most common idle action. */
+  .tinker--wiggle .tinker-img {
+    animation:
+      tinker-bob 4.6s ease-in-out infinite,
+      tinker-wiggle 520ms ease-in-out;
+  }
+  @keyframes tinker-wiggle {
+    0%, 100% { rotate: 0deg; }
+    20%      { rotate: -6deg; }
+    50%      { rotate: 5deg; }
+    80%      { rotate: -3deg; }
+  }
+
+  /* Hop — vertical jump with squash/stretch. The bob keeps running underneath
+     (it uses `translate`); the hop adds an additive translateY via a
+     wrapper-style scale + raise. Bigger than the click bounce. */
+  .tinker--hop .tinker-img {
+    animation:
+      tinker-bob 4.6s ease-in-out infinite,
+      tinker-hop 720ms cubic-bezier(0.34, 1.4, 0.64, 1);
+  }
+  @keyframes tinker-hop {
+    0%   { scale: 1; rotate: 0deg; }
+    20%  { scale: 1.08 0.94; rotate: 0deg; }
+    45%  { scale: 0.96 1.06; rotate: -3deg; }
+    70%  { scale: 1.02 0.98; rotate: 2deg; }
+    100% { scale: 1; rotate: 0deg; }
+  }
+
+  /* Lean — slow look-around, side to side. Rare. */
+  .tinker--lean .tinker-img {
+    animation:
+      tinker-bob 4.6s ease-in-out infinite,
+      tinker-lean 1600ms ease-in-out;
+  }
+  @keyframes tinker-lean {
+    0%, 100% { rotate: 0deg; }
+    35%      { rotate: -7deg; }
+    65%      { rotate: 6deg; }
   }
 
   /* Reduced motion: no bob, no cursor tilt. Click bounce stays. */

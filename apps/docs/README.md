@@ -9,7 +9,7 @@ From the monorepo root:
 ```bash
 pnpm install
 pnpm -F docs dev          # http://localhost:4321
-pnpm -F docs build        # prebuild runs docgen, then astro build
+pnpm -F docs build        # astro build
 pnpm -F docs preview      # wrangler preview against the built bundle
 ```
 
@@ -19,43 +19,13 @@ Node `>=22.12` required (matches Astro 6 and the Cloudflare adapter).
 
 ```
 apps/docs/
-├── scripts/
-│   └── docgen.ts                  # parses lib exports → MDX
 ├── src/
 │   ├── layouts/Base.astro         # <html> shell + Nav + footer
-│   ├── components/
-│   │   ├── Nav.astro              # sticky top bar
-│   │   ├── ThemeToggle.astro      # inline-script dark-mode flip
-│   │   ├── DemoPlaceholder.astro  # decorative preview card
-│   │   └── ThemePlayground.svelte # hydrated island
-│   ├── pages/
-│   │   ├── index.astro            # hero + previews + features
-│   │   ├── getting-started.mdx    # install, first snippet, a11y
-│   │   ├── examples.astro         # stub; Wave B backfills
-│   │   ├── playground.astro       # wraps ThemePlayground
-│   │   └── api/
-│   │       ├── index.astro        # TOC (reads api-manifest.json)
-│   │       └── {vec,math,...}.mdx # auto-generated per module
-│   ├── data/api-manifest.json     # written by docgen
+│   ├── components/                # nav, brand, lesson, demos, course, …
+│   ├── pages/                     # index, courses/, signin, signup, me, …
 │   └── styles/global.css          # design tokens + resets
 └── astro.config.mjs               # svelte + mdx + cloudflare
 ```
-
-## Auto-generated API pages
-
-`pnpm -F docs docgen` reads `packages/svelte-mafs/src/index.ts`, follows
-each re-export to its source (`.ts` or, in Wave B, `.svelte`), extracts
-JSDoc + signatures, and writes one MDX page per module to
-`src/pages/api/`. A manifest lands at `src/data/api-manifest.json` for
-the index page to read.
-
-The script runs as `prebuild` so CI and local builds are always
-consistent with whatever the lib currently exports. The generated MDX
-is committed so fresh clones can run `dev` without a prebuild step.
-
-When a new component PR merges to `main`, run `pnpm -F docs docgen &&
-git add src/pages/api src/data/api-manifest.json && git commit` to
-refresh the reference.
 
 ## Deploying to Cloudflare Pages
 
@@ -94,8 +64,7 @@ the flag.
 | Command                     | What it does                                     |
 | :-------------------------- | :----------------------------------------------- |
 | `pnpm -F docs dev`          | Dev server on `localhost:4321`                   |
-| `pnpm -F docs build`        | `prebuild` → `docgen` → `astro build`            |
-| `pnpm -F docs docgen`       | Regenerate API pages from lib source             |
+| `pnpm -F docs build`        | `astro build`                                    |
 | `pnpm -F docs preview`      | Preview the built site via Wrangler              |
 | `pnpm -F docs astro check`  | Type-check `.astro` / `.svelte` / `.ts`          |
 
