@@ -80,31 +80,35 @@ jobs:
       - name: Typecheck (svelte-mafs)
         run: pnpm -F svelte-mafs typecheck
 
+      # apps/docs imports svelte-mafs through its package.json exports map,
+      # which points at dist/. A fresh checkout has no dist/, so the docs
+      # typecheck and build below will fail to resolve the package unless we
+      # build the lib first. Same reason the e2e job builds it before
+      # starting the dev server.
+      - name: Build (lib)
+        run: pnpm -F svelte-mafs build
+
       - name: Generate Cloudflare Worker types (docs)
-        if: needs.detect.outputs.has-docs == 'true'
+        if: needs.detect.outputs.has-docs == 'true' && matrix.node-version == '22'
         run: pnpm -F docs generate-types
 
+      # apps/docs requires Node >=22.12 (Astro 6 minimum). Skip docs steps
+      # on the Node 20 matrix entry — that entry exists to verify the
+      # svelte-mafs library still works on the older runtime.
       - name: Typecheck (docs)
-        if: needs.detect.outputs.has-docs == 'true'
+        if: needs.detect.outputs.has-docs == 'true' && matrix.node-version == '22'
         run: pnpm -F docs exec astro check
 
       - name: Unit tests with coverage (svelte-mafs)
         run: pnpm -F svelte-mafs exec vitest run --coverage
 
       - name: Unit + integration tests (docs)
-        if: needs.detect.outputs.has-docs == 'true'
+        if: needs.detect.outputs.has-docs == 'true' && matrix.node-version == '22'
         run: pnpm -F docs test
 
       - name: Build (docs)
-        if: needs.detect.outputs.has-docs == 'true'
+        if: needs.detect.outputs.has-docs == 'true' && matrix.node-version == '22'
         run: pnpm -F docs build
-
-      # Build is gated continue-on-error until the lib's build script is
-      # corrected (svelte-package needs `-i src` because Stream 1 flattened
-      # sources into src/ rather than src/lib/). Tracked in CONTRIBUTING.md.
-      - name: Build (lib)
-        continue-on-error: true
-        run: pnpm -F svelte-mafs build
 
       - name: Upload coverage to Codecov
         if: matrix.node-version == 22 && success()
