@@ -1,0 +1,144 @@
+---
+title: Stacking N and the full forward pass
+module: m16-transformer-block
+summary: Stack the block N times. Add a final LayerNorm. Project back to vocabulary with a tied unembedding. That's GPT — the entire architecture, top to bottom.
+estimatedMinutes: 16
+order: 4
+prereqs:
+  - residual-stream-as-the-object
+conceptsCovered:
+  - stacked-blocks
+  - depth-specialization
+  - final-layer-norm
+  - unembedding
+  - weight-tying
+  - full-forward-pass
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import AblationLab from '../../components/demos/AblationLab.svelte';
+
+<Step title="Stack the block">
+The block is the same building piece, repeated $N$ times. There are no special "first" or "last" blocks — every block has the same architecture, the same shape, the same parameter count. Different layers hold *different* parameters (each block trains its own $W_Q, W_K, W_V, W_O, W_1, W_2$, $\gamma_1, \beta_1, \gamma_2, \beta_2$), but the wiring between them is uniform.
+
+$$
+h_\ell = \mathrm{Block}_\ell(h_{\ell-1}), \qquad \ell = 1, \dots, N
+$$
+
+with $h_0$ = token embeddings + positional encodings, and each $\mathrm{Block}_\ell$ implementing the pre-LN wiring from lesson 16.1: $x \to x + \mathrm{MHA}(\mathrm{LN}(x)) \to x + \mathrm{FFN}(\mathrm{LN}(x))$.
+
+What makes the architecture *the* transformer is not the block — it's that the block is *self-similar enough* to stack arbitrarily, and that the residual stream gives gradient and information a clean highway from layer 1 to layer $N$.
+</Step>
+
+<Step title="The final LayerNorm">
+Pre-LN's residual trunk is never normalized inside the stack. By the time you reach the top of an $N = 24$ stack, the residual stream's magnitude has accumulated $24 \times 2 = 48$ deltas without rescaling. The activations entering the language-modeling head can have wildly different magnitudes per dimension, and the cross-entropy loss is not robust to that.
+
+The fix is one LayerNorm at the top of the stack, after the last block, before the unembedding:
+
+$$
+z = \mathrm{LN}_{\text{final}}(h_N)
+$$
+
+This is *not* part of any block. It's a single, trunk-level normalization that exists specifically because pre-LN never did one. Post-LN models don't include this final LN — every block's output was already normalized.
+
+It's tiny — $2d$ parameters — but architecturally important. Forget it and your loss is unstable.
+</Step>
+
+<Step title="Unembedding and weight tying">
+The final residual-stream vector at every position is in $\mathbb{R}^d$. To get next-token predictions, project back to vocabulary size $V$ via an unembedding matrix $W_U \in \mathbb{R}^{d \times V}$:
+
+$$
+\mathrm{logits}_i = z_i\, W_U,\qquad p(\cdot \mid t_{\le i}) = \mathrm{softmax}(\mathrm{logits}_i)
+$$
+
+This produces $V$ logits per position; softmax over the vocab axis gives the next-token distribution at every position simultaneously. At training time we feed all $T$ positions through the loss; at inference only the last position's distribution matters (you sample from it, append the new token, repeat).
+
+In every modern decoder-only transformer (GPT-2 onward, LLaMA, Mistral, Gemma, all of them), $W_U$ is *tied* to the input embedding:
+
+$$
+W_U = W_E^\top
+$$
+
+The same $V \times d$ matrix is used to look up the input embedding for a token *and* to score the model's residual stream against every vocab item at the output. This is "weight tying" (Press & Wolf, 2017).
+
+Two things you get from tying:
+
+- **Parameters.** A single $V \times d$ matrix instead of two. For GPT-2-small that's a 24% saving on total parameter count. For frontier models with $V = 200{,}000$ that's hundreds of millions of params.
+- **Inductive bias.** The model is forced to use the *same* geometric direction to *represent* token $t$ (when it's an input) and to *predict* token $t$ (when it's a candidate output). Press and Wolf showed this *lowers* perplexity at fixed parameter count — it's a regularizer, not just a memory hack.
+</Step>
+
+<StepCheck
+  title="Tied character model param count"
+  prompt="params = "
+  answer={4160}
+  tolerance={1}
+  hint="With tying, you have one V × d matrix shared as embedding + LM head. V × d = 65 × 64 = 4160."
+>
+A tied character model has $V = 65$ characters and $d = 64$ model dimension. **How many parameters are in the combined embedding-and-LM-head matrix**?
+</StepCheck>
+
+<Step title="The full forward pass, in seven lines">
+Pulling it all together — the entire decoder-only transformer, from token IDs to next-token distribution, in pseudocode:
+
+```python
+h = W_E[tokens] + W_pos[: len(tokens)]   # embed + positional encoding
+for block in blocks:
+    h = h + block.mha(block.ln1(h))      # sub-layer 1: attention
+    h = h + block.ffn(block.ln2(h))      # sub-layer 2: FFN
+z = layernorm(h, gamma_f, beta_f)        # final LN
+logits = z @ W_E.T                       # tied unembedding
+return softmax(logits, dim=-1)           # next-token distribution per position
+```
+
+That's it. Seven lines.
+
+If you have the right $W_E$, $W_{\text{pos}}$, the parameters of every block, and the final-LN parameters, you can run a transformer of any size. nanoGPT's [`model.py`](https://github.com/karpathy/nanoGPT/blob/master/model.py) is this same pseudocode in PyTorch with a few hundred lines of bookkeeping for batching, dropout, KV cache, and config.
+
+Every modern decoder-only LLM you've heard of is this picture. The differences come from scale, tokenizer, training data, and a handful of architectural tweaks (rotary PE instead of learned, gated FFN instead of GELU+linear, grouped query attention to reduce KV cache memory) — but the bones are this.
+</Step>
+
+<Step title="Depth specialization is empirical, not architectural">
+Different blocks in a trained transformer end up doing different jobs — *empirically*. The architecture itself is uniform; the specialization comes from training. Probing studies (Tenney et al., Bills et al., the entire mech-interp literature) consistently find:
+
+- **Early blocks** tend to handle surface-level features: position-tracking, simple syntax, character-level patterns.
+- **Middle blocks** tend to handle relational and semantic features: who refers to what, factual associations, syntactic dependencies.
+- **Late blocks** tend to handle output-shape features: which token to actually emit, vocabulary-level constraints, confidence calibration.
+
+This is descriptive, not prescriptive. You don't *design* the model to have early/middle/late specialization — gradient descent finds it because it's an efficient division of labor for the loss objective. Re-train a transformer with different data and different specializations emerge in different layers.
+
+For the ablation experiment below, this empirical fact has a corollary: **ablating a late-block sub-layer typically hurts more than ablating an early-block sub-layer**. Late blocks are closer to the output; their deltas are the last word.
+</Step>
+
+<Step title="Click to ablate">
+Below is a scripted four-block transformer rendered as a stack of clickable sub-layer boxes. Click any box to zero out that sub-layer's contribution to the residual stream. Watch what happens to the model's negative-log-likelihood on a held-out passage.
+
+<AblationLab client:visible />
+
+Things to try:
+
+- **Ablate one attention head** at a time. Notice that early-block attention barely moves the loss; late-block attention moves it noticeably.
+- **Ablate one FFN sub-layer**. On average, FFN ablations hurt more than attention ablations of the same depth — consistent with the FFN owning two-thirds of the parameter budget.
+- **Ablate the final LayerNorm**. NLL spikes by an order of magnitude. Without that single trunk-level normalization, the unembedding is reading from an unbounded-magnitude vector and the cross-entropy explodes.
+- **Stack multiple ablations**. The deltas are roughly additive in this scripted demo (and approximately additive in real models too, modulo circuit redundancy).
+
+The widget's NLL deltas are pre-recorded — there isn't a real GPT running in your browser yet (that's the M18 capstone). But the qualitative ranking is faithful to what real ablation studies find.
+</Step>
+
+<StepCheck
+  title="The catastrophic ablation"
+  prompt="block 1 attn = 1, block 4 ffn = 2, final LN = 3, position encoding = 4: "
+  answer={3}
+  tolerance={0.01}
+  hint="The single most catastrophic single-component ablation is the final LayerNorm — it normalizes the trunk before the unembedding. Without it, logits are unbounded."
+>
+Of these four single-component ablations on a pre-LN GPT — block 1 attention, block 4 FFN, final LayerNorm, positional encoding — **which one typically causes the largest immediate jump in NLL**?
+</StepCheck>
+
+<Step title="What's actually new in this lesson">
+Architecturally, almost nothing. Stack a block you already had. Add an LN you already understand. Add a linear projection that's tied to an embedding matrix you already had.
+
+What *is* new is the realization that the assembly is so uniform: every block is the same shape, every layer reads from and writes to the same residual stream, the entire forward pass fits in seven lines of pseudocode. The transformer is not a complex object — it is a small object, repeated. Almost all the expressive power comes from depth, scale, and the data the model was trained on, not the architecture.
+
+The next lesson (16.5, the last in M16) counts what this whole thing actually costs to run.
+</Step>
