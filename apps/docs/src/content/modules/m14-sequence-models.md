@@ -4,7 +4,7 @@ arc: arc-3-transformers
 order: 14
 title: Sequence Modeling — Bigrams to RNNs
 summary: From a bigram count table to an RNN. Tokens, the chain rule of probability, perplexity, sampling, fixed-context MLPs, and the recurrent hidden state — built so that attention next module lands as a fix to a specific, named failure mode.
-status: drafting
+status: shipped
 estimatedMinutes: 390
 prereqs: [m12-backpropagation, m13-training-dynamics]
 conceptsCovered:
