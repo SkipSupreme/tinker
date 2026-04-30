@@ -1,0 +1,136 @@
+---
+title: How a tokenizer is built
+module: m17-tokenization-sampling
+summary: Byte-pair encoding is a deterministic, frequency-greedy merge loop. Train once, ship the merge table, replay it at inference. Byte-level BPE makes the tokenizer total — every string is representable, no UNK token. The "strawberry" failure is a downstream consequence, not a bug.
+estimatedMinutes: 18
+order: 2
+prereqs:
+  - text-becomes-integers
+conceptsCovered:
+  - bpe-train
+  - bpe-encode
+  - byte-bpe
+  - vocab-artifact
+  - tok-failure-modes
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import BpeMergeStepper from '../../components/demos/BpeMergeStepper.svelte';
+import TokenInspector from '../../components/demos/TokenInspector.svelte';
+
+<Step title="The merge loop">
+Byte-pair encoding (Sennrich et al. 2016, adapted from Gage 1994) is one for-loop. Start from the alphabet of the corpus. Count how often every adjacent pair of tokens appears. Pick the most frequent pair, fuse it into a new token, replace it everywhere. Repeat until you've made enough new tokens.
+
+That's the entire algorithm. It is deterministic, it is greedy, and the only state it produces is an *ordered list of merges*.
+
+Five word-counts is enough to see it work. The widget below holds the canonical Hugging Face / Sennrich teaching corpus:
+
+$$
+\{\text{hug}{:}10,\ \text{pug}{:}5,\ \text{pun}{:}12,\ \text{bun}{:}4,\ \text{hugs}{:}5\}
+$$
+
+<BpeMergeStepper client:visible />
+
+The histogram on the right is the only thing the algorithm consults at each step. It picks the tallest bar, fuses that pair, and recomputes. Hit "merge once" twice and watch what happens to the corpus on the left.
+</Step>
+
+<Step title="Counting pairs by hand">
+At step 0, before any merges, every word is just a sequence of characters. Counts of adjacent pairs:
+
+- `(u, g)`: 10 (in `hug`) + 5 (in `pug`) + 5 (in `hugs`) = **20**
+- `(p, u)`: 5 (in `pug`) + 12 (in `pun`) = **17**
+- `(u, n)`: 12 (in `pun`) + 4 (in `bun`) = **16**
+- `(h, u)`: 10 (in `hug`) + 5 (in `hugs`) = **15**
+- `(g, s)`: 5 (in `hugs`) = **5**
+
+`(u, g)` wins. Merge ① is `(u, g) → ug`. Every `u g` becomes a single token `ug`. Now `hug` is `[h, ug]`, `pug` is `[p, ug]`, `hugs` is `[h, ug, s]`.
+
+The pair counts change. Recompute against the *new* token sequences:
+
+- `(p, ug)`: 5 (in the merged `pug`) = **5**
+- `(u, n)`: still 16 — `pun` and `bun` were not touched.
+
+Watch the widget bar move.
+</Step>
+
+<StepCheck
+  title="Pair count after merge ①"
+  prompt="count = "
+  answer={5}
+  tolerance={0.5}
+  hint="After merging (u, g), the only word containing the pair (p, ug) is the merged `pug`, with count 5."
+>
+After running merge ① on the corpus above, **what is the count of the pair `(p, ug)`?**
+</StepCheck>
+
+<Step title="The merge list is the tokenizer">
+The output of training isn't a model. It's a list:
+
+```
+1.  (u, g) → ug
+2.  (u, n) → un
+3.  (h, ug) → hug
+…
+```
+
+To tokenize a *new* word at inference time, replay the merges in order. Start with single characters. Apply merge 1 wherever it matches. Apply merge 2. Apply merge 3. Stop when you reach the end of the list.
+
+The widget exposes this. After two merges — `(u, g)` then `(u, n)` — type new words into the bottom box and watch them tokenize against the current merge table.
+</Step>
+
+<StepCheck
+  title="Tokenize 'hugs' after two merges"
+  prompt="tokens = "
+  answer={3}
+  tolerance={0.5}
+  hint="After (u, g) → ug and (u, n) → un, 'hugs' becomes [h, ug, s]. Three tokens."
+>
+With merges $(u, g) \to ug$ and $(u, n) \to un$ applied in that order, **how many tokens does `'hugs'` produce?**
+</StepCheck>
+
+<Step title="The tokenizer is a frozen artifact">
+Three things follow from this construction that learners frequently get wrong:
+
+- **The tokenizer is not learned.** No gradients. No optimizer. The merge list is computed once by a frequency-counting batch job and never updated. It is a fixed pre-processor.
+- **The merge list ships with the weights.** If you swap the tokenizer for a different one, every embedding-table row is now mapped to the wrong token, and the model becomes noise. You can't change the tokenizer without retraining the model.
+- **The order of merges matters.** Applying merge ② before merge ① can produce a different tokenization. The list is replayed in the order it was trained.
+
+You will see this hard rule a lot in practice: when a model card says "tokenizer: cl100k_base," that means *exact* binary-identical merge list, or the model breaks.
+</Step>
+
+<Step title="Bytes, not codepoints">
+GPT-2 made one important variation. Instead of starting from "the set of distinct Unicode characters in the corpus," it started from the 256 raw UTF-8 bytes. Every input string — Cyrillic, emoji, whitespace, control characters — turns into bytes the same way, and BPE runs over the byte stream.
+
+Why does that matter?
+
+- **The tokenizer is total.** Every possible input is representable, because every input is bytes. No `<UNK>` token, no failures at inference.
+- **Cross-language behavior.** Languages whose alphabet is not in the training corpus still work — they just tokenize into more pieces. Korean, Arabic, emoji.
+- **The base vocabulary size is fixed at 256.** All learned merges go on top of that.
+
+GPT-2 trained 50,001 merges on top of those 256 bytes (vocab = 50,257 once you add a handful of special tokens). GPT-4 trained more, with `cl100k_base` ≈ 100,000.
+</Step>
+
+<StepCheck
+  title="Byte-level base vocab"
+  prompt="vocab = "
+  answer={256}
+  tolerance={0.5}
+  hint="The byte-level base vocabulary is the set of distinct UTF-8 byte values, before any merges run."
+>
+**What is the size of GPT-2's byte-level BPE vocabulary before any merges have been applied?**
+</StepCheck>
+
+<Step title="The strawberry failure, in full">
+Now `strawberry` is fully explained. The byte-level BPE tokenizer that GPT-4 was trained with happens to have learned merges for `st`, `raw`, and `berry` — three common subword pieces — but never learned a single token for `strawberry`. So at inference, the word decomposes into three ids: `[496, 675, 15717]` for `cl100k_base`.
+
+Run the inspector below, leave it on BPE mode, and try `strawberry`. Try `unbelievable`. Try a date. Try a code snippet.
+
+<TokenInspector client:visible initialText="strawberry" />
+
+The tokenizer in the widget is a small one, trained on a paragraph of Shakespeare. The exact tokens differ from GPT-4's. The shape of the failure is identical: single, opaque, multi-character chunks where the model has no operation that introspects the letters inside them.
+
+When the model is asked "how many R's in strawberry," it sees `[496, 675, 15717]` — three integers — and is asked to perform a counting operation on the *characters of those tokens*, an operation the embedding layer does not expose. Letter-counting tasks are off-distribution. So is reversing strings. So is ASCII-art. So is multi-digit arithmetic, partly because BPE merges multi-digit numbers into chunks unevenly (`123` might be one token, `1234` might be two — `12` and `34`).
+
+This is the price of subword tokenization. It is not the model being dumb. It is the model being given different inputs than the inputs the question demands. Next lesson: how the model uses these inputs to learn.
+</Step>
