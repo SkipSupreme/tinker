@@ -21,6 +21,11 @@ const { title } = Astro.props;
       deterministic regardless of the CI runner's prefers-color-scheme.
     -->
     <style is:inline>
+      /* stylelint-disable color-no-hex -- Playwright fixtures need theme-stable
+         hex literals: this layout deliberately ignores the user's data-theme to
+         keep visual-regression baselines deterministic across CI runners. The
+         Quality Bar's no-hex rule applies to PRODUCTION components, not test
+         scaffolding. */
       html,
       body {
         margin: 0;

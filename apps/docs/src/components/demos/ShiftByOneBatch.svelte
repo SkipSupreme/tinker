@@ -209,7 +209,7 @@
   .btn-primary {
     border-radius: 999px; padding: 0.32rem 0.95rem;
     font-size: 0.85rem; font-weight: 600; cursor: pointer;
-    background: var(--ink-sun); color: #1a1402; border: 1px solid var(--ink-sun);
+    background: var(--ink-sun); color: var(--cta-fg); border: 1px solid var(--ink-sun);
     transition: transform 120ms ease;
   }
   .btn-primary:hover { transform: translateY(-1px); }

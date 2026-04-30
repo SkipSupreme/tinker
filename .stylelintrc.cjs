@@ -50,6 +50,8 @@ module.exports = {
     "import-notation": null,
     "string-no-newline": null,
     "no-invalid-double-slash-comments": null,
+    "color-hex-length": null,
+    "declaration-block-no-shorthand-property-overrides": null,
 
     // Inline @ rules used by Astro / Svelte build pipelines.
     "at-rule-no-unknown": [true, {

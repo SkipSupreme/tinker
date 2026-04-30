@@ -327,7 +327,7 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
   }
   .xp-amount { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
   .xp-msg {
-    color: color-mix(in srgb, var(--ink-sun) 80%, #fff);
+    color: color-mix(in srgb, var(--ink-sun) 80%, var(--on-color-fg));
     font-weight: 600;
     font-size: 0.85rem;
   }
@@ -426,7 +426,7 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
   .tile {
     display: block;
     background: var(--demo-card);
-    border: 1.5px solid var(--demo-card-border, #e8e8e3);
+    border: 1.5px solid var(--demo-card-border, var(--site-border));
     border-radius: 18px;
     padding: 1.1rem 1.15rem 1.15rem;
     text-decoration: none;

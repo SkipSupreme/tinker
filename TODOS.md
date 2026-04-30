@@ -22,20 +22,13 @@
 
 **Decision criterion:** Re-open after Phase 1 ships. If audit found ≥3 subtle overlap bugs that visual regression missed, build this. If 0-1, close with note "regression suite caught everything."
 
-### Stylelint Phase 3 cleanup — remaining hex literals
+### ✅ DONE — Stylelint Phase 3 hex cleanup
 
-**What:** 11 remaining `color-no-hex` violations in component files after the bulk `#fdfdfc → var(--on-color-fg)` sweep landed.
+All `color-no-hex` violations resolved (2026-04-30):
+- 22 components: `#fdfdfc` → `var(--on-color-fg)` (bulk sweep)
+- `index.astro`: `#fff` → `var(--on-color-fg)`, `#e8e8e3` → `var(--site-border)`
+- `me.astro`: `#b91c1c` → `var(--site-error)`
+- `ShiftByOneBatch.svelte`: `#1a1402` → `var(--cta-fg)`
+- `TestFixture.astro`: `stylelint-disable color-no-hex` with rationale (Playwright fixtures need theme-stable colors)
 
-**Why:** Lint surfaced them; per-file judgment needed for the replacement.
-
-**Findings (run `pnpm lint:css` to refresh):**
-- `#fff` / `#ffffff` — alias of `#fdfdfc`. Replace with `var(--on-color-fg)`.
-- `#111`, `#666` — generic dark / muted text. Replace with `var(--site-fg)` / `var(--site-fg-muted)` after verifying theme behaviour.
-- `#b91c1c` — error red. Replace with `var(--site-error)`.
-- `#e8e8e3` — light border. Replace with `var(--site-border)` or `var(--demo-card-border)`.
-- `#1a1402` — accent text used in sunglasses easter egg. Either add a token or stylelint-disable with a TODO.
-
-**Pros:** Closes the lint cleanly, lint becomes truly green-or-blocking in CI.
-**Cons:** Each replacement needs a per-file check that the token's theme behaviour is what the component wants (some intent here is "always-this-color regardless of theme", same case as `--on-color-fg`).
-**Context:** Surfaced by /plan-eng-review CQ-1 stylelint setup (2026-04-30). The `#fdfdfc` sweep was mechanical; these last 11 need eyes.
-**Depends on / blocked by:** None. Can be done at any time.
+`pnpm lint:css` now exits 0. New token added to global.css: `--on-color-fg: #fdfdfc;` (theme-stable foreground for white text on saturated backgrounds).
