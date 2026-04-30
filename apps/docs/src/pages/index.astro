@@ -241,14 +241,14 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
   .hero-grid {
     /* Apple on the left, copy on the right. Mascot column has a min-width
        so the cropped apple head reads as a focal point even on narrow
-       laptop widths. align-items: start so the apple sits at the top of
-       its column, lined up with the eyebrow — centering left a tall void
-       above and below the apple when the copy column was full of widget
-       + CTAs. */
+       laptop widths. align-items: center so the apple is vertically
+       centered against the copy column. The empty-space problem this
+       once caused has been mitigated by shrinking the hero widget and
+       tightening hero padding above. */
     display: grid;
     grid-template-columns: minmax(220px, 1fr) minmax(0, 1.25fr);
     gap: clamp(2rem, 5vw, 5rem);
-    align-items: start;
+    align-items: center;
   }
   @media (max-width: 900px) {
     .hero-grid {
