@@ -1,12 +1,40 @@
 <script lang="ts">
   import { Mafs, Coordinates, MovablePoint, Point } from 'svelte-mafs';
 
+  import { TINKER_HERO_EVENT } from '../../lib/events';
+
   interface Props {
     /** Initial selected character. */
     initialPick?: string;
+    /** Hero variant: stripped chrome, dispatches tinker:hero:* events on its closest [data-hero-region] ancestor. */
+    hero?: boolean;
   }
 
-  let { initialPick = 'a' }: Props = $props();
+  let { initialPick = 'a', hero = false }: Props = $props();
+
+  let stageEl: HTMLDivElement | undefined = $state();
+
+  // Cache the hero region ancestor on mount; events bubble naturally to it.
+  let heroRegion: Element | null = $state(null);
+
+  function findHeroRegion(): Element | null {
+    if (!stageEl) return null;
+    return stageEl.closest('[data-hero-region]');
+  }
+
+  function dispatchHero<T>(name: string, detail: T) {
+    const target = heroRegion ?? findHeroRegion();
+    if (!target) return;
+    target.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: false }));
+  }
+
+  // Normalize Mafs viewBox coords to [0,1] hero-region space.
+  // viewBox: x in [-2.7, 2.7], y in [-1.9, 1.9]. y inverts (top is +1.9 in math, 0 in CSS).
+  function norm(x: number, y: number): { x: number; y: number } {
+    const nx = (x - -2.7) / (2.7 - -2.7);
+    const ny = (1.9 - y) / (1.9 - -1.9);
+    return { x: Math.max(0, Math.min(1, nx)), y: Math.max(0, Math.min(1, ny)) };
+  }
 
   const VOCAB: string[] = ['.', ...'abcdefghijklmnopqrstuvwxyz'.split('')];
   const display = (c: string) => (c === '.' ? '·' : c);
@@ -100,25 +128,77 @@
     const [ix, iy] = idealMap[selected];
     return Math.hypot(px - ix, py - iy) > 0.5;
   });
+
+  // Hero event dispatch: when the selected position changes (the user is
+  // dragging via MovablePoint), emit tinker:hero:drag. When isFar transitions,
+  // emit tinker:hero:threshold so the apple can react with a face-shift.
+  let lastIsFar = $state(false);
+  let dragStartFired = $state(false);
+  $effect(() => {
+    if (!hero) return;
+    const [x, y] = positions[selected];
+    const n = norm(x, y);
+    if (!dragStartFired) {
+      dispatchHero(TINKER_HERO_EVENT.drag, { x: n.x, y: n.y, handle: selected, phase: 'start' });
+      dragStartFired = true;
+      // Schedule a phase=end after stillness — debounced via timeout.
+    } else {
+      dispatchHero(TINKER_HERO_EVENT.drag, { x: n.x, y: n.y, handle: selected, phase: 'move' });
+    }
+    if (isFar !== lastIsFar) {
+      dispatchHero(TINKER_HERO_EVENT.threshold, {
+        kind: isFar ? 'left-cluster' : 'in-cluster',
+        label: `${display(selected)} is ${isFar ? 'far from' : 'near'} its trained position`,
+      });
+      lastIsFar = isFar;
+    }
+  });
+
+  // Hover focus tracking on the stage — apple eye-tracks toward where
+  // the visitor is exploring. Throttled to ~60Hz via raf.
+  let focusRaf = 0;
+  function onStagePointerMove(e: PointerEvent) {
+    if (!hero || !stageEl) return;
+    if (focusRaf) return;
+    focusRaf = requestAnimationFrame(() => {
+      focusRaf = 0;
+      if (!stageEl) return;
+      const rect = stageEl.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      dispatchHero(TINKER_HERO_EVENT.focus, { x: Math.max(0, Math.min(1, x)), y: Math.max(0, Math.min(1, y)) });
+    });
+  }
+  function onStagePointerLeave() {
+    if (!hero) return;
+    dispatchHero(TINKER_HERO_EVENT.idle, {});
+  }
 </script>
 
-<div class="widget">
-  <header class="head">
-    <div class="meta">
-      <span class="meta-key">selected</span>
-      <span class="meta-val sel">{display(selected)}</span>
-    </div>
-    <div class="meta">
-      <span class="meta-key">C[{display(selected)}]</span>
-      <span class="meta-val">({fmt(selX)}, {fmt(selY)})</span>
-    </div>
-    <div class="meta meta-loss" class:bad={isFar}>
-      <span class="meta-key">simulated loss</span>
-      <span class="meta-val">{fmt(currentLoss)}</span>
-    </div>
-  </header>
+<div class="widget" class:widget-hero={hero}>
+  {#if !hero}
+    <header class="head">
+      <div class="meta">
+        <span class="meta-key">selected</span>
+        <span class="meta-val sel">{display(selected)}</span>
+      </div>
+      <div class="meta">
+        <span class="meta-key">C[{display(selected)}]</span>
+        <span class="meta-val">({fmt(selX)}, {fmt(selY)})</span>
+      </div>
+      <div class="meta meta-loss" class:bad={isFar}>
+        <span class="meta-key">simulated loss</span>
+        <span class="meta-val">{fmt(currentLoss)}</span>
+      </div>
+    </header>
+  {/if}
 
-  <div class="stage">
+  <div
+    class="stage"
+    bind:this={stageEl}
+    onpointermove={onStagePointerMove}
+    onpointerleave={onStagePointerLeave}
+  >
     <Mafs width={460} height={340} viewBox={{ x: [-2.7, 2.7], y: [-1.9, 1.9] }}>
       <Coordinates.Cartesian
         xAxis={{ labels: () => '' }}
@@ -155,39 +235,47 @@
         >{display(c)}</span>
       {/each}
     </div>
+
+    {#if hero}
+      <!-- Hero-only "try me" pulse on the active letter. CSS handles the
+           pulse animation; pointer-events: none so it doesn't intercept drag. -->
+      <div class="try-me" aria-hidden="true">drag a letter</div>
+    {/if}
   </div>
 
-  <div class="picker">
-    <span class="picker-label">click a token to pluck →</span>
-    <div class="picker-grid">
-      {#each VOCAB as c}
-        <button
-          type="button"
-          class="pick-btn"
-          class:active={c === selected}
-          style={c === selected ? `border-color:${colorFor(c)};color:${colorFor(c)};` : ''}
-          onclick={() => pick(c)}
-          aria-pressed={c === selected}
-        >{display(c)}</button>
-      {/each}
+  {#if !hero}
+    <div class="picker">
+      <span class="picker-label">click a token to pluck →</span>
+      <div class="picker-grid">
+        {#each VOCAB as c}
+          <button
+            type="button"
+            class="pick-btn"
+            class:active={c === selected}
+            style={c === selected ? `border-color:${colorFor(c)};color:${colorFor(c)};` : ''}
+            onclick={() => pick(c)}
+            aria-pressed={c === selected}
+          >{display(c)}</button>
+        {/each}
+      </div>
     </div>
-  </div>
 
-  <div class="controls">
-    <button type="button" class="btn" onclick={snapToIdeal}>Snap {display(selected)} to its trained position</button>
-    <button type="button" class="btn btn-ghost" onclick={shuffle}>Shuffle (untrained init)</button>
-    <button type="button" class="btn btn-ghost" onclick={reset}>Reset</button>
-  </div>
+    <div class="controls">
+      <button type="button" class="btn" onclick={snapToIdeal}>Snap {display(selected)} to its trained position</button>
+      <button type="button" class="btn btn-ghost" onclick={shuffle}>Shuffle (untrained init)</button>
+      <button type="button" class="btn btn-ghost" onclick={reset}>Reset</button>
+    </div>
 
-  <p class="caption">
-    Each dot is a row of the embedding matrix <em>C</em>. Vowels (red) cluster
-    together because the model learned that their following-character
-    distributions are similar; common consonants (blue) cluster too. Pluck
-    one and drag it across the plane — you're physically editing
-    <em>C[i]</em>, and the simulated loss reacts. The point of an embedding
-    isn't anything mystical: it's a vector of learned parameters that
-    happens to encode semantic structure.
-  </p>
+    <p class="caption">
+      Each dot is a row of the embedding matrix <em>C</em>. Vowels (red) cluster
+      together because the model learned that their following-character
+      distributions are similar; common consonants (blue) cluster too. Pluck
+      one and drag it across the plane — you're physically editing
+      <em>C[i]</em>, and the simulated loss reacts. The point of an embedding
+      isn't anything mystical: it's a vector of learned parameters that
+      happens to encode semantic structure.
+    </p>
+  {/if}
 </div>
 
 <style>
@@ -281,5 +369,54 @@
   .caption em {
     color: var(--site-fg); font-style: normal;
     font-family: var(--font-mono); font-size: 0.85em;
+  }
+
+  /* === Hero variant: stripped chrome, bigger stage, "try me" hint. === */
+  .widget-hero {
+    background: transparent;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+    /* Hero stage gets its own visual treatment via the .stage rule below. */
+  }
+  .widget-hero .stage {
+    background: var(--demo-stage);
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--ink-sea) 16%, transparent);
+    box-shadow:
+      0 1px 0 rgba(0,0,0,0.04),
+      0 32px 56px -36px color-mix(in srgb, var(--ink-sea) 60%, transparent);
+  }
+  .widget-hero .lbl {
+    /* Slightly larger labels for hero readability. */
+    font-size: 0.78rem;
+  }
+  .widget-hero .lbl.active {
+    font-size: 0.95rem;
+  }
+
+  .try-me {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: color-mix(in srgb, var(--site-fg) 55%, transparent);
+    background: color-mix(in srgb, var(--demo-stage) 92%, transparent);
+    padding: 0.32rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--site-fg) 12%, transparent);
+    pointer-events: none;
+    animation: try-me-pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes try-me-pulse {
+    0%, 100% { opacity: 0.55; transform: translateX(-50%) translateY(0); }
+    50%      { opacity: 0.95; transform: translateX(-50%) translateY(-2px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .try-me { animation: none; opacity: 0.7; }
   }
 </style>

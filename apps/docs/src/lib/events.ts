@@ -89,3 +89,23 @@ export interface HeroSuccessDetail {
 export function emitHeroEvent<T>(target: Element, name: TinkerHeroEventName, detail: T): void {
   target.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: false }));
 }
+
+/**
+ * Pre-hydration buffer for hero events. Astro islands hydrate on their
+ * own schedules, so the visitor can drag the hero widget before Tinker.svelte
+ * has attached its listener. The homepage installs a window-level capture
+ * listener BEFORE any island hydrates (in an inline `is:inline` script tag),
+ * pushing events into `window.__tinkerHeroBuffer`. Tinker.svelte drains the
+ * buffer on mount and replays each event into its own handler.
+ *
+ * Re-hydration is idempotent: events are still emitted normally; the buffer
+ * just guarantees the listener doesn't miss anything dispatched in the gap
+ * between page load and apple hydration.
+ */
+declare global {
+  interface Window {
+    __tinkerHeroBuffer?: CustomEvent[];
+  }
+}
+
+export const HERO_BUFFER_KEY = '__tinkerHeroBuffer' as const;

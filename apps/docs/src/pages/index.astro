@@ -1,10 +1,9 @@
 ---
 export const prerender = true;
 import Base from '../layouts/Base.astro';
-import TangentDemo from '../components/demos/TangentDemo.svelte';
-import VectorAddDemo from '../components/demos/VectorAddDemo.svelte';
 import Tinker from '../components/brand/Tinker.svelte';
 import FloatingMath from '../components/brand/FloatingMath.svelte';
+import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
 ---
 
 <Base
@@ -12,80 +11,77 @@ import FloatingMath from '../components/brand/FloatingMath.svelte';
   description="Play with ideas. Learn for real. Grow fast. Mini lessons, instant feedback, and joyful wins for curious kids, teens, and grown-ups."
   fullWidth
 >
+  <!-- Pre-hydration capture for hero events. The widget hydrates as a
+       client:load island and may dispatch tinker:hero:* events before
+       Tinker.svelte (client:visible) attaches. This inline capture-phase
+       listener buffers events to window.__tinkerHeroBuffer so Tinker can
+       drain them on mount. ARCH-3 / TENSION-3 from the plan-eng-review. -->
+  <script is:inline>
+    (function () {
+      if (typeof window === 'undefined') return;
+      window.__tinkerHeroBuffer = window.__tinkerHeroBuffer || [];
+      var names = [
+        'tinker:hero:focus',
+        'tinker:hero:drag',
+        'tinker:hero:threshold',
+        'tinker:hero:success',
+        'tinker:hero:idle',
+      ];
+      for (var i = 0; i < names.length; i++) {
+        window.addEventListener(names[i], function (e) {
+          if (window.__tinkerHeroBuffer && window.__tinkerHeroBuffer.length < 64) {
+            window.__tinkerHeroBuffer.push(e);
+          }
+        }, true);
+      }
+    })();
+  </script>
+
   <section class="hero">
     <div class="hero-grid" data-hero-region>
       <div class="hero-mascot">
         <FloatingMath client:visible />
-        <Tinker client:visible size="clamp(220px, 32vw, 360px)" />
+        <Tinker client:visible size="clamp(180px, 26vw, 280px)" />
       </div>
       <div class="hero-copy">
         <p class="eyebrow">🌱 Alpha · 1 course live · new modules every week</p>
-        <h1>Learn by building intuition, not memorizing steps.</h1>
+        <h1>Learn by playing with the math.</h1>
         <p class="lede">
-          Tinker is a new kind of learning app for math, physics, and computer
-          science — interactive the whole way down, with spaced-repetition that
-          actually tracks your understanding, and visualizations you can drag.
-          For adults who want rigor and intuition in the same product.
+          Drag a letter. Watch the constellation react. That's not a
+          decoration — it's the core idea behind embeddings, the foundation
+          of every modern AI model. Tinker teaches the math underneath
+          machine learning by letting you touch it.
         </p>
-
+        <div class="hero-widget">
+          <EmbeddingPluck client:load hero={true} />
+        </div>
         <div class="cta-row">
           <a class="btn primary" href="/signup">Sign up — it's free</a>
           <a class="btn secondary" href="/courses/ml-math">Explore the course</a>
         </div>
-        <p class="form-note">
-          One course live today: <a href="/courses/ml-math">Math for Machine Learning</a>.
-          New modules ship weekly. Sign up to track progress, save notes,
-          and get the heads-up when new courses drop.
-        </p>
       </div>
     </div>
   </section>
 
-  <!-- Lesson tile preview — what you can learn. Cream band so the tiles pop. -->
+  <!-- One live track. No vapor cards. More tracks ship as they're ready. -->
   <section class="band band-cream tiles-band">
     <div class="shell">
-      <p class="kicker kicker-red">What you can tinker with</p>
+      <p class="kicker kicker-red">Available now</p>
       <h2 class="display tiles-headline">
-        Pick a track. <em>Press play.</em>
+        Math for ML. <em>One full course.</em>
       </h2>
-      <div class="tiles">
+      <div class="tiles tiles-single">
         <a href="/courses/ml-math" class="tile tile-open">
           <div class="tile-chip chip-red">Available now</div>
           <h3 class="tile-title">Math for ML</h3>
-          <p class="tile-desc">Derivatives → gradients → linear algebra → backprop → train a GPT.</p>
+          <p class="tile-desc">Derivatives → gradients → linear algebra → backprop → train a GPT. Eighteen lessons, every concept paired with a draggable widget.</p>
           <div class="tile-meta">
             <span class="tile-xp">★ 18 lessons</span>
             <span class="tile-cta">Open →</span>
           </div>
         </a>
-
-        <div class="tile tile-soon">
-          <div class="tile-chip chip-pink">Coming · for kids</div>
-          <h3 class="tile-title">Fractions Through Pizza</h3>
-          <p class="tile-desc">Drag the slices. Share them fairly. Halves, thirds, and the moment fractions click.</p>
-          <div class="tile-meta">
-            <span class="tile-xp">For ages 7–11</span>
-          </div>
-        </div>
-
-        <div class="tile tile-soon">
-          <div class="tile-chip chip-teal">Coming soon</div>
-          <h3 class="tile-title">Vectors as Treasure Maps</h3>
-          <p class="tile-desc">Walk three steps east and four steps north. Now name the arrow that gets you there.</p>
-          <div class="tile-meta">
-            <span class="tile-xp">Pre-algebra ready</span>
-          </div>
-        </div>
-
-        <div class="tile tile-soon">
-          <div class="tile-chip chip-orange">Coming soon</div>
-          <h3 class="tile-title">Why Do Shadows Move?</h3>
-          <p class="tile-desc">A flashlight, a ball, a wall. The thing the sun does every day, but you get to control it.</p>
-          <div class="tile-meta">
-            <span class="tile-xp">For curious anyone</span>
-          </div>
-        </div>
       </div>
+      <p class="tiles-footnote">More tracks ship as they're ready. No vapor.</p>
     </div>
   </section>
 
@@ -263,6 +259,18 @@ import FloatingMath from '../components/brand/FloatingMath.svelte';
     min-height: 280px;
   }
 
+  /* === Hero widget container ===
+     EmbeddingPluck in hero mode lives between the lede and the CTA row.
+     The widget itself handles its border, shadow, and stage styling. */
+  .hero-widget {
+    margin: 1.4rem 0 1.6rem;
+    width: 100%;
+    max-width: 540px;
+  }
+  @media (max-width: 900px) {
+    .hero-widget { margin: 1.2rem auto 1.4rem; }
+  }
+
   /* Floating math symbols above the apple — Tinker is math-as-play, so the
      ambient decoration is the alphabet of math itself. Confetti palette
      (teal/pink/orange) per DESIGN.md. */
@@ -402,6 +410,18 @@ import FloatingMath from '../components/brand/FloatingMath.svelte';
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1rem;
+  }
+  .tiles-single {
+    grid-template-columns: minmax(280px, 520px);
+    justify-content: center;
+  }
+  .tiles-footnote {
+    margin: 1.5rem auto 0;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.84rem;
+    color: var(--site-fg-muted);
+    max-width: 36ch;
   }
   .tile {
     display: block;

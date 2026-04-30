@@ -18,6 +18,8 @@
   import { play } from '../../lib/sound';
   import { burst } from '../../lib/confetti';
   import { eggs } from '../../lib/easterEggs.svelte';
+  import { TINKER_HERO_EVENT, HERO_BUFFER_KEY } from '../../lib/events';
+  import type { HeroFocusDetail, HeroDragDetail, HeroThresholdDetail, HeroSuccessDetail } from '../../lib/events';
 
   interface Props {
     /** Mascot width. Number = px; string = any CSS length, e.g. "clamp(180px, 38vw, 380px)". */
@@ -157,6 +159,107 @@
     if (root) burst(root, { count: 8 });
   });
 
+  // Hero region tracking — when on the homepage, the apple watches what
+  // the visitor does to the hero widget. Coordinates in events are
+  // normalized to hero region [0,1]; we map drag/focus x into the same
+  // tilt range as the cursor-tilt mechanic so the apple "looks at" the
+  // active region.
+  let heroRegion: Element | null = $state(null);
+  let heroTilt = $state(0); // additive to cursorTilt when hero events fire
+  let heroLean = $state(0); // y-axis "lean" while dragging
+  let heroIdleTimer: number | null = null;
+
+  function handleHeroFocus(e: Event) {
+    if (!(e instanceof CustomEvent)) return;
+    const d = e.detail as HeroFocusDetail;
+    heroTilt = (d.x - 0.5) * 2 * HOVER_TILT_RANGE_DEG;
+    tinkerState = 'focus';
+    resetHeroIdle();
+  }
+
+  function handleHeroDrag(e: Event) {
+    if (!(e instanceof CustomEvent)) return;
+    const d = e.detail as HeroDragDetail;
+    heroTilt = (d.x - 0.5) * 2 * HOVER_TILT_RANGE_DEG * 1.4;
+    heroLean = (d.y - 0.5) * 2 * 4;
+    tinkerState = 'drag';
+    if (d.phase === 'end') {
+      resetHeroIdle();
+    } else {
+      resetHeroIdle(160);
+    }
+  }
+
+  function handleHeroThreshold(e: Event) {
+    if (!(e instanceof CustomEvent)) return;
+    // Brief bounce on threshold cross, like the click feedback but smaller.
+    bouncing = true;
+    setTimeout(() => (bouncing = false), 200);
+    tinkerState = 'threshold';
+    resetHeroIdle();
+  }
+
+  function handleHeroSuccess(_e: Event) {
+    tinkerState = 'success';
+    bouncing = true;
+    setTimeout(() => (bouncing = false), 240);
+    if (root) burst(root, { count: 14, spread: 1.3 });
+    resetHeroIdle();
+  }
+
+  function handleHeroIdle(_e: Event) {
+    heroTilt = 0;
+    heroLean = 0;
+    tinkerState = 'idle';
+  }
+
+  function resetHeroIdle(delay = 600) {
+    if (heroIdleTimer) clearTimeout(heroIdleTimer);
+    heroIdleTimer = window.setTimeout(() => {
+      heroTilt = 0;
+      heroLean = 0;
+      tinkerState = 'idle';
+    }, delay);
+  }
+
+  $effect(() => {
+    if (typeof window === 'undefined') return;
+    if (!root) return;
+    const region = root.closest('[data-hero-region]');
+    heroRegion = region;
+    if (!region) return;
+
+    region.addEventListener(TINKER_HERO_EVENT.focus, handleHeroFocus);
+    region.addEventListener(TINKER_HERO_EVENT.drag, handleHeroDrag);
+    region.addEventListener(TINKER_HERO_EVENT.threshold, handleHeroThreshold);
+    region.addEventListener(TINKER_HERO_EVENT.success, handleHeroSuccess);
+    region.addEventListener(TINKER_HERO_EVENT.idle, handleHeroIdle);
+
+    // Drain pre-hydration buffer (events that fired on window before the
+    // apple was hydrated). The inline script in index.astro pushes into
+    // window[HERO_BUFFER_KEY] in the capture phase.
+    const buf = (window as Window & { [HERO_BUFFER_KEY]?: CustomEvent[] })[HERO_BUFFER_KEY];
+    if (buf && buf.length) {
+      for (const ev of buf) {
+        if (ev.type === TINKER_HERO_EVENT.focus) handleHeroFocus(ev);
+        else if (ev.type === TINKER_HERO_EVENT.drag) handleHeroDrag(ev);
+        else if (ev.type === TINKER_HERO_EVENT.threshold) handleHeroThreshold(ev);
+        else if (ev.type === TINKER_HERO_EVENT.success) handleHeroSuccess(ev);
+        else if (ev.type === TINKER_HERO_EVENT.idle) handleHeroIdle(ev);
+      }
+      (window as Window & { [HERO_BUFFER_KEY]?: CustomEvent[] })[HERO_BUFFER_KEY] = [];
+    }
+
+    return () => {
+      region.removeEventListener(TINKER_HERO_EVENT.focus, handleHeroFocus);
+      region.removeEventListener(TINKER_HERO_EVENT.drag, handleHeroDrag);
+      region.removeEventListener(TINKER_HERO_EVENT.threshold, handleHeroThreshold);
+      region.removeEventListener(TINKER_HERO_EVENT.success, handleHeroSuccess);
+      region.removeEventListener(TINKER_HERO_EVENT.idle, handleHeroIdle);
+      if (heroIdleTimer) clearTimeout(heroIdleTimer);
+    };
+  });
+
   function onPointerMove(e: PointerEvent) {
     if (reducedMotion || !root) return;
     const r = root.getBoundingClientRect();
@@ -206,7 +309,7 @@
   class:tinker--hop={idleAction === 'hop'}
   class:tinker--lean={idleAction === 'lean'}
   data-tinker-state={computedState}
-  style="--tinker-size: {sizeCss}; --tinker-tilt: {tilt}deg; --tinker-cursor-tilt: {cursorTilt}deg;"
+  style="--tinker-size: {sizeCss}; --tinker-tilt: {tilt}deg; --tinker-cursor-tilt: {cursorTilt + heroTilt}deg; --tinker-hero-lean: {heroLean}px;"
   onpointermove={onPointerMove}
   onpointerleave={onPointerLeave}
   role="button"
@@ -313,7 +416,7 @@
        safer if the asset gets re-exported with different padding. */
     object-fit: contain;
     object-position: center;
-    transform: rotate(calc(var(--tinker-tilt) + var(--tinker-cursor-tilt))) translateY(0);
+    transform: rotate(calc(var(--tinker-tilt) + var(--tinker-cursor-tilt))) translateY(var(--tinker-hero-lean, 0));
     /* Drop-shadow tinted with apple red so the mascot reads as 3D-on-warm. */
     filter: drop-shadow(0 18px 32px rgba(230, 57, 106, 0.32));
     animation: tinker-bob 4.6s ease-in-out infinite;
