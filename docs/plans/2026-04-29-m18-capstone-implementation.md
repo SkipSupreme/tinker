@@ -13,15 +13,19 @@ The research surfaced three decisions; user signed off on all three.
 
 Trade accepted: the engine is bigger than any prior module's widget set. The pedagogy demands it.
 
-## 1. Lessons (final, 3)
+## 1. Lessons (final, 5)
 
 | # | Title | Slug | ~Min | Widgets |
 |---|---|---|---|---|
-| 18.1 | Push the button | `push-the-button` | 50 | runnerPanel, liveSampleStream, seedScrubber, lossCurvePathologyZoo |
-| 18.2 | Now make it talk | `now-make-it-talk` | 30 | samplerKnobsPlayground |
-| 18.3 | The credits roll | `the-credits-roll` | 18 | creditsRollPanel, liveSampleStream (frozen variant) |
+| 18.1 | Press Start | `press-start` | 15 | runnerPanel (boot + first iter focus) |
+| 18.2 | Watch it learn | `watch-it-learn` | 25 | runnerPanel (long-run focus), liveSampleStream, lossCurvePathologyZoo |
+| 18.3 | Your checkpoint | `your-checkpoint` | 15 | seedScrubber, runnerPanel (save/load affordances) |
+| 18.4 | Now make it talk | `now-make-it-talk` | 30 | samplerKnobsPlayground |
+| 18.5 | The credits roll | `the-credits-roll` | 18 | creditsRollPanel, liveSampleStream (frozen variant) |
 
-Total: ~98 minutes. Capstone lessons are *experiences*, not new theory — most of the wall time is the learner watching their own model train.
+Total: ~103 minutes. Five lessons matches the M14/M15/M17 cadence. The original "Push the button" splits at natural seams: *boot* (18.1) / *long training run* (18.2) / *artifact* (18.3). Each of the three is independently runnable — each fires its own training run rather than relying on cross-lesson state — so a learner who lands on 18.2 cold still gets the experience.
+
+Step distribution against research §6's 13-step Lesson 18.1: steps 1–4 + 6–7 → 18.1; steps 8–11 → 18.2; steps 5 + 12–13 → 18.3.
 
 ## 2. Engine — WGSL kernel inventory
 
@@ -66,24 +70,34 @@ Engine TS layer (~250 lines): `Tensor` = `{buffer: GPUBuffer, shape, dtype:'f32'
 
 The M16 `ParamBudgetPie` and M17 `LossCurveDoctor` are NOT reused: M18 wants live curves on a real running engine, not pre-recorded traces. Different widget contract.
 
-## 4. Build order — six slices
+## 4. Build order — eight slices
 
-Each slice = one or more commits, build + deploy + smoke-verify, push.
+Each slice = one or more commits, build + deploy + smoke-verify, push. Engine slices (2–4) ship `/dev/m18-…/` routes — not linked from nav, but real, deployed, and navigable for verification.
 
-- **Slice 1 (this turn)** — Plan committed. Research already saved.
-- **Slice 2 — Engine forward.** All 10 forward kernels + Engine TS layer. Smoke test: instantiate the model from a fixed seed, run one forward pass on a hand-crafted batch, assert logit shape and softmax sums to 1 within tolerance. Lives at `apps/docs/src/lib/m18/engine/`. No public route.
-- **Slice 3 — Engine backward + training loop.** All 13 backward+optimizer kernels. Smoke test: train the actual `n=4, d=64` model on tiny-shakespeare-char headless (Node + `@webgpu/dawn` or Bun's WebGPU) for 2{,}000 iters, assert val NLL drops below 1.7. This is the gate — if this doesn't converge, nothing else ships.
-- **Slice 4 — Determinism + save/load.** sfc32 + cyrb128 threaded through (data-loader, dropout-mask, weight-init, sampler). `.bin` format with 512-byte JSON header + Float32Array tail. Twin-run determinism test: two CLI runs with the same seed string produce byte-identical weight `.bin` files.
-- **Slice 5 — Lesson 18.1.** Build `runnerPanel` + `seedScrubber` + `liveSampleStream` + `lossCurvePathologyZoo`. Wire to engine. Ship `/lessons/push-the-button/`. First publicly visible M18 commit.
-- **Slice 6 — Lesson 18.2 + 18.3 + module shipped.** Train the reference checkpoint once on the slowest dev machine, ship the `.bin` as a static asset (~840 KB). Build `samplerKnobsPlayground`, ship `/lessons/now-make-it-talk/`. Build `creditsRollPanel` reading `apps/docs/src/lib/m18/engine/*` directly so the credits roll is the actual code. Ship `/lessons/the-credits-roll/`. Flip module manifest `status: planned → shipped`. Update m18 manifest's summary to reflect the locked architecture (n_layer=4, d_model=64, ~200k true).
+- **Slice 1 (done)** — Plan committed. Research already saved.
+- **Slice 2 — Engine forward + reference oracle.** All 10 forward kernels + Engine TS layer + per-kernel CPU twin (5–10 lines of TS each, used for unit-equivalence assertions to ~1e-5). Train the same `n=4, d=64, T=64, vocab=65` config in nanoGPT (CPU is fine — small model) for 2{,}000 iters and commit the resulting loss-trajectory CSV as `docs/research/m18-nanogpt-reference.csv`. This is the oracle Slice 3 must match. Ship `/dev/m18-forward/` running one forward pass on a hand-crafted batch with logit shape + softmax-sum readouts.
+- **Slice 3 — Engine backward + training loop.** All 13 backward+optimizer kernels. Smoke test: train the model headless (Node + `@webgpu/dawn` or Bun's WebGPU) for 2{,}000 iters and assert the loss trajectory matches the Slice 2 nanoGPT reference within ±0.1 nats at every 100-iter checkpoint. This is the gate. If it fails despite reference-run + per-kernel CPU twin, fall back to wrapping `webgpu-torch` (research §9 source 10) for the engine and continue with Slice 4+ unchanged — pedagogical claim weakens from "you wrote it" to "you can read it," lessons still ship. Ship `/dev/m18-train/` running 200 iters live with a curve.
+- **Slice 4 — Determinism + save/load.** sfc32 + cyrb128 threaded through (data-loader, dropout-mask, weight-init, sampler). `.bin` format with 512-byte JSON header + Float32Array tail. Twin-run test: two CLI runs with the same seed string produce byte-identical `.bin` files. Ship `/dev/m18-twin-seed/` running the twin-runs determinism check live in browser.
+- **Slice 5 — Lesson 18.1 (Press Start).** Build `runnerPanel` (boot + first-iter focus). Wire to engine. Ship `/lessons/press-start/`. First publicly visible M18 lesson.
+- **Slice 6 — Lesson 18.2 (Watch it learn).** Build `liveSampleStream` + `lossCurvePathologyZoo`. Extend `runnerPanel` with the long-run affordances (cosine LR readout, tab-throttle badge wired to Page Visibility API). Ship `/lessons/watch-it-learn/`.
+- **Slice 7 — Lesson 18.3 (Your checkpoint).** Build `seedScrubber`. Extend `runnerPanel` with Save Weights + Load Weights buttons + optional share-URL affordance. Ship `/lessons/your-checkpoint/`.
+- **Slice 8 — Lessons 18.4 + 18.5 + module shipped.** Train the reference checkpoint once on the slowest dev machine, ship the `.bin` as a static asset (~840 KB). Build `samplerKnobsPlayground`, ship `/lessons/now-make-it-talk/`. Build `creditsRollPanel` reading `apps/docs/src/lib/m18/engine/*` directly so the credits roll is the actual code. Ship `/lessons/the-credits-roll/`. Flip module manifest `status: planned → shipped`. Update m18 manifest's summary to reflect the locked architecture (n_layer=4, d_model=64, ~200k true).
 
 Per memory rule: every slice deploys to learntinker.com and verifies before commit.
 
+### 4.5 Convergence-gate hedges (Slice 3)
+
+Three layered de-risks so Slice 3's gate is a high-information checkpoint, not a high-risk cliff:
+
+1. **Reference oracle (Slice 2 task).** nanoGPT loss trajectory committed before any backward kernel is written; Slice 3's success criterion is curve-matching, not just "loss goes down."
+2. **Per-kernel CPU twin (Slice 2 task).** Every WGSL forward and backward kernel has a 5–10 line CPU implementation. Smoke tests assert WGSL output matches CPU output to ~1e-5 on random inputs. A failing kernel surfaces immediately, not as a downstream training mystery.
+3. **Explicit fallback (Slice 3 contingency).** If reference-matching fails, switch the engine to `webgpu-torch` and continue. This keeps the lessons shippable and avoids the panic-pivot that would otherwise blow up the schedule.
+
 ## 5. Pedagogical decisions (locked)
 
-- **Endgame callback:** research candidate A — *"This is the entire course. You started in M5… There is no module after this one. There is the model, the artifact, and the next thing you decide to learn."* In all three lesson MDX files; in the module manifest.
-- **3 lessons.** No further splits. The capstone *is* the experience of running the trainer; padding it with prose lessons would dilute the moment.
-- **Reference checkpoint shipped with the page.** Lesson 18.2 must work even if the learner skipped 18.1 — the playground loads the canonical `.bin` if no local checkpoint exists. The "use your own checkpoint" affordance is additive.
+- **Endgame callback:** research candidate A — *"This is the entire course. You started in M5… There is no module after this one. There is the model, the artifact, and the next thing you decide to learn."* In all five lesson MDX files; in the module manifest.
+- **5 lessons, no further splits.** The 18.1 → 18.1/2/3 split is final; the boot/long-run/artifact seam is real and each piece runs standalone.
+- **Reference checkpoint shipped with the page.** Lesson 18.4 must work even if the learner skipped 18.1–18.3 — the playground loads the canonical `.bin` if no local checkpoint exists. The "use your own checkpoint" affordance is additive.
 - **No fp16 path.** `f32` only. Mention `shader-f16` in research-trap prose; do not implement.
 - **No mobile path in v1.** WebGPU on iOS Safari is shipping but spotty (April 2026); detect, message gracefully, link to a desktop browser. Never silently fall back to CPU.
 - **No service-worker corpus caching in v1.** The 1 MB tiny-shakespeare loads each visit; caching is an optimization for after the lessons ship.
@@ -105,4 +119,4 @@ Per memory rule: every slice deploys to learntinker.com and verifies before comm
 
 ## 8. Done definition
 
-All three lessons live on `learntinker.com`, all five widgets implemented as Svelte components, the engine compiles 26 WGSL kernels and trains the reference model to val NLL < 1.7 in under 5 minutes on an M-series Mac, twin-seed determinism passes byte-identically, the m18 manifest is `status: shipped` with the corrected `n_layer=4, d_model=64` summary, CI green, the course's final lesson endpoint matches the endgame callback to the character.
+All five lessons live on `learntinker.com`, all five widgets implemented as Svelte components, the engine compiles 26 WGSL kernels and trains the reference model to val NLL < 1.7 in under 5 minutes on an M-series Mac (matching the Slice 2 nanoGPT reference within ±0.1 nats throughout the run), twin-seed determinism passes byte-identically, the m18 manifest is `status: shipped` with the corrected `n_layer=4, d_model=64` summary, CI green, the three `/dev/m18-…/` routes still serve and pass their smoke tests, the course's final lesson endpoint matches the endgame callback to the character.
