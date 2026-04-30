@@ -1,0 +1,102 @@
+---
+title: Text becomes integers
+module: m17-tokenization-sampling
+summary: The model never sees characters or bytes. It sees integer ids into a fixed vocabulary, picked once when the tokenizer was trained. Three flavors of tokenizer — character, word, subword — and the costs of each.
+estimatedMinutes: 14
+order: 1
+prereqs:
+  - counting-the-cost
+conceptsCovered:
+  - token-id
+  - vocab-artifact
+  - char-tokenizer
+  - word-tokenizer
+  - subword-motivation
+  - tok-failure-modes
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import TokenInspector from '../../components/demos/TokenInspector.svelte';
+
+<Step title="The interface, restated">
+For the entire transformer arc you have been thinking about token sequences. Time to look at the boundary where text turns into them.
+
+The model never sees a string. It never sees a UTF-8 byte. The forward pass starts with an embedding lookup, and the input to that lookup is an integer — an index into the model's vocabulary. The vocabulary is a fixed list of strings, picked once at *tokenizer-training time* and shipped alongside the weights.
+
+Two functions live at this boundary:
+
+$$
+\mathrm{encode}: \text{string} \to \text{list of ids},\qquad \mathrm{decode}: \text{list of ids} \to \text{string}
+$$
+
+That's the whole interface. Everything in M11–M16 sits on the right of `encode`. Everything in this lesson sits on the left.
+</Step>
+
+<Step title="The default failure mode">
+Type your name into the widget below. Then try `strawberry`. Then try a number. The default mode is BPE — a real subword tokenizer trained inline on a paragraph of Shakespeare.
+
+<TokenInspector client:visible />
+
+`strawberry` is not a token. It is three tokens, none of which are words. The colored chunks are the actual integers the model receives. If you ask GPT-4 "how many R's are in strawberry," the model is being handed three ids and asked to count letters in chunks it has no built-in operation to look inside.
+
+The model isn't bad at counting. It is doing something else entirely.
+</Step>
+
+<Step title="Character-level: every codepoint is a token">
+The simplest possible tokenizer. The vocabulary is just the set of distinct characters that appear in the corpus. For Shakespeare, that's 65 — 52 letters (cased), 10 digits, 13 symbols/whitespace. Switch the widget above to `character` and watch each glyph become its own colored chunk.
+
+The capstone (M18) trains on the tiny-shakespeare corpus with exactly this tokenizer. 1,115,394 characters total, split 90/10 into a 1,003,854-character training stream and a 111,540-character validation stream.
+
+Two strengths of character-level:
+
+- **No out-of-vocabulary problem.** Every input is representable.
+- **Tiny vocabulary.** $\lvert V \rvert = 65$ means the embedding table and the unembedding matrix are minuscule — at $d_{\text{model}} = 128$, that's $65 \times 128 = 8{,}320$ parameters per matrix. Practically free.
+
+One serious cost: every word becomes ~5 tokens, so the sequence the transformer has to process is ~5× longer than it would be with a word-level tokenizer. Attention is $O(T^2)$. Five times the tokens means twenty-five times the attention cost. Long sequences are how character-level pays for the rest.
+</Step>
+
+<StepCheck
+  title="Char-level tiny-shakespeare"
+  prompt="vocab_size = "
+  answer={65}
+  tolerance={0.5}
+  hint="Tiny-shakespeare contains 65 distinct characters: cased letters + digits + a handful of punctuation and whitespace."
+>
+**What is `vocab_size` for the character-level tokenizer on tiny-shakespeare?**
+</StepCheck>
+
+<Step title="Word-level: vocab explodes, OOV strikes">
+Switch the widget to `word`. Now every whitespace-separated unit is its own token. Punctuation gets its own token. This feels intuitive — it's how humans segment language.
+
+Two reasons it doesn't scale:
+
+- **Vocabulary explosion.** English has hundreds of thousands of distinct word forms (`run`, `runs`, `ran`, `running`, `runner`, `runners`, `rerun`, `outrun`...). Modern dictionary-style tokenizers built this way sit around $\lvert V \rvert = 500{,}000$ or more.
+- **Out-of-vocabulary at inference.** Any string the tokenizer didn't see during training has no id. Old NLP systems had a special `<UNK>` token for this. Models trained with `<UNK>` learn to *predict* `<UNK>` in places where the real next token was rare — which means they hallucinate "unknown" instead of producing the actual word.
+
+The vocab cost is real. The embedding table at the top of the model is $\lvert V \rvert \times d_{\text{model}}$. The unembedding at the bottom (often weight-tied — same matrix, transposed) is the same shape. Doubling the vocabulary doubles both.
+</Step>
+
+<StepCheck
+  title="What word-level costs you"
+  prompt="MB = "
+  answer={256}
+  tolerance={2}
+  hint="500,000 entries × 128 dims × 4 bytes (float32) = 256 MB. Just for the embedding table — and the unembedding doubles it."
+>
+A word-level English tokenizer with $\lvert V \rvert = 500{,}000$ entries paired with $d_{\text{model}} = 128$ in float32. **What's the embedding-table size in megabytes?**
+</StepCheck>
+
+<Step title="Subword: the compromise that won">
+Character-level is too long. Word-level is too big and has an OOV problem. Subword tokenization picks pieces somewhere in between — common words become a single token, rare words decompose into smaller chunks the tokenizer has seen before.
+
+The dominant subword algorithm is **byte-pair encoding** (BPE). Train it once on a corpus, ship the resulting merge list with the model, and you get:
+
+- Common words (`the`, `and`, `with`) become single tokens.
+- Inflections (`runs`, `running`) usually share a stem token plus a suffix token.
+- Brand-new words still tokenize without `<UNK>` — they just decompose into more pieces.
+
+GPT-2 and GPT-3 use BPE over raw UTF-8 bytes (vocab ≈ 50,257). GPT-4 uses a larger byte-level BPE (`cl100k_base`, vocab ≈ 100,000). LLaMA uses a different family (SentencePiece) with similar economics.
+
+The tokenizer in this widget's BPE mode is real. It was trained inline on a paragraph of Shakespeare, with 64 merges. It is small — the merge table fits on one screen, and you can see exactly which pieces it learned. Click "show merge table" to inspect what it's actually doing under the hood. Next lesson: how it got there.
+</Step>
