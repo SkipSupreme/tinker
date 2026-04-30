@@ -1,0 +1,192 @@
+---
+/**
+ * /dev/widget-lab/ — internal audit surface for all svelte-mafs widgets.
+ * Generalized from /examples/fixtures/ per ARCH-1 of the plan-eng-review.
+ *
+ * Renders every demo + fixture in standardized frames at desktop / tablet /
+ * mobile viewports. Overlay toggles (?overlay=bounds,grid,padding) reveal
+ * the Quality Bar invariants visually.
+ *
+ * Phase 1 captures audit-capture screenshots of every widget at every
+ * viewport. Phase 3 promotes widgets to baselines/ as they pass the bar.
+ */
+export const prerender = true;
+import Base from '../../../layouts/Base.astro';
+
+// Static manifests — Astro doesn't support glob component imports at
+// build time, so the index is a hand-maintained list. Loading the actual
+// component happens on the per-widget pages, not here.
+const DEMOS = [
+  "AblationLab", "AdamInternalsInspector", "AttentionMatrixHeatmap", "BasisTranslator",
+  "BigramHeatmap", "BigramTwoWays", "BnTrainEvalToggle", "BpeMergeStepper",
+  "BuildTheBlock", "ChainRuleComposition", "ChainRulePaths", "DirectPathInspector",
+  "DotProductPlayground", "DropoutMaskScrub", "EigenHunter", "EmbeddingPluck",
+  "GradientCompass", "GradientDecay", "GradientNoiseBall", "JvpPlayground",
+  "KvCacheTimeline", "LnPlacementGrad", "LossCurveDoctor", "LossLandscapeNavigator",
+  "M18ForwardSmoke", "M18TrainSmoke", "MatrixDraggable", "MlpContextDial",
+  "MultiHeadSplitter", "NucleusCutoff", "ParamBudgetPie", "PartialSlicer",
+  "PermutationEquivarianceLab", "PriorPenaltyEquivalence", "QkVectorPlayground",
+  "ResidualGradientFlow", "ResidualStreamScope", "RopeRotationDial", "SaddleScanner",
+  "ScheduleDesigner", "SecantToTangent", "ShiftByOneBatch", "SlopeOfLine",
+  "SoftmaxSatExplorer", "SvdEllipse", "TangentDemo", "TemperatureBars",
+  "TokenInspector", "UnrolledRNN", "VarianceFanOut", "VectorAddDemo",
+  "WarmupStabilizer",
+];
+
+const FIXTURES = [
+  'circle', 'coordinates-cartesian', 'ellipse', 'line-segment',
+  'line-through-points', 'movablepoint', 'pan-zoom', 'plot-inequality',
+  'plot-of-x', 'plot-of-y', 'plot-parametric', 'plot-vector-field',
+  'point', 'polygon', 'text', 'transform', 'vector',
+];
+---
+
+<Base title="Widget Lab — internal audit" description="Internal audit surface for svelte-mafs widgets. /dev/widget-lab/" fullWidth>
+  <section class="lab">
+    <header class="lab-head">
+      <p class="kicker">Internal · Quality Bar audit surface</p>
+      <h1>Widget Lab</h1>
+      <p class="lede">
+        Every svelte-mafs widget rendered at desktop / tablet / mobile viewports
+        with overlay toggles for the Quality Bar invariants. Phase 1 captures
+        current state into <code>audit-capture/</code>. Phase 3 promotes
+        widgets to <code>baselines/</code> as they pass the checklist.
+      </p>
+      <div class="counts">
+        <span class="count">{DEMOS.length} demos</span>
+        <span class="count">{FIXTURES.length} fixtures</span>
+        <span class="count">{DEMOS.length + FIXTURES.length} total</span>
+      </div>
+      <p class="hint">
+        Append <code>?overlay=bounds,grid,padding</code> to any widget URL to
+        toggle the Quality Bar overlays.
+      </p>
+    </header>
+
+    <section class="group">
+      <h2>Demos ({DEMOS.length})</h2>
+      <p class="lede">Each demo has its own audit page at <code>/dev/widget-lab/demos/&lt;Name&gt;/</code>. Playwright captures snapshots of each at desktop / tablet / mobile.</p>
+      <ul class="grid">
+        {DEMOS.map((slug) => (
+          <li class="cell">
+            <a href={`/dev/widget-lab/demos/${slug}/`}>
+              <span class="cell-title">{slug}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="group">
+      <h2>Fixtures ({FIXTURES.length})</h2>
+      <p class="lede">Already live at <code>/examples/fixtures/</code>.</p>
+      <ul class="grid">
+        {FIXTURES.map((slug) => (
+          <li class="cell">
+            <a href={`/examples/fixtures/${slug}/`}>
+              <span class="cell-title">{slug}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  </section>
+</Base>
+
+<style>
+  .lab {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 4rem) 1.25rem;
+    font-family: var(--font-sans);
+  }
+  .lab-head { margin-bottom: 2.5rem; }
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-coral);
+    margin: 0 0 0.5rem;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2rem, 4.5vw, 3.2rem);
+    margin: 0 0 1rem;
+    letter-spacing: -0.02em;
+  }
+  .lede {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: var(--site-fg-muted);
+    max-width: 60ch;
+    margin: 0 0 1rem;
+  }
+  .counts {
+    display: flex; gap: 0.6rem; flex-wrap: wrap;
+    margin: 1rem 0;
+  }
+  .count {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    padding: 0.3rem 0.6rem;
+    border: 1px solid color-mix(in srgb, var(--site-fg) 18%, transparent);
+    border-radius: 999px;
+    color: var(--site-fg-muted);
+  }
+  .hint {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--site-fg-muted);
+  }
+  .hint code {
+    background: var(--demo-stage);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+  .group { margin: 2.5rem 0; }
+  .group h2 {
+    font-family: var(--font-display);
+    font-weight: 650;
+    font-size: 1.5rem;
+    margin: 0 0 1rem;
+  }
+  .grid {
+    list-style: none;
+    padding: 0; margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.5rem;
+  }
+  .grid-wide {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+  .cell a {
+    display: block;
+    padding: 0.85rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--site-fg) 12%, transparent);
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--site-fg);
+    background: var(--demo-card);
+    transition: border-color 120ms ease, transform 120ms ease;
+  }
+  .cell a:hover {
+    border-color: var(--ink-red);
+    transform: translateY(-1px);
+  }
+  .cell-title {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: block;
+  }
+  .cell-meta {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--site-fg-muted);
+    margin-top: 0.3rem;
+  }
+</style>
