@@ -227,17 +227,16 @@
     </Mafs>
 
     <!-- Overlay labels, positioned via CSS calc on the SVG-coord system.
-         We absolutely position by transforming to a percentage of the viewBox.
-         Constrained to a safe interior padding so labels never abut the
-         widget edge or get clipped (Quality Bar invariant: no covered
-         numbers, no edge collisions). -->
+         Label center maps directly to dot center: same percentage of the
+         viewBox in both axes, so labels sit exactly on their dots. The
+         text-shadow halo is gone (replaced with a pill bg), so the old
+         interior-padding workaround is unnecessary and was misaligning
+         labels from dots. -->
     <div class="labels" aria-hidden="true">
       {#each VOCAB as c}
         {@const [x, y] = positions[c]}
-        {@const cx = ((x - -2.7) / (2.7 - -2.7))}
-        {@const cy = ((1.9 - y) / (1.9 - -1.9))}
-        {@const left = (0.05 + cx * 0.9) * 100}
-        {@const top = (0.08 + cy * 0.84) * 100}
+        {@const left = ((x - -2.7) / (2.7 - -2.7)) * 100}
+        {@const top = ((1.9 - y) / (1.9 - -1.9)) * 100}
         <span
           class="lbl"
           class:active={c === selected}
