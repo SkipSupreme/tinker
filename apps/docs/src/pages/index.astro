@@ -63,25 +63,147 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
     </div>
   </section>
 
-  <!-- One live track. No vapor cards. More tracks ship as they're ready. -->
-  <section class="band band-cream tiles-band">
+  <!-- Three concrete proof-cards: real things you build in the course.
+       Not generic feature pills — actual module callbacks with the
+       widget, the moment, the payoff. -->
+  <section class="band band-white proof-band">
     <div class="shell">
-      <p class="kicker kicker-red">Available now</p>
-      <h2 class="display tiles-headline">
-        Math for ML. <em>One full course.</em>
+      <p class="kicker kicker-red">What you'll actually build</p>
+      <h2 class="display proof-headline">
+        Three moments. <em>Pick the one you want first.</em>
       </h2>
-      <div class="tiles tiles-single">
-        <a href="/courses/ml-math" class="tile tile-open">
-          <div class="tile-chip chip-red">Available now</div>
-          <h3 class="tile-title">Math for ML</h3>
-          <p class="tile-desc">Derivatives → gradients → linear algebra → backprop → train a GPT. Eighteen lessons, every concept paired with a draggable widget.</p>
-          <div class="tile-meta">
-            <span class="tile-xp">★ 18 lessons</span>
-            <span class="tile-cta">Open →</span>
+
+      <ol class="proof-grid">
+        <li class="proof-card">
+          <div class="proof-num"><span>12</span></div>
+          <h3 class="proof-title">Backprop, from scratch</h3>
+          <p class="proof-desc">
+            Build micrograd one node at a time. Watch the gradient flow
+            backward through a tanh, see how <code>loss.backward()</code>
+            actually works. The keystone module of the course.
+          </p>
+          <a class="proof-link" href="/courses/ml-math#m12">
+            Module 12 · Backpropagation →
+          </a>
+        </li>
+
+        <li class="proof-card">
+          <div class="proof-num"><span>15</span></div>
+          <h3 class="proof-title">Attention, as a soft dictionary</h3>
+          <p class="proof-desc">
+            The thing you played with up top is an embedding — the
+            foundation of attention. Drag a query vector, watch it pivot
+            toward the right keys. Build the math behind the T in GPT.
+          </p>
+          <a class="proof-link" href="/courses/ml-math#m15">
+            Module 15 · Attention →
+          </a>
+        </li>
+
+        <li class="proof-card">
+          <div class="proof-num"><span>18</span></div>
+          <h3 class="proof-title">A real transformer, in your browser</h3>
+          <p class="proof-desc">
+            Capstone: 4 layers, 4 heads, ~200k params. Trains in ~5
+            minutes on WebGPU. Generates text that sounds like Shakespeare
+            if Shakespeare had a head injury. Yours to keep.
+          </p>
+          <a class="proof-link" href="/courses/ml-math#m18">
+            Module 18 · Capstone →
+          </a>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Course curriculum: arc-by-arc map of all 18 modules so visitors
+       can see the actual shape of the work, not a vague "18 lessons" claim. -->
+  <section class="band band-cream curriculum-band">
+    <div class="shell">
+      <p class="kicker kicker-red">The whole course</p>
+      <h2 class="display curriculum-headline">
+        Eighteen modules. <em>Four arcs.</em>
+      </h2>
+      <p class="curriculum-lede">
+        Every concept is paired with a draggable widget. No memorization,
+        no chalk-talk. The math is the work; the widget is how you touch it.
+      </p>
+
+      <ol class="arc-list">
+        <li class="arc">
+          <div class="arc-head">
+            <span class="arc-tag">Arcs 0–1</span>
+            <h3 class="arc-name">Foundations</h3>
+            <span class="arc-count">7 modules</span>
           </div>
-        </a>
+          <p class="arc-desc">
+            Pre-algebra refresh, single-variable calculus and the chain
+            rule, partial derivatives, the gradient, vectors, matrices
+            as transformations, eigen and SVD. The math you need before
+            the ML math makes sense.
+          </p>
+        </li>
+        <li class="arc">
+          <div class="arc-head">
+            <span class="arc-tag">Arc 2</span>
+            <h3 class="arc-name">ML Foundations</h3>
+            <span class="arc-count">4 modules</span>
+          </div>
+          <p class="arc-desc">
+            Optimization (SGD → Adam, loss-landscape pathologies), neural
+            network fundamentals, backprop from scratch, training dynamics
+            (overfit, dropout, BatchNorm, residuals, warmup).
+          </p>
+        </li>
+        <li class="arc">
+          <div class="arc-head">
+            <span class="arc-tag">Arc 3</span>
+            <h3 class="arc-name">Transformers</h3>
+            <span class="arc-count">3 modules</span>
+          </div>
+          <p class="arc-desc">
+            Sequence models from bigrams to RNNs, attention as a soft
+            dictionary lookup with Q/K/V projections and positional
+            encoding, the transformer block (residuals, LayerNorm, FFN,
+            unembedding) stacked N times.
+          </p>
+        </li>
+        <li class="arc">
+          <div class="arc-head">
+            <span class="arc-tag">Arc 4</span>
+            <h3 class="arc-name">Capstone</h3>
+            <span class="arc-count">2 modules</span>
+          </div>
+          <p class="arc-desc">
+            Tokenization (BPE), the training loop with AdamW + warmup +
+            cosine decay + gradient clipping, autoregressive sampling
+            with temperature / top-k / top-p. Then you train your own
+            tiny transformer end-to-end.
+          </p>
+        </li>
+      </ol>
+
+      <div class="curriculum-cta">
+        <a class="btn primary" href="/courses/ml-math">Open the course →</a>
       </div>
-      <p class="tiles-footnote">More tracks ship as they're ready. No vapor.</p>
+    </div>
+  </section>
+
+  <!-- Closing CTA: dark hero band, premium feel. The work is the pitch. -->
+  <section class="band band-onyx closing-band">
+    <div class="shell tall">
+      <h2 class="closing-headline">
+        There's a math underneath every model.
+        <em class="closing-em">You can touch it.</em>
+      </h2>
+      <p class="closing-sub">
+        Tinker is alpha. New modules every week. The first course is live
+        and free.
+      </p>
+      <div class="cta-row closing-cta-row">
+        <a class="btn primary" href="/signup">Sign up — it's free</a>
+        <a class="btn secondary" href="/courses/ml-math">Explore the course</a>
+      </div>
     </div>
   </section>
 
@@ -424,6 +546,189 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
     font-size: 0.84rem;
     color: var(--site-fg-muted);
     max-width: 36ch;
+  }
+
+  /* === Proof band — three things you'll actually build. === */
+  .proof-band { padding: clamp(3rem, 6vw, 5rem) 1.25rem; }
+  .proof-headline {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.8rem, 3.6vw, 2.6rem);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin: 0 0 2rem;
+  }
+  .proof-headline em { font-style: italic; color: var(--ink-coral); font-weight: 700; }
+  .proof-grid {
+    list-style: none;
+    margin: 0; padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.25rem;
+  }
+  .proof-card {
+    position: relative;
+    padding: 1.5rem 1.4rem 1.4rem;
+    border: 1.5px solid var(--site-border);
+    border-radius: 20px;
+    background: var(--site-bg);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  }
+  .proof-card:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--ink-red) 40%, transparent);
+    box-shadow: 0 18px 32px -16px color-mix(in srgb, var(--ink-red) 35%, transparent);
+  }
+  .proof-num {
+    position: absolute;
+    top: 1rem;
+    right: 1.2rem;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 800;
+    font-size: 3rem;
+    line-height: 1;
+    color: color-mix(in srgb, var(--ink-red) 18%, transparent);
+    pointer-events: none;
+  }
+  .proof-num span { display: inline-block; }
+  .proof-title {
+    font-family: var(--font-display);
+    font-weight: 650;
+    font-size: 1.25rem;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0;
+    max-width: 14ch;
+  }
+  .proof-desc {
+    margin: 0;
+    color: var(--site-fg-muted);
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+  .proof-desc code {
+    background: var(--demo-stage);
+    color: var(--site-fg);
+    padding: 0.05em 0.35em;
+    border-radius: 4px;
+    font-size: 0.88em;
+  }
+  .proof-link {
+    margin-top: auto;
+    padding-top: 0.4rem;
+    color: var(--ink-red);
+    font-family: var(--font-mono);
+    font-size: 0.84rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-top: 1px dashed color-mix(in srgb, var(--site-fg) 14%, transparent);
+  }
+  .proof-link:hover { color: var(--ink-coral); }
+
+  /* === Curriculum band — arc-by-arc course map. === */
+  .curriculum-band { padding: clamp(3rem, 6vw, 5rem) 1.25rem; }
+  .curriculum-headline {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.8rem, 3.6vw, 2.6rem);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin: 0 0 0.75rem;
+  }
+  .curriculum-headline em { font-style: italic; color: var(--ink-red); font-weight: 700; }
+  .curriculum-lede {
+    font-size: 1.05rem;
+    line-height: 1.55;
+    color: var(--site-fg-muted);
+    max-width: 56ch;
+    margin: 0 0 2rem;
+  }
+  .arc-list {
+    list-style: none;
+    padding: 0; margin: 0 0 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  .arc {
+    padding: 1.2rem 1.3rem 1.3rem;
+    border-radius: 16px;
+    background: var(--site-bg);
+    border: 1px solid var(--site-border);
+  }
+  .arc-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin: 0 0 0.5rem;
+    flex-wrap: wrap;
+  }
+  .arc-tag {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-coral);
+    font-weight: 700;
+  }
+  .arc-name {
+    font-family: var(--font-display);
+    font-weight: 650;
+    font-size: 1.15rem;
+    margin: 0;
+    flex: 1;
+  }
+  .arc-count {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--site-fg-muted);
+  }
+  .arc-desc {
+    margin: 0;
+    color: var(--site-fg);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    opacity: 0.85;
+  }
+  .curriculum-cta {
+    margin-top: 0.5rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* === Closing CTA band — premium dark, the work is the pitch. === */
+  .closing-band {
+    padding: clamp(4rem, 8vw, 7rem) 1.25rem;
+  }
+  .closing-headline {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2rem, 4.5vw, 3.5rem);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    margin: 0 auto 1.25rem;
+    max-width: 28ch;
+    text-wrap: balance;
+  }
+  .closing-em {
+    display: block;
+    font-style: italic;
+    color: var(--ink-red);
+    font-weight: 700;
+  }
+  .closing-sub {
+    margin: 0 auto 2rem;
+    font-size: clamp(1rem, 1.4vw, 1.15rem);
+    line-height: 1.55;
+    color: color-mix(in srgb, var(--band-dark-fg) 75%, transparent);
+    max-width: 44ch;
+  }
+  .closing-cta-row {
+    justify-content: center;
   }
   .tile {
     display: block;
