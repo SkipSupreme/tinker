@@ -81,10 +81,11 @@
         <li role="none"><button role="menuitem" type="button" onclick={signOut}>Sign out</button></li>
       </ul>
     {/if}
-  {:else}
-    <a href="/signin" class="muted">Sign in</a>
-    <a href="/signup" class="cta">Sign up</a>
   {/if}
+  <!-- Anon state is rendered by Nav.astro's auth-slot (.auth-links) — that's
+       the SSR-fast version visible before JS hydrates. UserMenu.svelte only
+       takes over once it knows there's a logged-in user. -->
+
 </div>
 
 <style>

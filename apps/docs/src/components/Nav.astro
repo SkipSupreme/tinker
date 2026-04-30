@@ -178,8 +178,27 @@ try {
     font-size: 0.78rem;
   }
 
-  @media (max-width: 480px) {
-    .user-name, .auth-link { display: none; }
+  /* Mobile: collapse the nav to its essentials. The XP counter and streak
+     flame read as broken when they're 0 anonymously, and "Sign in" + "Sign up"
+     side-by-side eats the whole row. Keep brand + primary CTA + theme toggle. */
+  @media (max-width: 640px) {
+    .shell {
+      gap: 0.4rem;
+      padding: 0.5rem 0.85rem;
+    }
+    .counters { display: none; }
+    .auth-link { display: none; }
+    .user-name { display: none; }
+    .wordmark { font-size: 1.05rem; }
+    .brand-mark { width: 36px; height: 36px; }
+    .auth-cta {
+      font-size: 0.85rem;
+      padding: 0.35rem 0.7rem;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .wordmark { display: none; }
   }
 </style>
 

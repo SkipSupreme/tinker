@@ -125,7 +125,7 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
   .shell.tall { text-align: center; padding: 1rem 0 2rem; }
 
   /* === Hero === */
-  .hero { padding: clamp(3rem, 8vw, 6.5rem) 1.25rem clamp(3rem, 7vw, 5.5rem); }
+  .hero { padding: clamp(2rem, 8vw, 6.5rem) 1.25rem clamp(2.5rem, 7vw, 5.5rem); }
   .hero-grid {
     /* Apple on the left, copy on the right. Mascot column has a min-width
        so the cropped apple head reads as a focal point even on narrow
@@ -138,10 +138,22 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
   @media (max-width: 900px) {
     .hero-grid {
       grid-template-columns: 1fr;
-      gap: 2rem;
+      gap: 1.25rem;
     }
     /* Mascot is first in source order, so it naturally stacks above copy
        on mobile — no `order` override needed. */
+  }
+  /* On phones the mascot column was eating the whole above-fold viewport
+     before the headline showed. Cap the mascot at a comfortable thumbnail
+     size and keep the floating-math decoration clipped to its container. */
+  @media (max-width: 640px) {
+    .hero { padding: 1.25rem 1rem 1.5rem; }
+    .hero-mascot {
+      min-height: 0;
+      max-width: 200px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
   }
 
   .hero-headline {
