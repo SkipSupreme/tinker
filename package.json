@@ -8,10 +8,13 @@
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "lint:css": "stylelint \"apps/docs/src/**/*.{css,svelte,astro}\" --allow-empty-input",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:perf": "RUN_PERF=1 playwright test apps/docs/tests/e2e/perf.spec.ts --project=docs-chromium"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.0",
+    "lighthouse": "^13.1.0",
+    "playwright-lighthouse": "^4",
     "postcss-html": "^1.8.1",
     "stylelint": "^16",
     "stylelint-config-standard": "^36",
