@@ -1,0 +1,160 @@
+---
+title: Wrapping the training loop around the transformer
+module: m17-tokenization-sampling
+summary: From a 1-D stream of token ids to a working data loader, batched NLL across all positions, and AdamW with warmup, cosine decay, and gradient clipping. The training loop is the outside of the transformer — the forward pass from M16 sits inside it, untouched.
+estimatedMinutes: 18
+order: 3
+prereqs:
+  - how-a-tokenizer-is-built
+conceptsCovered:
+  - corpus-stream
+  - data-loader
+  - train-val-split
+  - loss-everywhere
+  - train-loop
+  - grad-clip
+  - warmup-cosine
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import ShiftByOneBatch from '../../components/demos/ShiftByOneBatch.svelte';
+
+<Step title="What this lesson is, and isn't">
+M16 ended with the full transformer forward pass. Tokens at the bottom, attention + FFN blocks in the middle, an unembedding at the top, a softmax over the vocabulary at the very end. That entire stack is *one function*, $f_\theta(\text{ids}) \to \text{logits}$.
+
+The training loop is what you wrap around that function to make $\theta$ get good. It does not change the forward pass. It does not change the architecture. It samples batches, computes a loss, runs backprop, and steps an optimizer — all of which you've seen separately in earlier modules. This lesson assembles them in the order they actually run.
+</Step>
+
+<Step title="The corpus is one tensor">
+Step zero: tokenize the entire training corpus, once, and concatenate the result into a single 1-D tensor of integer ids. For tiny-shakespeare-character that's 1,115,394 ids. The tokenizer is the boundary you crossed in the last two lessons; everything after it is integer math.
+
+Then split off a validation suffix. nanoGPT's convention for tiny corpora is a contiguous 90/10 split — the last 10% of the stream is held out and never touched during training:
+
+```python
+data = encode(text)            # one long 1-D tensor, length 1,115,394
+n = int(0.9 * len(data))
+train_data = data[:n]          # 1,003,854 tokens
+val_data   = data[n:]          # 111,540 tokens
+```
+
+A contiguous split, not a shuffle. Why? Because the model is autoregressive — it reads sequences. Random per-token shuffling would leak validation tokens into training contexts and back. A clean tail is the honest version.
+</Step>
+
+<StepCheck
+  title="Train tokens after the split"
+  prompt="train_tokens = "
+  answer={1003854}
+  tolerance={2}
+  hint="0.9 × 1,115,394 = 1,003,854.6 — rounded down by `int()` to 1,003,854."
+>
+Tiny-shakespeare-character has 1,115,394 tokens. With a 90/10 contiguous split, **how many train tokens?**
+</StepCheck>
+
+<Step title="One batch, B random offsets">
+The training step samples $B$ random positions in the train stream. From each position, it carves a context window of length $T$ as `x`, and the same window shifted by one as `y`. Karpathy's `get_batch` is four lines:
+
+```python
+def get_batch(split):
+    data = train_data if split == 'train' else val_data
+    ix = torch.randint(len(data) - T - 1, (B,))
+    x = torch.stack([data[i : i+T]   for i in ix])
+    y = torch.stack([data[i+1 : i+T+1] for i in ix])
+    return x, y
+```
+
+That's it. `x` has shape `(B, T)`. `y` has the same shape, shifted by one position. Watch what that looks like:
+
+<ShiftByOneBatch client:visible />
+
+Drag the sliders to feel the trade. Larger `T` means more next-token predictions per row, but a longer attention window. Larger `B` means more independent rows in parallel. The product `B · T` is the supervision count per gradient step.
+</Step>
+
+<Step title="The shifted-by-one trick">
+Why shift by one? Because the transformer's causal mask (M15) ensures that at position $t$ in the forward pass, the model has only seen `x[:t+1]`. So predicting `y[t]` from that prefix is honest next-token supervision — no information leak.
+
+This means one row gives you $T$ training examples instead of one. Position 0 predicts position 1. Position 1 predicts position 2. Position 7 predicts position 8. All in the same forward pass, sharing all the same attention computation. The cross-entropy loss is averaged over every position in every row:
+
+$$
+\mathcal{L} \;=\; -\frac{1}{B \, T} \sum_{b=1}^{B} \sum_{t=1}^{T} \log p_\theta\!\left(y_{b,t} \;\big|\; x_{b,1:t}\right)
+$$
+
+That averaging is the part that gets people. If you compute the loss only at the *last* position of each row, you're throwing away $T - 1$ of every $T$ gradient signals — and your training is roughly $T$ times slower than it should be. nanoGPT computes loss everywhere. So does GPT.
+</Step>
+
+<StepCheck
+  title="Predictions per step"
+  prompt="examples = "
+  answer={4096}
+  tolerance={0.5}
+  hint="Each of B rows produces T supervised next-token predictions: B · T = 64 · 64 = 4,096."
+>
+With $B = 64$ and $T = 64$, **how many supervised next-token predictions does one gradient step produce?**
+</StepCheck>
+
+<Step title="The training loop, in full">
+You have the forward pass (M16). You have the data loader (above). You have the loss (NLL, averaged over $B \cdot T$ positions). You have the optimizer (AdamW, from M10).
+
+The whole training loop is six lines:
+
+```python
+for step in range(max_iters):
+    x, y = get_batch('train')
+    logits = model(x)                                     # (B, T, V)
+    loss = F.cross_entropy(logits.view(-1, V), y.view(-1))
+    optimizer.zero_grad(set_to_none=True)
+    loss.backward()
+    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+    optimizer.step()
+```
+
+Read it with no surprise. Sample a batch. Forward. Loss. Zero grads. Backward. Clip. Step. Loop.
+
+The two pieces that haven't appeared elsewhere in the course:
+
+- **`set_to_none=True`** is a small memory-and-speed optimization. It tells PyTorch to drop the `.grad` tensors entirely instead of zeroing them in place. The next backward pass allocates fresh ones.
+- **`clip_grad_norm_(..., 1.0)`** is the gradient-clipping line below.
+</Step>
+
+<Step title="Gradient clipping">
+Sometimes a single batch produces a gigantic gradient. Maybe the batch had a string of rare tokens. Maybe the loss spiked because the model got confidently wrong. Whatever the reason, applying that gradient at the current learning rate would step the parameters far enough to wreck the run.
+
+Gradient clipping is cheap insurance. Compute the global L2 norm of the gradient — flatten every parameter's gradient into one big vector and take its length. If that length is greater than a threshold $c$ (typically 1.0), rescale the entire gradient down so its length is exactly $c$:
+
+$$
+g \;\leftarrow\; g \cdot \min\!\left(1,\ \frac{c}{\|g\|_2}\right)
+$$
+
+When the gradient is small, this does nothing. When it spikes, it rescales the step without changing its direction. Two lines of code, eliminates almost every "loss exploded out of nowhere" failure mode.
+</Step>
+
+<Step title="Warmup, then cosine decay">
+The learning rate is not constant. It follows a schedule with two phases:
+
+1. **Linear warmup** for the first $W$ iterations (typically 100–2000 depending on scale). The learning rate climbs from 0 to its peak $\eta_{\max}$. Why warmup? AdamW's running statistics (the exponentially-weighted moving averages of gradient and squared gradient) are zero at iter 0 and need a few hundred steps to stabilize. Stepping at full $\eta$ before they stabilize causes the spikes that gradient clipping then has to clean up. Better to not have the spikes.
+2. **Cosine decay** for the rest of training. The learning rate falls from $\eta_{\max}$ to a small floor $\eta_{\min}$ following half a cosine wave:
+
+$$
+\eta_t \;=\; \eta_{\min} + \tfrac{1}{2}(\eta_{\max} - \eta_{\min})\!\left[1 + \cos\!\left(\pi \cdot \tfrac{t - W}{D - W}\right)\right]
+$$
+
+Cosine is the dominant choice in modern training. It decays smoothly, spends a long time near peak before falling off, and crucially, ends near zero — so the final iterations are tiny correction steps rather than full-strength updates. The model "settles."
+</Step>
+
+<StepCheck
+  title="Iter-0 loss on tiny-shakespeare-char"
+  prompt="loss ≈ "
+  answer={4.17}
+  tolerance={0.07}
+  hint="A model with output ≈ uniform over 65 tokens has per-token NLL = ln 65 ≈ 4.17 nats."
+>
+Tiny-shakespeare-char has $\lvert V \rvert = 65$. With reasonable initialization, the model's output distribution at iter 0 is approximately uniform. **What is the expected initial training loss in nats?**
+</StepCheck>
+
+<Step title="What you would actually see">
+Wire all of this up against a small transformer (4 layers, 4 heads, $d = 128$, $T = 64$, ~200k parameters — capstone size). Train on tiny-shakespeare-char with $B = 64$, $\eta_{\max} = 10^{-3}$, 100-iter warmup, cosine decay over 5,000 iterations.
+
+Start point: $\ln 65 \approx 4.17$ nats. After ~100 iters of warmup, loss drops fast — by iter 500 it's around 1.7. By iter 2,000 it's around 1.4. Final val loss around 1.5 — a perplexity near 4.5.
+
+That curve is the same shape, scaled, at every model size from a 200k-parameter character model up to GPT-3. Initialize near $\log \lvert V \rvert$, drop fast in the first few percent of training, slow plateau for the rest. Next lesson: how to read it.
+</Step>
