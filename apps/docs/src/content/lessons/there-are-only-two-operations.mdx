@@ -1,0 +1,110 @@
+---
+title: There are only two operations
+module: m1-pre-algebra
+summary: Subtraction is just adding a negative. Division is just multiplying by a reciprocal. Four operations collapse into two — each with an undo button.
+estimatedMinutes: 22
+order: 2
+conceptsCovered:
+  - signed-addition-as-motion
+  - product-of-signs
+  - four-operations-and-inverses
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import NumberLineWalker from '../../components/demos/NumberLineWalker.svelte';
+import SignFlipMirror from '../../components/demos/SignFlipMirror.svelte';
+
+<Step title="Adding is walking">
+You learned four operations as four separate things, each with its own table to memorize. Two of them were a convenient lie.
+
+Start with an honest one. Addition is **motion**. $a + b$ means "stand at $a$, take $b$ steps." Positive $b$, step right. Negative $b$, step left.
+
+<NumberLineWalker client:visible start={-7} steps={[3, -4]} />
+
+Walk the queued steps. You start at $-7$; the walker takes a $+3$ step, then a $-4$ step.
+</Step>
+
+<Step title="Subtraction was addition all along">
+Here's the first collapse. There is no separate "subtraction" machine. To subtract, you add the opposite:
+
+$$
+a - b = a + (-b)
+$$
+
+$-7 - (-3)$ looks like two operations fighting. It isn't. Rewrite it: $-7 + 3$. Subtracting a negative is adding a positive — two left-facing arrows cancelling into one right-facing one. The number line above already showed you this: a $-4$ step and "subtract $4$" are the identical motion.
+</Step>
+
+<StepCheck
+  title="Walk it out"
+  prompt="lands at "
+  answer={-8}
+  hint="Rewrite every subtraction as adding the opposite: −7 + 3 + (−4). Now walk: −7 → −4 → −8."
+>
+Rewrite this so every operation is an addition, then walk the line:
+
+$$
+-7 - (-3) + (-4)
+$$
+
+**Where do you land?**
+</StepCheck>
+
+<Step title="Multiplying by −1 is a mirror">
+The other operation that's secretly pure motion: multiplying by $-1$ is a **reflection across zero**. It resizes nothing. It just flips the side.
+
+<SignFlipMirror client:visible />
+
+Press $\times(-1)$ a few times and watch the counter. After an *even* number of flips you're back on the positive side; after an *odd* number you're negative. The sign of a product is nothing more than this parity — count the negative factors, even means positive, odd means negative.
+</Step>
+
+<StepCheck
+  title="Count the negatives"
+  prompt="product = "
+  answer={-30}
+  hint="Magnitudes: 2 · 3 · 5 = 30. Three negative factors — an odd count — so the result is negative."
+>
+Don't multiply left-to-right tracking signs as you go. Do it the fast way: multiply the magnitudes, then count the negatives.
+
+$$
+(-2)\cdot(-3)\cdot(-5)
+$$
+
+**What is it?**
+</StepCheck>
+
+<Step title="Division was multiplication all along">
+Second collapse — exact same shape as the first. There is no separate "division" machine. To divide, you multiply by the **reciprocal**:
+
+$$
+a \div b = a \times \frac{1}{b}
+$$
+
+Subtraction undoes addition. Division undoes multiplication. Each pair is one operation paired with its **inverse** — its undo button.
+</Step>
+
+<Step title="Why you can't divide by zero">
+This finally explains *why* dividing by zero is banned. $a \div 0$ would mean $a \times \frac{1}{0}$ — multiplying by the reciprocal of zero. But every number times zero is zero, so $\frac{1}{0}$ — a number you could multiply zero by to get $1$ — simply does not exist.
+
+It's not "infinity." It's "no such number." The operation has nothing to return, so it's left undefined.
+</Step>
+
+<StepCheck
+  title="Signed division"
+  prompt="12 ÷ (−4) = "
+  answer={-3}
+  hint="Magnitude: 12 ÷ 4 = 3. One negative factor — odd count — so the result is negative."
+>
+Division follows the same sign rule as multiplication, because it *is* multiplication.
+
+**What is $\dfrac{12}{-4}$?**
+</StepCheck>
+
+<Step title="The whole map">
+Here is everything you will ever do to a number, on one card:
+
+- **add** ⇄ **subtract** — inverses
+- **multiply** ⇄ **divide** — inverses
+
+Four names, two operations, two undo buttons. Keep this. The next two lessons build expressions *out of* these operations; the lesson after that solves equations by pressing the undo buttons in the right order. "Apply the inverse" is about to become the most important verb in the course.
+</Step>

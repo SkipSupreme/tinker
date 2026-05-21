@@ -1,0 +1,100 @@
+---
+title: Quantities live on a line
+module: m1-pre-algebra
+summary: Every number — including the negative ones — is a position on one straight line. Distance from zero has a name, and you'll use it for the rest of the course.
+estimatedMinutes: 18
+order: 1
+conceptsCovered:
+  - number-line-as-positions
+  - negative-as-direction
+  - absolute-value
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import NumberLineWalker from '../../components/demos/NumberLineWalker.svelte';
+import SignFlipMirror from '../../components/demos/SignFlipMirror.svelte';
+
+<Step title="You already trust this picture">
+You've drawn it a hundred times without thinking: a straight line, a zero in the middle, numbers marching off in both directions.
+
+We're going to make it official — because this one picture is the whole foundation. Every number in this course is a *position on a line*, and a surprising amount of math turns out to be just two questions: **which way**, and **how far**.
+</Step>
+
+<Step title="The line has exactly three parts">
+A number line is three decisions. Where **zero** sits (the origin). Which way is **positive** (by convention, right). And how long **one unit** is. Fix those three things and every real number has exactly one home on the line.
+
+Drag the marker. Queue up some steps and watch it walk.
+
+<NumberLineWalker client:visible />
+
+There is no number you can name that doesn't land somewhere on this line — negative, fraction, decimal, all of them. That's the claim the rest of this module rests on.
+</Step>
+
+<Step title="A negative number is not a broken number">
+School taught you negatives as debt — "you owe me three." Fine for money, terrible as a definition. It makes $-3$ sound like a *damaged* $3$, a quantity with something missing.
+
+It isn't. $-3$ is a position — three units left of zero — every bit as real and as locatable as $+3$. The minus sign isn't damage. It's a **direction**.
+
+<SignFlipMirror client:visible />
+
+Press $\times(-1)$. The point doesn't shrink or break — it *reflects* across zero. Same distance out, opposite side.
+</Step>
+
+<Step title="Direction and magnitude are two separate facts">
+Once a number is a position, it carries two independent pieces of information:
+
+- **direction** — which side of zero it's on (that's the sign)
+- **magnitude** — how far from zero it is (a size, never negative)
+
+$-7$ and $+7$ *disagree* on direction and *agree* on magnitude. Pulling those two apart is the move the rest of this lesson is about.
+</Step>
+
+<Step title="Magnitude has a name: absolute value">
+The magnitude of a number — its distance from zero, with the sign thrown away — is its **absolute value**, written between two bars:
+
+$$
+|x| = \begin{cases} x & x \ge 0 \\ -x & x < 0 \end{cases}
+$$
+
+Read the second line slowly. When $x$ is negative, $-x$ is *positive* — flipping a negative gives a positive. So $|-7| = -(-7) = 7$. Absolute value never hands back a negative. It's a distance, and a distance has no side.
+</Step>
+
+<StepCheck
+  title="Strip the sign"
+  prompt="|−7| = "
+  answer={7}
+  hint="Absolute value is distance from zero. −7 sits 7 units from zero. The sign is discarded."
+>
+Absolute value answers exactly one question: how far from zero, ignoring which way?
+
+**What is $|-7|$?**
+</StepCheck>
+
+<Step title="Distance between any two points">
+Distance from zero is the easy case. The real tool is the distance between *any* two positions $x$ and $y$:
+
+$$
+\text{distance}(x, y) = |x - y|
+$$
+
+Subtract them, then take the absolute value. The subtraction might come out negative depending on which number you wrote first — the bars clean that up. Distance doesn't care about order.
+</Step>
+
+<StepCheck
+  title="How far apart"
+  prompt="distance = "
+  answer={3.5}
+  tolerance={0.01}
+  hint="Use |x − t|. Compute −2.4 − 1.1 = −3.5, then take the absolute value."
+>
+A point sits at $x = -2.4$. A target sits at $t = 1.1$.
+
+**How far apart are they?** Use $|x - t|$.
+</StepCheck>
+
+<Step title="Where this goes">
+Hold onto $|x|$. In a few modules, numbers stop being single positions and become **vectors** — whole lists of positions at once. The tool that measures a vector's size is the **norm**, written $\|\mathbf{x}\|$. It is absolute value with more dimensions: still "distance from the origin," still never negative.
+
+And when you train a neural network, the single number you drive toward zero — the *loss* — is a distance. You just met its one-dimensional ancestor.
+</Step>

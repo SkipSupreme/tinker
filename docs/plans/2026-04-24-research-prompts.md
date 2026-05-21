@@ -1,6 +1,6 @@
-# Deep-Research Prompt Pack — Tinker Course Content
+# Deep-Research Prompt Pack: Tinker Course Content
 
-> **Purpose:** Batch-commission the raw pedagogical material for every unwritten module. Fire one prompt per module into Deep Research (ChatGPT, Claude, Gemini, Perplexity — any). Paste the output into this repo; Claude Code converts it into MDX lessons + Svelte widgets.
+> **Purpose:** Batch-commission the raw pedagogical material for every unwritten module. Fire one prompt per module into Deep Research (ChatGPT, Claude, Gemini, Perplexity, any). Paste the output into this repo; Claude Code converts it into MDX lessons + Svelte widgets.
 
 ## Workflow
 
@@ -10,7 +10,7 @@
 4. I generate lesson drafts + widget specs. Human edits for voice.
 5. Ship the module.
 
-Per-module work units: one research fire, one conversion pass, one editing pass, one deploy. Independent per module — multiple can run in parallel (one research tool per module, Claude Code converts them as results land).
+Per-module work units: one research fire, one conversion pass, one editing pass, one deploy. Independent per module, multiple can run in parallel (one research tool per module, Claude Code converts them as results land).
 
 ---
 
@@ -28,7 +28,7 @@ Per-module work units: one research fire, one conversion pass, one editing pass,
 Paste this template into Deep Research, then replace every `{{...}}` token with the per-module block below. Everything else stays verbatim.
 
 ```
-# Research brief: Tinker Module {{ORDER}} — {{TITLE}}
+# Research brief: Tinker Module {{ORDER}}: {{TITLE}}
 
 ## Role
 
@@ -36,7 +36,7 @@ You are a world-class mathematics educator and interactive-pedagogy researcher. 
 
 ## Context
 
-I am building an interactive online course called Tinker: "Machine Learning, Backpropagation, and AI — The Math." It takes adult technical learners (think: software engineers who took calc a decade ago and want to actually understand ML from the math up) from pre-algebra to training a tiny character-level transformer in the browser via WebGPU.
+I am building an interactive online course called Tinker: "Machine Learning, Backpropagation, and AI. The Math." It takes adult technical learners (think: software engineers who took calc a decade ago and want to actually understand ML from the math up) from pre-algebra to training a tiny character-level transformer in the browser via WebGPU.
 
 The course has 18 modules across 5 arcs. Every module must pay back to the transformer endpoint via a 1–2 sentence "Where this shows up in the transformer" callback.
 
@@ -52,11 +52,11 @@ Stack: Astro 6 + Svelte 5 + MDX + a custom Svelte+Mafs widget library + KaTeX fo
 - **Immediate next module:** {{NEXT_MODULE}}
 - **Endgame callback (the one-liner at the bottom of every lesson in this module):** {{ENDGAME}}
 
-## Deliverables — return ONE response with exactly these 10 sections, in order. No preamble.
+## Deliverables: return ONE response with exactly these 10 sections, in order. No preamble.
 
 ### 1. Concept dependency graph
 10–25 specific concepts this module must cover, topologically sorted.
-For each: concept id (kebab-case), one-sentence definition, direct prerequisites (from this module or earlier — use module ids like `m5-calculus`).
+For each: concept id (kebab-case), one-sentence definition, direct prerequisites (from this module or earlier, use module ids like `m5-calculus`).
 
 ### 2. Canonical worked examples
 6–10 worked examples that are the "default teaching examples" for these concepts across MIT OCW, Stanford CS courses, Karpathy's videos, 3B1B, and Mathematics for Machine Learning (Deisenroth/Faisal/Ong).
@@ -74,17 +74,17 @@ For each:
 - **What updates live** (specific readouts, visual changes)
 - **What concept it makes tangible** (the pedagogical moment)
 - **Why it beats a slider + static figure** (the Bret Victor / Nicky Case test)
-- **Prior art** — 1–3 existing widgets on the web that do something similar (URLs if known)
+- **Prior art**, 1–3 existing widgets on the web that do something similar (URLs if known)
 
 Reject any idea that reduces to "drag a slider, watch an unlabeled number change." Every widget must let the learner grab a mathematical object the lesson has already named.
 
 ### 5. Key formulas
 Every formula a student must recognize and/or reproduce.
-Return as LaTeX source strings ready to drop into MDX (e.g. `\frac{\partial f}{\partial x}`). No commentary per formula — just the list, grouped by concept.
+Return as LaTeX source strings ready to drop into MDX (e.g. `\frac{\partial f}{\partial x}`). No commentary per formula, just the list, grouped by concept.
 
 ### 6. Lesson decomposition
 Propose 3–6 lessons this module should split into. For each lesson:
-- **Title** (conversational, not textbook — e.g. "What is a derivative?" not "1.1 Introduction to differentiation")
+- **Title** (conversational, not textbook, e.g. "What is a derivative?" not "1.1 Introduction to differentiation")
 - **Summary** (one sentence, learner-facing)
 - **Step outline** (8–15 gated steps, each a title + one-line description; note which steps are StepCheck with the expected scalar answer)
 - **Widgets it uses** (refs to section 4)
@@ -99,7 +99,7 @@ For each:
 - Cognitive type: computation / interpretation / construction / debugging / proof-scaffold
 - Concept tags (from section 1)
 
-### 8. Endgame callback — refined
+### 8. Endgame callback: refined
 Propose 1–3 candidate one-liners for the module's endgame callback. I supplied a starter; give me better options.
 
 ### 9. Sources (licensing-aware)
@@ -112,7 +112,7 @@ For each: title, author, URL, medium (textbook / paper / video / blog / widget),
 - Khan Academy content: CC BY-NC-SA → reference-only, never adapt.
 - Wikipedia / Wikibooks: CC BY-SA → reference-only.
 - MIT OCW: CC BY-NC-SA → reference-only.
-- **OK to adapt:** CC BY, public domain, US federal government, OpenStax books that are CC BY (verify per-book — some OpenStax are NC-SA).
+- **OK to adapt:** CC BY, public domain, US federal government, OpenStax books that are CC BY (verify per-book, some OpenStax are NC-SA).
 - Every source must be tagged **[ADAPT]** (we can reuse) or **[REFERENCE-ONLY]** (inspiration, don't embed).
 
 ### 10. Pedagogical traps
@@ -134,25 +134,38 @@ For each: the trap, why it happens, and the concrete lesson-design mitigation.
 
 Fire one at a time. Paste the master template above, then replace `{{...}}` tokens with the block below.
 
-### M6 — Multivariable Calculus — Partial Derivatives, Gradients, Jacobians
+### M1: Pre-Algebra
+
+```
+ORDER: 1
+TITLE: Pre-Algebra
+ARC: Arc 0. Foundations
+MINUTES: 120
+PRIOR: None, this is the first teaching module of the course. M0 is a placement diagnostic, not a lesson sequence, so it teaches nothing. Assume only that the learner can read numbers and has written code before (the audience is working software engineers who last saw this material in school). The module's job is reactivation and reframing, not first-contact instruction.
+CONCEPTS: the number line as the canonical mental model for "a quantity is a position"; negative numbers as positions left of zero and the sign as a direction rather than a defect; absolute value as distance-from-zero (the one-dimensional ancestor of the vector norm taught in m7-linear-algebra); signed arithmetic, adding and subtracting as moving along the line, the product-of-signs rule, and "subtracting is adding the opposite"; the four operations and their inverse pairs (add/subtract, multiply/divide) and why "apply the inverse operation" is the single idea that solves every equation in this module; fractions as deferred division, a/b is literally "a divided by b" and also one single point on the number line, not two numbers; equivalent fractions, lowest terms, common denominators, and the four fraction operations with the standard adult-learner failure points; the fraction↔decimal↔percent correspondence as three notations for one number; ratios and proportional reasoning ("scale everything by the same factor"); exponents as repeated multiplication and the intuition that a^0 = 1 (preview only, the laws of exponents are formalized in m2-algebra); order of operations as operator precedence, the same precedence rules the learner already trusts in code, framed explicitly as "an expression has exactly one unambiguous value"; the expression-as-evaluation-tree framing, an arithmetic expression is an abstract syntax tree and evaluating it bottom-up is the foundational shape of the m16 transformer forward pass; variables as named placeholders for a quantity that is unknown, chosen later, or allowed to vary, explicitly the same "named box" the learner already uses in every program they write; the distinction between an expression (evaluates to a value) and an equation (asserts two expressions are equal); evaluating an expression by substituting a value for its variable; the equation as a balance/constraint that must stay level, whatever you do to one side you do to the other; solving a one-variable linear equation by peeling off operations with their inverses in reverse precedence order; verifying a solution by substituting it back; the explicit handoff to m2-algebra, once a learner can manipulate one equation with one unknown, m2 generalizes to expressions, functions, and systems.
+NEXT_MODULE: m2-algebra (algebraic manipulation, functions and function composition, exponents and logarithms, systems of equations).
+ENDGAME: A neural network is an arithmetic expression with a few hundred thousand variables in it, the variables are the parameters the model learns. Order of operations, the rule that an expression has exactly one value, is the forward pass. Solving an equation by undoing operations in reverse is the shape of the backward pass. You already know how to read code; this module is the bridge that lets you read the math the same way.
+```
+
+### M6: Multivariable Calculus: Partial Derivatives, Gradients, Jacobians
 
 ```
 ORDER: 6
-TITLE: Multivariable Calculus — Partial Derivatives, Gradients, Jacobians
-ARC: Arc 1 — Prerequisite Math
+TITLE: Multivariable Calculus. Partial Derivatives, Gradients, Jacobians
+ARC: Arc 1. Prerequisite Math
 MINUTES: 150
 PRIOR: Single-variable derivatives, chain rule, power rule (m5-calculus). Vectors as lists of numbers and dot products (m7-linear-algebra).
 CONCEPTS: functions of multiple variables, partial derivatives, gradient, directional derivative, level sets, Jacobian, chain rule for composed multivariable functions, Hessian (intuition only)
-NEXT_MODULE: m7-linear-algebra (linear algebra — vectors, matrices as transformations, matrix multiplication)
+NEXT_MODULE: m7-linear-algebra (linear algebra, vectors, matrices as transformations, matrix multiplication)
 ENDGAME: loss.backward() computes the gradient of loss with respect to every parameter. That's the Jacobian-vector product you're about to implement by hand.
 ```
 
-### M7 — Linear Algebra
+### M7: Linear Algebra
 
 ```
 ORDER: 7
 TITLE: Linear Algebra
-ARC: Arc 1 — Prerequisite Math
+ARC: Arc 1. Prerequisite Math
 MINUTES: 240
 PRIOR: Algebra and function composition (m2-algebra). Can be taken in parallel with multivariable calculus (m6).
 CONCEPTS: vectors as arrows and lists, vector addition and scaling, dot product (as similarity and projection), matrices as linear transformations of space, matrix-vector multiplication as linear combination of columns, matrix-matrix multiplication as composition, determinant geometrically (signed area/volume), eigenvalues and eigenvectors, singular value decomposition (intuition: best low-rank approximation), change of basis
@@ -160,51 +173,51 @@ NEXT_MODULE: m8-probability and m10-optimization (both depend on linear algebra)
 ENDGAME: A transformer is x @ W_q, x @ W_k, x @ W_v, then dot products through softmax, then more matrix multiplies. The attention matrix is a dot-product similarity matrix. Linear algebra is 80% of the transformer.
 ```
 
-### M8 — Probability & Statistics
+### M8: Probability & Statistics
 
 ```
 ORDER: 8
 TITLE: Probability & Statistics
-ARC: Arc 1 — Prerequisite Math
+ARC: Arc 1. Prerequisite Math
 MINUTES: 240
 PRIOR: Algebra and function composition (m2-algebra). Light single-variable calculus for the log and exp identities used in maximum likelihood (m5-calculus). Vectors and dot products help for joint distributions and the covariance-as-dot-product intuition but are not strictly required (m7-linear-algebra).
-CONCEPTS: probability as a measure over outcomes (sample space, events, the three axioms — non-negativity, normalization, additivity), random variables as functions from outcomes to numbers, the probability mass function (pmf) for discrete RVs vs the probability density function (pdf) for continuous RVs and what "integrates to 1" really means, the canonical discrete distributions used in ML (Bernoulli for a single coin flip, Categorical for "which of K tokens", Uniform), the Gaussian as the workhorse continuous distribution and why it shows up everywhere downstream (weight initialization, noise models, BatchNorm assumptions), joint probability P(X, Y), marginal probability via summing/integrating one variable out, conditional probability P(Y | X) as a renormalization, the chain rule of probability P(X_1, ..., X_n) = ∏ P(X_i | X_<i) — the exact factoring that justifies autoregressive language modeling and is invoked verbatim in m14-sequence-modeling, independence and conditional independence, Bayes' theorem as posterior ∝ likelihood × prior (intuition first, then generative-vs-discriminative framing), expectation E[X] as the long-run mean and as a probability-weighted sum, variance and standard deviation as spread, covariance as joint variation (with the dot-product-of-centered-vectors intuition that bridges to m7), the sample mean and sample variance as estimators of population quantities, the law of large numbers (one-line statement: sample means concentrate on the true mean as n grows) and the central limit theorem (one-line statement: averages of many independent things tend Gaussian regardless of the underlying distribution — calibration only, no proof), maximum likelihood estimation — the parameter θ that maximizes ∏ P(x_i | θ) is the same θ that minimizes − ∑ log P(x_i | θ), the equivalence between "fit the data" and "minimize negative log-likelihood" that is the entire foundation of supervised ML, sampling from a discrete categorical distribution — the inverse-CDF / cumulative-sum-plus-uniform-random trick that the m18 capstone sampler uses verbatim, sampling from a Gaussian (Box-Muller intuition, no derivation), the bias-variance tradeoff as a one-page intuition (simple models miss, complex models overfit) and a forward pointer to m13-training-dynamics where the empirical version appears as train-vs-val divergence, the explicit handoff to m9-information-theory: minimizing NLL is what m9 will rename as minimizing cross-entropy.
-NEXT_MODULE: m9-information-theory (entropy, cross-entropy, KL divergence, and perplexity — all built directly on the distributions, expectations, and MLE framing from this module).
-ENDGAME: When you train a language model you are doing maximum likelihood — tuning θ so the data you have is as probable as possible under your model. When you sample from the trained model you are drawing from a categorical distribution over the vocabulary. Every loss curve, every "temperature = 0.8", every "perplexity = 4.7" you will see for the rest of this course is a sentence in the language defined by this module.
+CONCEPTS: probability as a measure over outcomes (sample space, events, the three axioms, non-negativity, normalization, additivity), random variables as functions from outcomes to numbers, the probability mass function (pmf) for discrete RVs vs the probability density function (pdf) for continuous RVs and what "integrates to 1" really means, the canonical discrete distributions used in ML (Bernoulli for a single coin flip, Categorical for "which of K tokens", Uniform), the Gaussian as the workhorse continuous distribution and why it shows up everywhere downstream (weight initialization, noise models, BatchNorm assumptions), joint probability P(X, Y), marginal probability via summing/integrating one variable out, conditional probability P(Y | X) as a renormalization, the chain rule of probability P(X_1, ..., X_n) = ∏ P(X_i | X_<i), the exact factoring that justifies autoregressive language modeling and is invoked verbatim in m14-sequence-modeling, independence and conditional independence, Bayes' theorem as posterior ∝ likelihood × prior (intuition first, then generative-vs-discriminative framing), expectation E[X] as the long-run mean and as a probability-weighted sum, variance and standard deviation as spread, covariance as joint variation (with the dot-product-of-centered-vectors intuition that bridges to m7), the sample mean and sample variance as estimators of population quantities, the law of large numbers (one-line statement: sample means concentrate on the true mean as n grows) and the central limit theorem (one-line statement: averages of many independent things tend Gaussian regardless of the underlying distribution, calibration only, no proof), maximum likelihood estimation, the parameter θ that maximizes ∏ P(x_i | θ) is the same θ that minimizes − ∑ log P(x_i | θ), the equivalence between "fit the data" and "minimize negative log-likelihood" that is the entire foundation of supervised ML, sampling from a discrete categorical distribution, the inverse-CDF / cumulative-sum-plus-uniform-random trick that the m18 capstone sampler uses verbatim, sampling from a Gaussian (Box-Muller intuition, no derivation), the bias-variance tradeoff as a one-page intuition (simple models miss, complex models overfit) and a forward pointer to m13-training-dynamics where the empirical version appears as train-vs-val divergence, the explicit handoff to m9-information-theory: minimizing NLL is what m9 will rename as minimizing cross-entropy.
+NEXT_MODULE: m9-information-theory (entropy, cross-entropy, KL divergence, and perplexity, all built directly on the distributions, expectations, and MLE framing from this module).
+ENDGAME: When you train a language model you are doing maximum likelihood, tuning θ so the data you have is as probable as possible under your model. When you sample from the trained model you are drawing from a categorical distribution over the vocabulary. Every loss curve, every "temperature = 0.8", every "perplexity = 4.7" you will see for the rest of this course is a sentence in the language defined by this module.
 ```
 
-### M9 — Information Theory
+### M9: Information Theory
 
 ```
 ORDER: 9
 TITLE: Information Theory
-ARC: Arc 1 — Prerequisite Math
+ARC: Arc 1. Prerequisite Math
 MINUTES: 150
 PRIOR: From m8-probability: pmfs, expectations, the Categorical and Bernoulli distributions, joint and conditional probability, the chain rule of probability, and maximum likelihood estimation as the minimization of − ∑ log P(x_i | θ). Single-variable calculus for log and exp manipulation (m5-calculus). Linear algebra is not required.
-CONCEPTS: information content of a single outcome as I(x) = − log P(x) — the rarer the event, the more bits it carries; the base of the log as a choice of units (log₂ → bits, ln → nats, log₁₀ → bans) and why the modern ML literature defaults to nats while perplexity is conventionally reported as exp(loss) regardless of base; Shannon entropy H(P) = E_P[− log P(x)] = − ∑ P(x) log P(x) as the average information content of a draw from P — a measure of how uncertain P is about its own outcome; the entropy of canonical distributions (Uniform over K outcomes has entropy log K — the maximum possible; a one-hot pmf has entropy 0 — total certainty; a slightly-biased coin has entropy slightly less than 1 bit) and the qualitative shape of H as a function of pmf shape; cross-entropy H(P, Q) = − ∑ P(x) log Q(x) as the average information content under Q when the data actually comes from P — strictly greater than or equal to H(P), with equality iff P = Q; KL divergence D_KL(P || Q) = H(P, Q) − H(P) as the "extra surprise" cost of modeling P with Q — non-negative, zero iff P = Q, not symmetric, not a true metric; the equivalence at the center of supervised ML — minimizing cross-entropy between the empirical data distribution and the model's predicted distribution is exactly maximum likelihood estimation (the explicit callback to m8); cross-entropy loss for classification with one-hot targets reducing to − log Q(true_class), i.e. negative log-likelihood — the explicit reason classification networks have a softmax head and an NLL loss; perplexity = exp(cross-entropy) — the geometric mean of "1 / probability assigned to the true next token" — and its intuitive interpretation as "the effective number of equally-likely options the model is choosing among at each step"; the entropy floor of natural language — Shannon's 1948 and 1951 experiments estimating English at roughly 1 to 1.3 bits per character — which sets a hard lower bound on what character-level perplexity any model can ever achieve on English and reframes the m18 capstone's training curve as a finite race toward a known floor; mutual information I(X; Y) = H(X) − H(X | Y) as a single-paragraph forward pointer (intuition only, no derivations — "how much does knowing Y reduce uncertainty about X") and where it shows up in modern ML (representation learning, InfoMax, contrastive losses) as preview-only material; honest framing that information theory is named for telephone-line capacity but in modern ML it shows up almost entirely through cross-entropy and perplexity — the rest of Shannon's machinery (channel coding, source coding, rate-distortion) is rarely touched in practice and is therefore explicitly out of scope for this module.
+CONCEPTS: information content of a single outcome as I(x) = − log P(x), the rarer the event, the more bits it carries; the base of the log as a choice of units (log₂ → bits, ln → nats, log₁₀ → bans) and why the modern ML literature defaults to nats while perplexity is conventionally reported as exp(loss) regardless of base; Shannon entropy H(P) = E_P[− log P(x)] = − ∑ P(x) log P(x) as the average information content of a draw from P, a measure of how uncertain P is about its own outcome; the entropy of canonical distributions (Uniform over K outcomes has entropy log K, the maximum possible; a one-hot pmf has entropy 0, total certainty; a slightly-biased coin has entropy slightly less than 1 bit) and the qualitative shape of H as a function of pmf shape; cross-entropy H(P, Q) = − ∑ P(x) log Q(x) as the average information content under Q when the data actually comes from P, strictly greater than or equal to H(P), with equality iff P = Q; KL divergence D_KL(P || Q) = H(P, Q) − H(P) as the "extra surprise" cost of modeling P with Q, non-negative, zero iff P = Q, not symmetric, not a true metric; the equivalence at the center of supervised ML, minimizing cross-entropy between the empirical data distribution and the model's predicted distribution is exactly maximum likelihood estimation (the explicit callback to m8); cross-entropy loss for classification with one-hot targets reducing to − log Q(true_class), i.e. negative log-likelihood, the explicit reason classification networks have a softmax head and an NLL loss; perplexity = exp(cross-entropy), the geometric mean of "1 / probability assigned to the true next token", and its intuitive interpretation as "the effective number of equally-likely options the model is choosing among at each step"; the entropy floor of natural language. Shannon's 1948 and 1951 experiments estimating English at roughly 1 to 1.3 bits per character, which sets a hard lower bound on what character-level perplexity any model can ever achieve on English and reframes the m18 capstone's training curve as a finite race toward a known floor; mutual information I(X; Y) = H(X) − H(X | Y) as a single-paragraph forward pointer (intuition only, no derivations, "how much does knowing Y reduce uncertainty about X") and where it shows up in modern ML (representation learning, InfoMax, contrastive losses) as preview-only material; honest framing that information theory is named for telephone-line capacity but in modern ML it shows up almost entirely through cross-entropy and perplexity, the rest of Shannon's machinery (channel coding, source coding, rate-distortion) is rarely touched in practice and is therefore explicitly out of scope for this module.
 NEXT_MODULE: m10-optimization (next module in the linear sequence). The first downstream module that actually cashes m9 in is m14-sequence-modeling, where NLL becomes the literal training loss and perplexity becomes the validation metric.
 ENDGAME: The loss you minimize when you train a language model is the cross-entropy between the data and the model. Perplexity is that loss exponentiated. The reason GPT-style models have a softmax head and an NLL loss is in this module. When the m18 capstone's training run plateaus near "val NLL ≈ 1.5, perplexity ≈ 4.5" on tiny-shakespeare, the floor that plateau is approaching is the entropy of Shakespearean English itself.
 ```
 
-### M10 — Optimization
+### M10: Optimization
 
 ```
 ORDER: 10
 TITLE: Optimization
-ARC: Arc 2 — ML Foundations
+ARC: Arc 2. ML Foundations
 MINUTES: 150
 PRIOR: Single-variable derivatives (m5), gradients (m6), linear algebra (m7).
 CONCEPTS: minimizing a scalar function, gradient descent, learning rate as step size, batch vs stochastic vs mini-batch gradient descent, momentum, RMSProp, Adam, learning-rate schedules (warmup, cosine decay), loss-landscape pathologies (saddle points, local minima, cliffs), convergence criteria
 NEXT_MODULE: m11-neural-networks (applying optimization to learn MLP parameters)
-ENDGAME: Adam is the optimizer you'll actually use to train the transformer. The LR warmup schedule, the betas, the epsilon — all of it has reasons, and you'll understand them.
+ENDGAME: Adam is the optimizer you'll actually use to train the transformer. The LR warmup schedule, the betas, the epsilon, all of it has reasons, and you'll understand them.
 ```
 
-### M11 — Neural Network Fundamentals
+### M11: Neural Network Fundamentals
 
 ```
 ORDER: 11
 TITLE: Neural Network Fundamentals
-ARC: Arc 2 — ML Foundations
+ARC: Arc 2. ML Foundations
 MINUTES: 150
 PRIOR: Linear algebra (m7), optimization (m10). Light exposure to the chain rule (m5).
 CONCEPTS: perceptron, linear layer with bias, activation functions (sigmoid, tanh, ReLU, GELU), single-layer limitations (the XOR problem), multilayer perceptrons (MLPs), forward pass as a stack of (matmul + nonlinearity), universal approximation theorem (intuition only, no proof), decision boundaries
@@ -212,78 +225,78 @@ NEXT_MODULE: m12-backpropagation (how MLPs actually learn their weights)
 ENDGAME: The transformer's feed-forward block is literally an MLP. Everything you learn here plugs directly into the transformer architecture two modules from now.
 ```
 
-### M12 — Backpropagation from Scratch (THE KEYSTONE)
+### M12: Backpropagation from Scratch (THE KEYSTONE)
 
 ```
 ORDER: 12
 TITLE: Backpropagation from Scratch
-ARC: Arc 2 — ML Foundations
+ARC: Arc 2. ML Foundations
 MINUTES: 240
 PRIOR: Chain rule (m5-calculus), gradients (m6-multivariable), linear algebra (m7), MLPs (m11-neural-networks).
 CONCEPTS: computational graph (nodes = values, edges = ops), forward pass as graph evaluation, local derivatives at each node, reverse-mode automatic differentiation, chain rule applied across the graph, building micrograd scalar-by-scalar (Karpathy-style), vectorizing from scalars to tensors, gradient checking (numerical vs analytical), common backprop bugs (missing .zero_grad(), in-place ops, detached tensors)
-NEXT_MODULE: m13-training-dynamics (stabilizing the training of deep nets — BatchNorm, dropout, residuals)
-ENDGAME: You just built micrograd. Every deep-learning framework on earth is a fancier version of what you now understand end-to-end. loss.backward() is no longer magic — it's your code.
+NEXT_MODULE: m13-training-dynamics (stabilizing the training of deep nets. BatchNorm, dropout, residuals)
+ENDGAME: You just built micrograd. Every deep-learning framework on earth is a fancier version of what you now understand end-to-end. loss.backward() is no longer magic, it's your code.
 ```
 
-### M14 — Sequence Modeling: Bigrams to RNNs
+### M14: Sequence Modeling: Bigrams to RNNs
 
 ```
 ORDER: 14
-TITLE: Sequence Modeling — Bigrams to RNNs
-ARC: Arc 3 — Language Models
+TITLE: Sequence Modeling. Bigrams to RNNs
+ARC: Arc 3. Language Models
 MINUTES: 390
-PRIOR: Linear algebra, matmul, softmax (m7). Gradient descent, Adam, schedules (m10). MLP forward/backward (m11). Backprop on a computational graph (m12). Training dynamics — initialization, normalization, residuals, regularization (m13).
+PRIOR: Linear algebra, matmul, softmax (m7). Gradient descent, Adam, schedules (m10). MLP forward/backward (m11). Backprop on a computational graph (m12). Training dynamics, initialization, normalization, residuals, regularization (m13).
 CONCEPTS: characters/tokens as a vocabulary, sequence as a sample from a joint distribution, factoring P(sequence) via the chain rule of probability, bigram language model as a lookup table of next-token probabilities, training a bigram by counting AND by gradient descent on a single embedding-then-softmax layer (showing they converge to the same thing), negative log-likelihood as the loss, perplexity as exp(loss) and what it intuitively measures, sampling from a categorical distribution (greedy vs temperature vs top-k), context windows and the bigram→trigram→n-gram explosion, replacing the n-gram table with a small MLP (Bengio 2003-style) that consumes a fixed-width context of token embeddings, the embedding matrix as a learned lookup, fixed-context limitations, recurrent neural networks: a hidden state that ingests one token at a time and carries information forward, the RNN cell as h_t = tanh(W_x x_t + W_h h_{t-1} + b), training RNNs with backprop-through-time (intuition; concrete unrolling for a 3-step example), vanishing and exploding gradients in long sequences (callback to m13), the sequential-bottleneck failure mode that motivates attention
 NEXT_MODULE: m15-attention (queries, keys, values; scaled dot-product attention; multi-head attention)
-ENDGAME: We started with a table that knew one character of context, expanded it to a window of k characters, then to a vector that — in theory — carries everything. In practice it carries about ten characters before fading. Next, we stop trying to carry the past and learn to query it instead.
+ENDGAME: We started with a table that knew one character of context, expanded it to a window of k characters, then to a vector that, in theory, carries everything. In practice it carries about ten characters before fading. Next, we stop trying to carry the past and learn to query it instead.
 ```
 
-### M15 — Attention
+### M15: Attention
 
 ```
 ORDER: 15
 TITLE: Attention
-ARC: Arc 3 — Language Models
-PRIOR: Linear algebra — matmul, dot product as similarity, softmax, broadcasting (m7-linear-algebra). Gradient descent, Adam, LR schedules (m10-optimization). MLP forward/backward (m11-neural-networks). Backprop on a computational graph (m12-backpropagation). Training dynamics — Xavier/He init, layer/batch norm, residual connections, dropout, weight decay (m13-training-dynamics). Everything from m14-sequence-modeling: token vocab, NLL loss, perplexity, the embedding matrix as a learned lookup, the bigram-as-one-layer-NN equivalence, the Bengio-2003 fixed-context MLP, the RNN cell h_t = tanh(W_x x_t + W_h h_{t-1} + b), backprop-through-time, vanishing/exploding gradients, and the sequential-bottleneck failure mode that motivates attention.
-CONCEPTS: attention as a soft / differentiable dictionary lookup, query-key-value triple, scoring via scaled dot product, the 1/sqrt(d_k) scale and why softmax saturation makes it necessary, softmax over the time axis to produce attention weights, the weighted sum of values as the output, the three learned projections W_q / W_k / W_v and what each subspace conceptually represents, self-attention vs cross-attention, causal (autoregressive) masking via the upper-triangular −∞ trick, the full attention(Q, K, V) = softmax(QK^T / sqrt(d_k) + M) V formula and its shape calculus, multi-head attention (split heads → parallel attentions → concat → output projection) and the motivation for multiple heads, why attention without positional information is permutation-equivariant and therefore broken for sequences, positional encoding (sinusoidal, learned absolute, RoPE — intuition only, no derivations), computational complexity (O(T² d) — the quadratic context cost that defines modern LLM economics), KV-cache during autoregressive inference and what it actually saves
+ARC: Arc 3. Language Models
+PRIOR: Linear algebra, matmul, dot product as similarity, softmax, broadcasting (m7-linear-algebra). Gradient descent, Adam, LR schedules (m10-optimization). MLP forward/backward (m11-neural-networks). Backprop on a computational graph (m12-backpropagation). Training dynamics. Xavier/He init, layer/batch norm, residual connections, dropout, weight decay (m13-training-dynamics). Everything from m14-sequence-modeling: token vocab, NLL loss, perplexity, the embedding matrix as a learned lookup, the bigram-as-one-layer-NN equivalence, the Bengio-2003 fixed-context MLP, the RNN cell h_t = tanh(W_x x_t + W_h h_{t-1} + b), backprop-through-time, vanishing/exploding gradients, and the sequential-bottleneck failure mode that motivates attention.
+CONCEPTS: attention as a soft / differentiable dictionary lookup, query-key-value triple, scoring via scaled dot product, the 1/sqrt(d_k) scale and why softmax saturation makes it necessary, softmax over the time axis to produce attention weights, the weighted sum of values as the output, the three learned projections W_q / W_k / W_v and what each subspace conceptually represents, self-attention vs cross-attention, causal (autoregressive) masking via the upper-triangular −∞ trick, the full attention(Q, K, V) = softmax(QK^T / sqrt(d_k) + M) V formula and its shape calculus, multi-head attention (split heads → parallel attentions → concat → output projection) and the motivation for multiple heads, why attention without positional information is permutation-equivariant and therefore broken for sequences, positional encoding (sinusoidal, learned absolute, RoPE, intuition only, no derivations), computational complexity (O(T² d), the quadratic context cost that defines modern LLM economics), KV-cache during autoregressive inference and what it actually saves
 NEXT_MODULE: m16-transformer-block (residual connections + layer norm + the feed-forward MLP + multi-head attention assembled into the canonical transformer block, then stacked N times)
-ENDGAME: Attention is the operation. The rest of a transformer — residuals, layer norm, an MLP on top — is plumbing around this single core idea: every position broadcasts a query, every position offers a key, and the softmax-weighted match decides whose values you pull back. You are now one layer of glue away from the real thing.
+ENDGAME: Attention is the operation. The rest of a transformer, residuals, layer norm, an MLP on top, is plumbing around this single core idea: every position broadcasts a query, every position offers a key, and the softmax-weighted match decides whose values you pull back. You are now one layer of glue away from the real thing.
 ```
 
-### M16 — The Transformer Block
+### M16: The Transformer Block
 
 ```
 ORDER: 16
 TITLE: The Transformer Block
-ARC: Arc 3 — Language Models
+ARC: Arc 3. Language Models
 PRIOR: From m11-neural-networks: MLPs as stacks of (matmul + nonlinearity), forward pass, activation functions including ReLU and GELU. From m12-backpropagation: backprop on a computational graph; gradient flow through compositions. From m13-training-dynamics: residual connections (with the gradient-highway intuition), layer norm and batch norm, variance-preserving initialization (Xavier, He), dropout, weight decay. From m14-sequence-modeling: token vocab, embedding lookup, NLL loss, perplexity, the bigram-as-one-layer-NN equivalence, the full chain "tokens → embedding → predict next token." From m15-attention: full scaled dot-product self-attention with the matrix form softmax(QKᵀ/√dₖ)V, causal masking, three flavors of positional encoding (sinusoidal, learned absolute, RoPE), multi-head as parallel subspaces, the T² cost and the KV cache. From m7-linear-algebra: matmul, softmax, broadcasting.
-CONCEPTS: the canonical transformer block as x → x + MHA(LN(x)) → x + FFN(LN(x)) — two sub-layers, each wrapped in residual + layer norm; pre-LN vs post-LN architectures and the empirical / gradient-flow argument for pre-LN winning at depth; the residual stream as a per-token vector that every block reads from and writes to (Anthropic mech-interp framing); the position-wise feed-forward block as a 2-layer MLP applied independently to every token's vector with no cross-token mixing; the 4× hidden-dimension expansion convention (d_model → 4 d_model → d_model); GELU vs ReLU as the modern FFN activation choice; stacking N transformer blocks for depth; the final layer norm at the top of the stack before the language-modeling head; the unembedding matrix as the projection from d_model back to vocabulary-size logits; weight tying — sharing parameters between the input embedding and the output unembedding; the complete top-to-bottom forward pass: token ids → embedding lookup → + positional encoding → N × transformer block → final layer norm → unembedding → softmax → next-token distribution; parameter count budget per block (≈ 4d² from attention projections + ≈ 8d² from the FFN's two matrices, roughly 12d² per block, dominated by the FFN as d grows); where dropout sits in the standard recipe.
-NEXT_MODULE: m17-tokenization-sampling (byte-pair encoding tokenization, sampling strategies — temperature, top-k, top-p, beam search — and the inference loop that wraps around a trained transformer to actually generate text)
+CONCEPTS: the canonical transformer block as x → x + MHA(LN(x)) → x + FFN(LN(x)), two sub-layers, each wrapped in residual + layer norm; pre-LN vs post-LN architectures and the empirical / gradient-flow argument for pre-LN winning at depth; the residual stream as a per-token vector that every block reads from and writes to (Anthropic mech-interp framing); the position-wise feed-forward block as a 2-layer MLP applied independently to every token's vector with no cross-token mixing; the 4× hidden-dimension expansion convention (d_model → 4 d_model → d_model); GELU vs ReLU as the modern FFN activation choice; stacking N transformer blocks for depth; the final layer norm at the top of the stack before the language-modeling head; the unembedding matrix as the projection from d_model back to vocabulary-size logits; weight tying, sharing parameters between the input embedding and the output unembedding; the complete top-to-bottom forward pass: token ids → embedding lookup → + positional encoding → N × transformer block → final layer norm → unembedding → softmax → next-token distribution; parameter count budget per block (≈ 4d² from attention projections + ≈ 8d² from the FFN's two matrices, roughly 12d² per block, dominated by the FFN as d grows); where dropout sits in the standard recipe.
+NEXT_MODULE: m17-tokenization-sampling (byte-pair encoding tokenization, sampling strategies, temperature, top-k, top-p, beam search, and the inference loop that wraps around a trained transformer to actually generate text)
 ENDGAME: This is the transformer. Tokens at the bottom, attention + MLP blocks in the middle, an unembedding at the top, the bigram-style NLL loss as the training objective. Stack N of them, train with Adam and a warmup schedule, and you have GPT.
 ```
 
-### M17 — Tokenization, Training & Sampling
+### M17: Tokenization, Training & Sampling
 
 ```
 ORDER: 17
 TITLE: Tokenization, Training & Sampling
-ARC: Arc 4 — Capstone
-PRIOR: From m7-linear-algebra: matmul, softmax, broadcasting. From m8-probability: categorical distributions, sampling from a probability simplex. From m9-information-theory: entropy, cross-entropy, perplexity = exp(NLL). From m10-optimization: Adam / AdamW, LR warmup + cosine decay, mini-batch SGD. From m11-neural-networks: MLP forward/backward, embedding lookups. From m12-backpropagation: loss.backward(), .zero_grad(), gradient checking, common backprop bugs. From m13-training-dynamics: train vs val loss, overfitting, weight decay, dropout, learning-rate schedules in practice. From m14-sequence-modeling: tokens as a vocabulary, NLL loss on the next-token distribution, the bigram-as-one-layer-NN equivalence, the introductory treatment of greedy / temperature / top-k sampling for the bigram model. From m15-attention: causal masking, scaled dot-product attention, the KV cache during autoregressive inference and what it actually saves (recompute of K and V across already-emitted tokens). From m16-transformer-block: the full top-to-bottom forward pass — token ids → embedding + positional encoding → N × (residual + LN + MHA → residual + LN + FFN) → final LN → tied unembedding → softmax over vocab → next-token distribution; the parameter budget per block; pre-LN architecture.
-CONCEPTS: tokenization as the interface between raw text and the model — the model never sees characters or bytes, only token ids; character-level tokenization (the nanoGPT-tiny default we will use in the capstone) — its strengths (no OOV, tiny vocabulary, every operation is on a learned per-character embedding) and its costs (sequence length blows up, the model has to compose more steps to "spell" anything); word-level tokenization and why it fails at scale (vocab explosion, OOV at inference time, zero morphological generalization); subword tokenization as the modern compromise; byte-pair encoding (BPE) — the merge-loop algorithm, run on a corpus once to produce a fixed merge table, then deterministically applied at inference; byte-level BPE as used in GPT-2/3 (operating on the 256 raw bytes rather than Unicode codepoints, which makes the tokenizer total — every input string is representable, no UNK token); the trained tokenizer as a fixed artifact shipped alongside the model weights; how tokenization shapes what the model can and cannot do (multi-digit arithmetic, capital-letter handling, the "how many R's in strawberry" failure mode); vocabulary size as a hyperparameter and its tradeoff between sequence length T and embedding-table size; the standard training loop wrapped around the m16 forward pass — sample a batch of (B, T) sequences from the tokenized corpus, forward, compute NLL across all (B, T) positions, backward, AdamW step, zero grad; the data loader: from a single long stream of tokens, slice random (x, y) pairs where y is x shifted right by one; train/val split for a small corpus and what overfitting looks like (val loss diverging from train loss); expected loss trajectory on tiny-shakespeare-character (start near log(vocab_size) ≈ 4.2, drop fast, plateau near val NLL ≈ 1.5 — perplexity ≈ 4–5 — for a small model); the gradient-clipping and learning-rate-schedule choices that nanoGPT actually ships with; the autoregressive inference loop wrapped around the same forward pass — given a prompt, run the model, sample one token, append, repeat until a stop condition or max length; greedy / argmax sampling and why deterministic decoding produces repetitive, mode-collapsed text on a generative LM; temperature τ as logits / τ before softmax — τ → 0 collapses to greedy, τ → ∞ collapses to uniform, τ = 1 is the model's own distribution; top-k filtering — keep only the k highest-logit tokens, renormalize, sample; top-p (nucleus) sampling — keep the smallest prefix of the sorted distribution whose cumulative mass ≥ p, renormalize, sample; how temperature, top-k, and top-p compose in practice and the order they are applied; beam search and why generative language modeling does not use it (creative generation needs diversity, not maximum-likelihood paths) — contrast with translation/summarization where beam search is still common; the KV cache during sampling — callback to m15 — and why it turns the per-token inference cost from O(T²) to O(T); the random seed as the only source of variation in a frozen model with fixed sampling parameters; "controlling" a generative model entirely from the outside via prompt + sampling settings, no weight changes.
-NEXT_MODULE: m18-capstone (train your own tiny transformer in the browser via WebGPU on the tiny-shakespeare corpus — 4 layers, 4 heads, d_model = 128, T = 64, ~200k parameters — and ship the resulting weights + a sampling-knob playground)
+ARC: Arc 4. Capstone
+PRIOR: From m7-linear-algebra: matmul, softmax, broadcasting. From m8-probability: categorical distributions, sampling from a probability simplex. From m9-information-theory: entropy, cross-entropy, perplexity = exp(NLL). From m10-optimization: Adam / AdamW, LR warmup + cosine decay, mini-batch SGD. From m11-neural-networks: MLP forward/backward, embedding lookups. From m12-backpropagation: loss.backward(), .zero_grad(), gradient checking, common backprop bugs. From m13-training-dynamics: train vs val loss, overfitting, weight decay, dropout, learning-rate schedules in practice. From m14-sequence-modeling: tokens as a vocabulary, NLL loss on the next-token distribution, the bigram-as-one-layer-NN equivalence, the introductory treatment of greedy / temperature / top-k sampling for the bigram model. From m15-attention: causal masking, scaled dot-product attention, the KV cache during autoregressive inference and what it actually saves (recompute of K and V across already-emitted tokens). From m16-transformer-block: the full top-to-bottom forward pass, token ids → embedding + positional encoding → N × (residual + LN + MHA → residual + LN + FFN) → final LN → tied unembedding → softmax over vocab → next-token distribution; the parameter budget per block; pre-LN architecture.
+CONCEPTS: tokenization as the interface between raw text and the model, the model never sees characters or bytes, only token ids; character-level tokenization (the nanoGPT-tiny default we will use in the capstone), its strengths (no OOV, tiny vocabulary, every operation is on a learned per-character embedding) and its costs (sequence length blows up, the model has to compose more steps to "spell" anything); word-level tokenization and why it fails at scale (vocab explosion, OOV at inference time, zero morphological generalization); subword tokenization as the modern compromise; byte-pair encoding (BPE), the merge-loop algorithm, run on a corpus once to produce a fixed merge table, then deterministically applied at inference; byte-level BPE as used in GPT-2/3 (operating on the 256 raw bytes rather than Unicode codepoints, which makes the tokenizer total, every input string is representable, no UNK token); the trained tokenizer as a fixed artifact shipped alongside the model weights; how tokenization shapes what the model can and cannot do (multi-digit arithmetic, capital-letter handling, the "how many R's in strawberry" failure mode); vocabulary size as a hyperparameter and its tradeoff between sequence length T and embedding-table size; the standard training loop wrapped around the m16 forward pass, sample a batch of (B, T) sequences from the tokenized corpus, forward, compute NLL across all (B, T) positions, backward, AdamW step, zero grad; the data loader: from a single long stream of tokens, slice random (x, y) pairs where y is x shifted right by one; train/val split for a small corpus and what overfitting looks like (val loss diverging from train loss); expected loss trajectory on tiny-shakespeare-character (start near log(vocab_size) ≈ 4.2, drop fast, plateau near val NLL ≈ 1.5, perplexity ≈ 4–5, for a small model); the gradient-clipping and learning-rate-schedule choices that nanoGPT actually ships with; the autoregressive inference loop wrapped around the same forward pass, given a prompt, run the model, sample one token, append, repeat until a stop condition or max length; greedy / argmax sampling and why deterministic decoding produces repetitive, mode-collapsed text on a generative LM; temperature τ as logits / τ before softmax, τ → 0 collapses to greedy, τ → ∞ collapses to uniform, τ = 1 is the model's own distribution; top-k filtering, keep only the k highest-logit tokens, renormalize, sample; top-p (nucleus) sampling, keep the smallest prefix of the sorted distribution whose cumulative mass ≥ p, renormalize, sample; how temperature, top-k, and top-p compose in practice and the order they are applied; beam search and why generative language modeling does not use it (creative generation needs diversity, not maximum-likelihood paths), contrast with translation/summarization where beam search is still common; the KV cache during sampling, callback to m15, and why it turns the per-token inference cost from O(T²) to O(T); the random seed as the only source of variation in a frozen model with fixed sampling parameters; "controlling" a generative model entirely from the outside via prompt + sampling settings, no weight changes.
+NEXT_MODULE: m18-capstone (train your own tiny transformer in the browser via WebGPU on the tiny-shakespeare corpus, 4 layers, 4 heads, d_model = 128, T = 64, ~200k parameters, and ship the resulting weights + a sampling-knob playground)
 ENDGAME: Tokenization is how text becomes vectors. The training loop is how those vectors get good. Sampling is how good vectors become text again. You now have everything between a corpus of bytes and a model that talks. Next module: you actually train one in your browser.
 ```
 
-### M18 — Capstone — Train a Tiny Transformer in Your Browser
+### M18: Capstone: Train a Tiny Transformer in Your Browser
 
 ```
 ORDER: 18
-TITLE: Capstone — Train a Tiny Transformer in Your Browser
-ARC: Arc 4 — Capstone
+TITLE: Capstone. Train a Tiny Transformer in Your Browser
+ARC: Arc 4. Capstone
 PRIOR: This is the capstone of the Math-for-ML track; it composes everything taught earlier and introduces no new mathematics. Specifically: from m5-calculus and m6-multivariable: the chain rule, gradients, partial derivatives. From m7-linear-algebra: matmul, softmax, broadcasting, embedding lookup as a linear layer. From m8-probability: sampling from a categorical distribution. From m9-information-theory: NLL, perplexity = exp(NLL), the entropy floor of natural language. From m10-optimization: Adam / AdamW, linear warmup + cosine decay, mini-batch SGD, gradient clipping. From m11-neural-networks: MLP forward/backward, GELU, the FFN block. From m12-backpropagation: loss.backward() on a computational graph, reverse-mode autodiff, the canonical bugs (missing zero_grad, in-place ops, detached tensors). From m13-training-dynamics: layer norm, residual connections, He/Xavier init, dropout, weight decay, train vs val separation, the five canonical loss-curve pathologies (clean / overfit fork / plateau / divergence spike / dead). From m14-sequence-modeling: tokens as a vocabulary, NLL on the next-token distribution, the bigram-as-one-layer-NN equivalence, the Bengio-2003 fixed-context MLP, the RNN cell h_t = tanh(W_x x_t + W_h h_{t-1} + b), backprop-through-time, the sequential-bottleneck failure that motivated attention. From m15-attention: full scaled dot-product self-attention with the matrix form softmax(QKᵀ/√dₖ + M)V, causal masking, three flavors of positional encoding (sinusoidal, learned absolute, RoPE), multi-head as parallel subspaces, the T² cost, the KV cache. From m16-transformer-block: the canonical pre-LN block x → x + MHA(LN(x)) → x + FFN(LN(x)), the 4× FFN expansion convention, the residual stream as the per-token vector every block reads from and writes to, stacking N blocks, final layer norm, tied unembedding, the seven-line forward pass, the ≈12d² per-block parameter rule. From m17-tokenization-sampling: character-level tokenization on tiny-shakespeare (1,115,394 chars, vocab=65, contiguous 90/10 split → 1,003,854 train / 111,540 val), nanoGPT's get_batch (B random offsets, x and shifted-by-one y, loss averaged over B·T positions), the AdamW + linear-warmup + cosine-decay + grad-clip-1.0 training loop, the autoregressive sampling loop with the conventional temperature → top-k → top-p pipeline, the KV cache turning per-token inference cost from O(T²) to O(T).
-CONCEPTS: the capstone target — a 4-layer, 4-head, d_model = 128, T = 64, ~200{,}000-parameter character-level transformer, end-to-end, trained on tiny-shakespeare in the learner's browser tab in roughly 3–5 minutes on consumer-grade WebGPU (M-series Mac, modern integrated/discrete GPU on Windows/Linux, recent Android Chrome); the engineering shape of running gradient-based training in a browser — WebGPU as the compute substrate, the WebGPU compute-pipeline model (bind groups, storage buffers, workgroup sizes), the practical limits of the broadly-shipping WebGPU spec (f32-only is the safe default, fp16/bf16 are not yet portable, no NCCL-style multi-device, no tensor cores); candidate runtime options and their honest tradeoffs — candle-wasm (Rust + Hugging Face's candle compiled to WASM with WebGPU backend), webgpu-torch (a JS torch-shaped layer over WebGPU), transformers.js's training fork, ONNX Runtime Web with the training-enabled build, tinygrad-web, or a custom set of WGSL kernels for matmul + softmax + cross-entropy + AdamW step shipped from scratch — for each: maturity, bundle size, supported ops, dependency tree, license, and concrete fit for an ~200k-parameter toy training run that lives inside an Astro 6 + Svelte 5 + MDX page; how to ship the tokenizer and corpus as static assets (one .bin tensor of token ids fetched once and held in memory, one vocab JSON, both cacheable forever via the worker); the in-browser training-loop choreography — chunking iterations to stay responsive (yield back to the event loop with requestAnimationFrame every K iters, never block the main thread), surfacing live metrics (train NLL, val NLL, iters/sec, wall time) without re-rendering the entire DOM; how to render a live, dual-curve loss plot that scrolls smoothly without dropping frames; pathologies that show up only in a browser run — first-call WebGPU shader compilation cost making iter 0 look anomalously slow, JIT warm-up making the first ~50 iters look slower than the rest, fp32-only making accuracy slightly worse than a CUDA reference, tab-throttling when the learner switches away (requestAnimationFrame stops firing in background tabs — graceful pause/resume is required, not optional); the moment-of-truth UX — sampling generations live during training so the learner watches gibberish at iter 0 ("xQqp;,Bh"), recognizable-English shape at ~iter 500 ("the and the of a the"), Shakespeare-ish at ~iter 2,000 ("KING RICHARD: My lord, the earth doth"), and the final settled sample after the run plateaus; the "this checkpoint is yours" affordances — a Save Weights button that serializes the trained tensor as a download, a Load Weights button that re-instantiates the model from a previous .bin, an optional shareable URL for a small enough model (the ~200k-param model serializes to ~800 KB in fp32, well under URL-encoding limits with base64 and gzip); a frozen-checkpoint sampler-knob playground built on the model the learner just trained, where they drag τ, top-k, top-p, edit the prompt, and watch the same model say different things — "controlling the model" without retraining it; honest browser-side seed determinism — Math.random is not enough; thread a seeded PRNG (sfc32, xorshift128+, or splitmix64) through the data loader, the dropout RNG, the weight-init RNG, and the sampler so a fixed (seed, hyperparameters) tuple produces byte-identical runs across reloads; the pedagogical frame of a capstone — the lessons are *experiences*, not new theory: lesson 1 is the runner page where training happens (the learner pushes Start, watches the loss curve, watches the live samples improve), lesson 2 is the playground for the trained checkpoint, lesson 3 is the close that loops the entire course back to "loss.backward() on the transformer is no longer magic — you wrote it"; honest framing of what the artifact is (a tiny model on a tiny corpus that produces poetry-flavored gibberish, not GPT-4) and what it represents (proof to yourself that every line of nanoGPT is something you could now read and recognize); celebration moments as first-class features (first non-gibberish sample, first plausible iambic line, "you trained this") rather than as UX afterthoughts; what to learn next — pointers to mech-interp on the trained model (Anthropic's residual-stream framing already taught in M16 maps directly), to scaling the same recipe to a slightly larger corpus, and to the eventual reveal that the same operations underneath GPT-4 are the operations the learner just shipped.
-NEXT_MODULE: none — M18 is the final module of the Math-for-ML track. Course completion. The natural follow-ons (a mech-interp track on the trained model, a tokenizer-and-data-curation track, a scaling-laws track) are future Tinker courses, not part of this one.
-ENDGAME: This is the entire course. You started in M5 with a single-variable derivative. You finish here with a transformer you trained yourself on hardware you own, weights you can save, and a model that — within the limits of 200,000 parameters and one play of Shakespeare — actually talks. There is no module after this one. There is the model, the artifact, and the next thing you decide to learn.
+CONCEPTS: the capstone target, a 4-layer, 4-head, d_model = 128, T = 64, ~200{,}000-parameter character-level transformer, end-to-end, trained on tiny-shakespeare in the learner's browser tab in roughly 3–5 minutes on consumer-grade WebGPU (M-series Mac, modern integrated/discrete GPU on Windows/Linux, recent Android Chrome); the engineering shape of running gradient-based training in a browser. WebGPU as the compute substrate, the WebGPU compute-pipeline model (bind groups, storage buffers, workgroup sizes), the practical limits of the broadly-shipping WebGPU spec (f32-only is the safe default, fp16/bf16 are not yet portable, no NCCL-style multi-device, no tensor cores); candidate runtime options and their honest tradeoffs, candle-wasm (Rust + Hugging Face's candle compiled to WASM with WebGPU backend), webgpu-torch (a JS torch-shaped layer over WebGPU), transformers.js's training fork, ONNX Runtime Web with the training-enabled build, tinygrad-web, or a custom set of WGSL kernels for matmul + softmax + cross-entropy + AdamW step shipped from scratch, for each: maturity, bundle size, supported ops, dependency tree, license, and concrete fit for an ~200k-parameter toy training run that lives inside an Astro 6 + Svelte 5 + MDX page; how to ship the tokenizer and corpus as static assets (one .bin tensor of token ids fetched once and held in memory, one vocab JSON, both cacheable forever via the worker); the in-browser training-loop choreography, chunking iterations to stay responsive (yield back to the event loop with requestAnimationFrame every K iters, never block the main thread), surfacing live metrics (train NLL, val NLL, iters/sec, wall time) without re-rendering the entire DOM; how to render a live, dual-curve loss plot that scrolls smoothly without dropping frames; pathologies that show up only in a browser run, first-call WebGPU shader compilation cost making iter 0 look anomalously slow, JIT warm-up making the first ~50 iters look slower than the rest, fp32-only making accuracy slightly worse than a CUDA reference, tab-throttling when the learner switches away (requestAnimationFrame stops firing in background tabs, graceful pause/resume is required, not optional); the moment-of-truth UX, sampling generations live during training so the learner watches gibberish at iter 0 ("xQqp;,Bh"), recognizable-English shape at ~iter 500 ("the and the of a the"), Shakespeare-ish at ~iter 2,000 ("KING RICHARD: My lord, the earth doth"), and the final settled sample after the run plateaus; the "this checkpoint is yours" affordances, a Save Weights button that serializes the trained tensor as a download, a Load Weights button that re-instantiates the model from a previous .bin, an optional shareable URL for a small enough model (the ~200k-param model serializes to ~800 KB in fp32, well under URL-encoding limits with base64 and gzip); a frozen-checkpoint sampler-knob playground built on the model the learner just trained, where they drag τ, top-k, top-p, edit the prompt, and watch the same model say different things, "controlling the model" without retraining it; honest browser-side seed determinism. Math.random is not enough; thread a seeded PRNG (sfc32, xorshift128+, or splitmix64) through the data loader, the dropout RNG, the weight-init RNG, and the sampler so a fixed (seed, hyperparameters) tuple produces byte-identical runs across reloads; the pedagogical frame of a capstone, the lessons are *experiences*, not new theory: lesson 1 is the runner page where training happens (the learner pushes Start, watches the loss curve, watches the live samples improve), lesson 2 is the playground for the trained checkpoint, lesson 3 is the close that loops the entire course back to "loss.backward() on the transformer is no longer magic, you wrote it"; honest framing of what the artifact is (a tiny model on a tiny corpus that produces poetry-flavored gibberish, not GPT-4) and what it represents (proof to yourself that every line of nanoGPT is something you could now read and recognize); celebration moments as first-class features (first non-gibberish sample, first plausible iambic line, "you trained this") rather than as UX afterthoughts; what to learn next, pointers to mech-interp on the trained model (Anthropic's residual-stream framing already taught in M16 maps directly), to scaling the same recipe to a slightly larger corpus, and to the eventual reveal that the same operations underneath GPT-4 are the operations the learner just shipped.
+NEXT_MODULE: none. M18 is the final module of the Math-for-ML track. Course completion. The natural follow-ons (a mech-interp track on the trained model, a tokenizer-and-data-curation track, a scaling-laws track) are future Tinker courses, not part of this one.
+ENDGAME: This is the entire course. You started in M5 with a single-variable derivative. You finish here with a transformer you trained yourself on hardware you own, weights you can save, and a model that, within the limits of 200,000 parameters and one play of Shakespeare, actually talks. There is no module after this one. There is the model, the artifact, and the next thing you decide to learn.
 ```
 
 ---
@@ -301,17 +314,17 @@ Some widgets in the design doc are their own pedagogical research project. Use t
 ## The widget
 I am building an interactive Svelte + Mafs widget called {{WIDGET_NAME}} for Module {{ORDER}} of Tinker. Its job is to make the following pedagogical moment tangible: {{MOMENT}}.
 
-## Deliverables — return these 6 sections, nothing else
+## Deliverables: return these 6 sections, nothing else
 
 ### 1. Prior art
 5–8 existing interactive widgets on the web that do something similar. For each: URL, what it lets the user manipulate, what it does well, what it does badly, whether it's free to clone (MIT/CC BY) or reference-only.
 
 ### 2. Design variants
 4–6 different ways this widget could be designed. For each:
-- **Interaction surface** — what the learner drags, clicks, scrubs
-- **Live updates** — what visual state changes in response
-- **Failure mode** — the "boring slider" degenerate case this variant risks
-- **Strength** — what this variant teaches that others don't
+- **Interaction surface**, what the learner drags, clicks, scrubs
+- **Live updates**, what visual state changes in response
+- **Failure mode**, the "boring slider" degenerate case this variant risks
+- **Strength**, what this variant teaches that others don't
 
 ### 3. Pedagogical pitfalls
 Specific things that go wrong when learners use widgets of this kind. Include the Bret Victor criticism ("adjust mystery numbers") and Nicky Case's "sandbox without scaffolding" failure mode where applicable.
@@ -323,35 +336,35 @@ Keyboard navigation plan, screen-reader labels, color-blind-safe alternatives, m
 Pick ONE. Say why. Include a rough storyboard: initial state → first interaction → aha moment → final state.
 
 ### 6. Parametrization
-Exact numerical defaults — viewBox ranges, slider min/max, default parameter values — that produce the intended pedagogical moment on load.
+Exact numerical defaults, viewBox ranges, slider min/max, default parameter values, that produce the intended pedagogical moment on load.
 ```
 
 ---
 
 ## Batch queue (priority order)
 
-Fire in this order. MVP spine first — everything in Tier 1 blocks the capstone.
+Fire in this order. MVP spine first, everything in Tier 1 blocks the capstone.
 
-**Tier 1 — MVP spine:**
+**Tier 1. MVP spine:**
 1. M6 Multivariable Calculus
 2. M7 Linear Algebra
 3. M10 Optimization
 4. M11 Neural Network Fundamentals
 5. M12 Backpropagation (keystone)
 
-**Tier 2 — fill out the arcs:**
+**Tier 2, fill out the arcs:**
 6. M13 Training Dynamics
 7. M14 Sequence Modeling (bigrams + RNNs)
 8. M15 Attention
 9. M16 Transformer Block
 
-**Tier 3 — capstone + completeness:**
+**Tier 3, capstone + completeness:**
 10. M17 Tokenization & Sampling
-11. M18 Capstone — Train Your Transformer
+11. M18 Capstone. Train Your Transformer
 12. M8 Probability & Statistics
 13. M9 Information Theory
 
-**Deferred** (safety-floor modules — route around with a diagnostic instead of teaching linearly):
+**Deferred** (safety-floor modules, route around with a diagnostic instead of teaching linearly):
 - M0, M1, M2, M3, M4
 
 ---

@@ -1,0 +1,153 @@
+---
+title: A fraction is one number
+module: m1-pre-algebra
+summary: a/b means "a divided by b" — one point on the line. Fractions, decimals, and percents are three spellings of that single point.
+estimatedMinutes: 25
+order: 3
+conceptsCovered:
+  - fraction-as-deferred-division
+  - equivalent-fractions
+  - common-denominators
+  - fraction-arithmetic
+  - decimal-percent-equivalence
+  - ratio-and-proportion
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import FractionUnitBar from '../../components/demos/FractionUnitBar.svelte';
+import NotationToggle from '../../components/demos/NotationToggle.svelte';
+
+<Step title="Type it into a console">
+Open a JavaScript console and type `3/4`. It answers `0.75`. One number out — not a pair, not a little stacked object.
+
+That's the whole truth about fractions, and it's right there in the syntax: $\frac{a}{b}$ is just $a \div b$ with the division **not done yet**. A fraction is a division you're choosing to leave un-evaluated, because the un-evaluated form is exact and often more useful.
+</Step>
+
+<Step title="One fraction, one position">
+Because $\frac{3}{4}$ is a number, it has a home on the number line — a single point, three-quarters of the way from $0$ to $1$. Not two points. Not a picture of a pie. One position.
+
+<FractionUnitBar client:visible />
+
+Each bar shows one fixed fraction. The steppers re-slice the bar into more or fewer pieces — but the bar's *length* never moves. Slicing is cosmetic. The number is the number.
+</Step>
+
+<Step title="Equivalent fractions: same point, finer slices">
+Multiply the top and the bottom by the same number and you have not changed the value — you've only cut the same length into finer pieces:
+
+$$
+\frac{a}{b} = \frac{a \times k}{b \times k}
+$$
+
+$\frac{3}{4} = \frac{6}{8} = \frac{9}{12}$ — same point on the line, three slicings. Going the other way, dividing top and bottom by a common factor, is **reducing**.
+</Step>
+
+<Step title="Lowest terms">
+A fraction is in **lowest terms** when its top and bottom share no common factor bigger than $1$ — you've reduced as far as you can go.
+
+Take $\frac{18}{24}$. Both numbers divide by $6$, which gives $\frac{3}{4}$. Nothing divides $3$ and $4$ together, so $\frac{3}{4}$ is the floor.
+</Step>
+
+<StepCheck
+  title="Reduce it"
+  prompt="18/24 = 3 / "
+  answer={4}
+  hint="Divide top and bottom by their greatest common factor, 6. 18 ÷ 6 = 3, 24 ÷ 6 = 4."
+>
+Reduce $\dfrac{18}{24}$ to lowest terms. It comes out as $\dfrac{3}{?}$.
+
+**What is the denominator?**
+</StepCheck>
+
+<Step title="Why adding fractions needs a common denominator">
+Here is the one rule people get wrong — and there's a real reason behind it, not a ritual.
+
+The denominator is the **unit**. $\frac{3}{4}$ is "3 of a thing called a quarter." $\frac{5}{6}$ is "5 of a thing called a sixth." You can't add 3 quarters to 5 sixths any more than you can add 3 metres to 5 seconds — different units. Re-slice both into a shared unit first, *then* the counts add.
+
+<FractionUnitBar client:visible />
+
+Step the two bars until their denominators match. Only then does the result bar appear — and it lands exactly on a tick.
+</Step>
+
+<Step title="The four fraction operations">
+With that understood, here is the whole toolkit:
+
+$$
+\frac{a}{b} + \frac{c}{d} = \frac{ad + bc}{bd}
+\qquad
+\frac{a}{b} \times \frac{c}{d} = \frac{ac}{bd}
+$$
+
+$$
+\frac{a}{b} \div \frac{c}{d} = \frac{a}{b} \times \frac{d}{c}
+$$
+
+Add: find a common denominator, then add the counts. Multiply: straight across, no common denominator needed. Divide: multiply by the reciprocal — the inverse trick from the last lesson, back on the job.
+</Step>
+
+<StepCheck
+  title="Add them"
+  prompt="3/4 + 5/6 = ? / 12"
+  answer={19}
+  hint="Common denominator 12: 3/4 = 9/12 and 5/6 = 10/12. Add the numerators: 9 + 10."
+>
+Both fractions re-slice into twelfths. Add them:
+
+$$
+\frac{3}{4} + \frac{5}{6} = \frac{?}{12}
+$$
+
+**What is the numerator?**
+</StepCheck>
+
+<StepCheck
+  title="Divide them"
+  prompt="(2/3) ÷ (4/5) = 5 / "
+  answer={6}
+  hint="Flip the divisor and multiply: 2/3 × 5/4 = 10/12 = 5/6."
+>
+Divide by multiplying by the reciprocal:
+
+$$
+\frac{2}{3} \div \frac{4}{5} = \frac{5}{?}
+$$
+
+**What is the denominator?**
+</StepCheck>
+
+<Step title="Three spellings, one number">
+A fraction, a decimal, and a percent are not three kinds of number. They're three *spellings* of one number — one position on the line. $\frac{3}{8} = 0.375 = 37.5\%$. A percent is just a fraction whose denominator is locked to $100$: $37.5\% = \frac{37.5}{100}$.
+
+<NotationToggle client:visible />
+
+Drag the dot. All three spellings update together, because there's only one thing being spelled. Engineers do this every day — the same byte is `255`, `0xFF`, or `0b11111111`. Pick the spelling that makes the next step easy.
+</Step>
+
+<StepCheck
+  title="Respell as a percent"
+  prompt="3/8 = ___ %"
+  answer={37.5}
+  tolerance={0.01}
+  hint="3 ÷ 8 = 0.375. A percent counts hundredths, so multiply by 100."
+>
+Write $\dfrac{3}{8}$ as a percent — compute the decimal first, then move to hundredths.
+
+**$\dfrac{3}{8}$ equals what percent?**
+</StepCheck>
+
+<Step title="Ratios: scale everything by the same factor">
+A **ratio** compares two quantities by division; a **proportion** sets two ratios equal. The one move that matters: scaling both quantities by the *same* factor leaves the ratio unchanged.
+
+A recipe for 6 servings needs 250 g of flour. For 15 servings you don't *add* a fixed amount — you scale. The factor is $\frac{15}{6} = 2.5$, and the flour scales by that identical factor.
+</Step>
+
+<StepCheck
+  title="Scale the recipe"
+  prompt="flour (g) = "
+  answer={625}
+  hint="Scale factor is 15 ÷ 6 = 2.5. Scale the flour by the same factor: 250 × 2.5."
+>
+6 servings need 250 g of flour. You're cooking for 15.
+
+**How many grams of flour?**
+</StepCheck>

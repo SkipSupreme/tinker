@@ -4,7 +4,7 @@ arc: arc-0-foundations
 order: 1
 title: Pre-algebra Refresh
 summary: Number line intuition, arithmetic fluency, negatives, fractions as division, order of operations, variables as placeholders, one-variable equations.
-status: planned
+status: drafting
 estimatedMinutes: 120
 prereqs: []
 conceptsCovered: [number-line, fractions, order-of-operations, variables, one-variable-equations]

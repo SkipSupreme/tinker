@@ -1,6 +1,6 @@
 ---
 /**
- * /dev/widget-lab/ — internal audit surface for all svelte-mafs widgets.
+ * /dev/widget-lab/ -- internal audit surface for all svelte-mafs widgets.
  * Generalized from /examples/fixtures/ per ARCH-1 of the plan-eng-review.
  *
  * Renders every demo + fixture in standardized frames at desktop / tablet /
@@ -13,24 +13,27 @@
 export const prerender = true;
 import Base from '../../../layouts/Base.astro';
 
-// Static manifests — Astro doesn't support glob component imports at
+// Static manifests: Astro doesn't support glob component imports at
 // build time, so the index is a hand-maintained list. Loading the actual
 // component happens on the per-widget pages, not here.
 const DEMOS = [
   "AblationLab", "AdamInternalsInspector", "AttentionMatrixHeatmap", "BasisTranslator",
-  "BigramHeatmap", "BigramTwoWays", "BnTrainEvalToggle", "BpeMergeStepper",
-  "BuildTheBlock", "ChainRuleComposition", "ChainRulePaths", "DirectPathInspector",
-  "DotProductPlayground", "DropoutMaskScrub", "EigenHunter", "EmbeddingPluck",
-  "GradientCompass", "GradientDecay", "GradientNoiseBall", "JvpPlayground",
-  "KvCacheTimeline", "LnPlacementGrad", "LossCurveDoctor", "LossLandscapeNavigator",
-  "M18ForwardSmoke", "M18TrainSmoke", "MatrixDraggable", "MlpContextDial",
-  "MultiHeadSplitter", "NucleusCutoff", "ParamBudgetPie", "PartialSlicer",
-  "PermutationEquivarianceLab", "PriorPenaltyEquivalence", "QkVectorPlayground",
-  "ResidualGradientFlow", "ResidualStreamScope", "RopeRotationDial", "SaddleScanner",
-  "ScheduleDesigner", "SecantToTangent", "ShiftByOneBatch", "SlopeOfLine",
-  "SoftmaxSatExplorer", "SvdEllipse", "TangentDemo", "TemperatureBars",
-  "TokenInspector", "UnrolledRNN", "VarianceFanOut", "VectorAddDemo",
-  "WarmupStabilizer",
+  "BayesGrid", "BigramHeatmap", "BigramTwoWays", "BnTrainEvalToggle",
+  "BpeMergeStepper", "BuildTheBlock", "CdfSampler", "ChainRuleComposition",
+  "ChainRulePaths", "CovarianceScatter", "CrossEntropyDuel", "DirectPathInspector", "DotProductPlayground",
+  "DropoutMaskScrub", "EigenHunter", "EmbeddingPluck", "GaussianForge",
+  "GradientCompass", "GradientDecay", "GradientNoiseBall", "JointMarginalScrub",
+  "JvpPlayground", "KlAsymmetryCanvas", "KvCacheTimeline", "LnPlacementGrad", "LossCurveDoctor",
+  "LossLandscapeNavigator", "M18ForwardSmoke", "M18TrainSmoke", "MatrixDraggable",
+  "MleClimber", "MlpContextDial", "MultiHeadSplitter", "NucleusCutoff",
+  "OneHotCollapse", "ParamBudgetPie", "PartialSlicer", "PermutationEquivarianceLab", "PmfSurpriseLab",
+  "PriorPenaltyEquivalence", "QkVectorPlayground", "ResidualGradientFlow", "ResidualStreamScope", "RopeRotationDial",
+  "SaddleScanner", "ScheduleDesigner", "SecantToTangent", "ShiftByOneBatch",
+  "SlopeOfLine", "SoftmaxSatExplorer", "SvdEllipse", "TangentDemo",
+  "TemperatureBars", "TokenInspector", "UnrolledRNN", "UnitConvertor",
+  "VarianceFanOut", "VectorAddDemo", "WarmupStabilizer",
+  "BalanceSolver", "ExpressionTreeBuilder", "FractionUnitBar", "NotationToggle",
+  "NumberLineWalker", "PeelInversesGame", "SignFlipMirror",
 ];
 
 const FIXTURES = [
@@ -41,7 +44,7 @@ const FIXTURES = [
 ];
 ---
 
-<Base title="Widget Lab — internal audit" description="Internal audit surface for svelte-mafs widgets. /dev/widget-lab/" fullWidth>
+<Base title="Widget Lab: internal audit" description="Internal audit surface for svelte-mafs widgets. /dev/widget-lab/" fullWidth>
   <section class="lab">
     <header class="lab-head">
       <p class="kicker">Internal · Quality Bar audit surface</p>
@@ -60,6 +63,10 @@ const FIXTURES = [
       <p class="hint">
         Append <code>?overlay=bounds,grid,padding</code> to any widget URL to
         toggle the Quality Bar overlays.
+      </p>
+      <p class="hint">
+        <a href="/dev/widget-lab/gallery/">Open the live gallery</a> to see every
+        widget rendered inline on a single page.
       </p>
     </header>
 

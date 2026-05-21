@@ -1,0 +1,917 @@
+---
+/**
+ * /dev/widget-lab/gallery/ : live visual gallery of every widget.
+ *
+ * Unlike index.astro (a click-through link list), this page renders
+ * every svelte-mafs widget inline so they can be compared side by side.
+ * Each island hydrates with client:visible, so only widgets scrolled
+ * into view pay the hydration cost. Generated, not hand-maintained.
+ */
+export const prerender = true;
+import Base from '../../../layouts/Base.astro';
+import AblationLab from '../../../components/demos/AblationLab.svelte';
+import AdamInternalsInspector from '../../../components/demos/AdamInternalsInspector.svelte';
+import AttentionMatrixHeatmap from '../../../components/demos/AttentionMatrixHeatmap.svelte';
+import BasisTranslator from '../../../components/demos/BasisTranslator.svelte';
+import BayesGrid from '../../../components/demos/BayesGrid.svelte';
+import BigramHeatmap from '../../../components/demos/BigramHeatmap.svelte';
+import BigramTwoWays from '../../../components/demos/BigramTwoWays.svelte';
+import BnTrainEvalToggle from '../../../components/demos/BnTrainEvalToggle.svelte';
+import BpeMergeStepper from '../../../components/demos/BpeMergeStepper.svelte';
+import BuildTheBlock from '../../../components/demos/BuildTheBlock.svelte';
+import CdfSampler from '../../../components/demos/CdfSampler.svelte';
+import ChainRuleComposition from '../../../components/demos/ChainRuleComposition.svelte';
+import ChainRulePaths from '../../../components/demos/ChainRulePaths.svelte';
+import CovarianceScatter from '../../../components/demos/CovarianceScatter.svelte';
+import CrossEntropyDuel from '../../../components/demos/CrossEntropyDuel.svelte';
+import DirectPathInspector from '../../../components/demos/DirectPathInspector.svelte';
+import DotProductPlayground from '../../../components/demos/DotProductPlayground.svelte';
+import DropoutMaskScrub from '../../../components/demos/DropoutMaskScrub.svelte';
+import EigenHunter from '../../../components/demos/EigenHunter.svelte';
+import EmbeddingPluck from '../../../components/demos/EmbeddingPluck.svelte';
+import EntropyOfEnglishGame from '../../../components/demos/EntropyOfEnglishGame.svelte';
+import GaussianForge from '../../../components/demos/GaussianForge.svelte';
+import GradientCompass from '../../../components/demos/GradientCompass.svelte';
+import GradientDecay from '../../../components/demos/GradientDecay.svelte';
+import GradientNoiseBall from '../../../components/demos/GradientNoiseBall.svelte';
+import JointMarginalScrub from '../../../components/demos/JointMarginalScrub.svelte';
+import JvpPlayground from '../../../components/demos/JvpPlayground.svelte';
+import KlAsymmetryCanvas from '../../../components/demos/KlAsymmetryCanvas.svelte';
+import KvCacheTimeline from '../../../components/demos/KvCacheTimeline.svelte';
+import LnPlacementGrad from '../../../components/demos/LnPlacementGrad.svelte';
+import LossCurveDoctor from '../../../components/demos/LossCurveDoctor.svelte';
+import LossLandscapeNavigator from '../../../components/demos/LossLandscapeNavigator.svelte';
+import M18ForwardSmoke from '../../../components/demos/M18ForwardSmoke.svelte';
+import M18TrainSmoke from '../../../components/demos/M18TrainSmoke.svelte';
+import MatrixDraggable from '../../../components/demos/MatrixDraggable.svelte';
+import MleClimber from '../../../components/demos/MleClimber.svelte';
+import MlpContextDial from '../../../components/demos/MlpContextDial.svelte';
+import MultiHeadSplitter from '../../../components/demos/MultiHeadSplitter.svelte';
+import NucleusCutoff from '../../../components/demos/NucleusCutoff.svelte';
+import OneHotCollapse from '../../../components/demos/OneHotCollapse.svelte';
+import ParamBudgetPie from '../../../components/demos/ParamBudgetPie.svelte';
+import PartialSlicer from '../../../components/demos/PartialSlicer.svelte';
+import PermutationEquivarianceLab from '../../../components/demos/PermutationEquivarianceLab.svelte';
+import PerplexityDial from '../../../components/demos/PerplexityDial.svelte';
+import PmfSurpriseLab from '../../../components/demos/PmfSurpriseLab.svelte';
+import PriorPenaltyEquivalence from '../../../components/demos/PriorPenaltyEquivalence.svelte';
+import QkVectorPlayground from '../../../components/demos/QkVectorPlayground.svelte';
+import ResidualGradientFlow from '../../../components/demos/ResidualGradientFlow.svelte';
+import ResidualStreamScope from '../../../components/demos/ResidualStreamScope.svelte';
+import RopeRotationDial from '../../../components/demos/RopeRotationDial.svelte';
+import SaddleScanner from '../../../components/demos/SaddleScanner.svelte';
+import ScheduleDesigner from '../../../components/demos/ScheduleDesigner.svelte';
+import SecantToTangent from '../../../components/demos/SecantToTangent.svelte';
+import ShiftByOneBatch from '../../../components/demos/ShiftByOneBatch.svelte';
+import SlopeOfLine from '../../../components/demos/SlopeOfLine.svelte';
+import SoftmaxSatExplorer from '../../../components/demos/SoftmaxSatExplorer.svelte';
+import SvdEllipse from '../../../components/demos/SvdEllipse.svelte';
+import TangentDemo from '../../../components/demos/TangentDemo.svelte';
+import TemperatureBars from '../../../components/demos/TemperatureBars.svelte';
+import TokenInspector from '../../../components/demos/TokenInspector.svelte';
+import UnitConvertor from '../../../components/demos/UnitConvertor.svelte';
+import UnrolledRNN from '../../../components/demos/UnrolledRNN.svelte';
+import VarianceFanOut from '../../../components/demos/VarianceFanOut.svelte';
+import VectorAddDemo from '../../../components/demos/VectorAddDemo.svelte';
+import WarmupStabilizer from '../../../components/demos/WarmupStabilizer.svelte';
+import BalanceSolver from '../../../components/demos/BalanceSolver.svelte';
+import ExpressionTreeBuilder from '../../../components/demos/ExpressionTreeBuilder.svelte';
+import FractionUnitBar from '../../../components/demos/FractionUnitBar.svelte';
+import NotationToggle from '../../../components/demos/NotationToggle.svelte';
+import NumberLineWalker from '../../../components/demos/NumberLineWalker.svelte';
+import PeelInversesGame from '../../../components/demos/PeelInversesGame.svelte';
+import SignFlipMirror from '../../../components/demos/SignFlipMirror.svelte';
+---
+
+<Base title="Widget Gallery" description="Live gallery of every Tinker widget, rendered inline." fullWidth>
+  <section class="gallery">
+    <header class="gallery-head">
+      <p class="kicker">Internal · Live widget gallery</p>
+      <h1>Widget Gallery</h1>
+      <p class="lede">
+        Every Tinker widget rendered live, in one place. Each hydrates as you
+        scroll to it. Use the jump list to find one, or click a name to open
+        its solo audit page.
+      </p>
+      <nav class="jump" aria-label="Jump to widget">
+        <a href="#w-AblationLab">AblationLab</a>
+        <a href="#w-AdamInternalsInspector">AdamInternalsInspector</a>
+        <a href="#w-AttentionMatrixHeatmap">AttentionMatrixHeatmap</a>
+        <a href="#w-BasisTranslator">BasisTranslator</a>
+        <a href="#w-BayesGrid">BayesGrid</a>
+        <a href="#w-BigramHeatmap">BigramHeatmap</a>
+        <a href="#w-BigramTwoWays">BigramTwoWays</a>
+        <a href="#w-BnTrainEvalToggle">BnTrainEvalToggle</a>
+        <a href="#w-BpeMergeStepper">BpeMergeStepper</a>
+        <a href="#w-BuildTheBlock">BuildTheBlock</a>
+        <a href="#w-CdfSampler">CdfSampler</a>
+        <a href="#w-ChainRuleComposition">ChainRuleComposition</a>
+        <a href="#w-ChainRulePaths">ChainRulePaths</a>
+        <a href="#w-CovarianceScatter">CovarianceScatter</a>
+        <a href="#w-CrossEntropyDuel">CrossEntropyDuel</a>
+        <a href="#w-DirectPathInspector">DirectPathInspector</a>
+        <a href="#w-DotProductPlayground">DotProductPlayground</a>
+        <a href="#w-DropoutMaskScrub">DropoutMaskScrub</a>
+        <a href="#w-EigenHunter">EigenHunter</a>
+        <a href="#w-EmbeddingPluck">EmbeddingPluck</a>
+        <a href="#w-EntropyOfEnglishGame">EntropyOfEnglishGame</a>
+        <a href="#w-GaussianForge">GaussianForge</a>
+        <a href="#w-GradientCompass">GradientCompass</a>
+        <a href="#w-GradientDecay">GradientDecay</a>
+        <a href="#w-GradientNoiseBall">GradientNoiseBall</a>
+        <a href="#w-JointMarginalScrub">JointMarginalScrub</a>
+        <a href="#w-JvpPlayground">JvpPlayground</a>
+        <a href="#w-KlAsymmetryCanvas">KlAsymmetryCanvas</a>
+        <a href="#w-KvCacheTimeline">KvCacheTimeline</a>
+        <a href="#w-LnPlacementGrad">LnPlacementGrad</a>
+        <a href="#w-LossCurveDoctor">LossCurveDoctor</a>
+        <a href="#w-LossLandscapeNavigator">LossLandscapeNavigator</a>
+        <a href="#w-M18ForwardSmoke">M18ForwardSmoke</a>
+        <a href="#w-M18TrainSmoke">M18TrainSmoke</a>
+        <a href="#w-MatrixDraggable">MatrixDraggable</a>
+        <a href="#w-MleClimber">MleClimber</a>
+        <a href="#w-MlpContextDial">MlpContextDial</a>
+        <a href="#w-MultiHeadSplitter">MultiHeadSplitter</a>
+        <a href="#w-NucleusCutoff">NucleusCutoff</a>
+        <a href="#w-OneHotCollapse">OneHotCollapse</a>
+        <a href="#w-ParamBudgetPie">ParamBudgetPie</a>
+        <a href="#w-PartialSlicer">PartialSlicer</a>
+        <a href="#w-PermutationEquivarianceLab">PermutationEquivarianceLab</a>
+        <a href="#w-PerplexityDial">PerplexityDial</a>
+        <a href="#w-PmfSurpriseLab">PmfSurpriseLab</a>
+        <a href="#w-PriorPenaltyEquivalence">PriorPenaltyEquivalence</a>
+        <a href="#w-QkVectorPlayground">QkVectorPlayground</a>
+        <a href="#w-ResidualGradientFlow">ResidualGradientFlow</a>
+        <a href="#w-ResidualStreamScope">ResidualStreamScope</a>
+        <a href="#w-RopeRotationDial">RopeRotationDial</a>
+        <a href="#w-SaddleScanner">SaddleScanner</a>
+        <a href="#w-ScheduleDesigner">ScheduleDesigner</a>
+        <a href="#w-SecantToTangent">SecantToTangent</a>
+        <a href="#w-ShiftByOneBatch">ShiftByOneBatch</a>
+        <a href="#w-SlopeOfLine">SlopeOfLine</a>
+        <a href="#w-SoftmaxSatExplorer">SoftmaxSatExplorer</a>
+        <a href="#w-SvdEllipse">SvdEllipse</a>
+        <a href="#w-TangentDemo">TangentDemo</a>
+        <a href="#w-TemperatureBars">TemperatureBars</a>
+        <a href="#w-TokenInspector">TokenInspector</a>
+        <a href="#w-UnitConvertor">UnitConvertor</a>
+        <a href="#w-UnrolledRNN">UnrolledRNN</a>
+        <a href="#w-VarianceFanOut">VarianceFanOut</a>
+        <a href="#w-VectorAddDemo">VectorAddDemo</a>
+        <a href="#w-WarmupStabilizer">WarmupStabilizer</a>
+        <a href="#w-BalanceSolver">BalanceSolver</a>
+        <a href="#w-ExpressionTreeBuilder">ExpressionTreeBuilder</a>
+        <a href="#w-FractionUnitBar">FractionUnitBar</a>
+        <a href="#w-NotationToggle">NotationToggle</a>
+        <a href="#w-NumberLineWalker">NumberLineWalker</a>
+        <a href="#w-PeelInversesGame">PeelInversesGame</a>
+        <a href="#w-SignFlipMirror">SignFlipMirror</a>
+      </nav>
+    </header>
+    <div class="grid">
+      <article class="cell" id="w-AblationLab">
+        <header class="cell-head">
+          <h2>AblationLab</h2>
+          <a class="solo" href="/dev/widget-lab/demos/AblationLab/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <AblationLab client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-AdamInternalsInspector">
+        <header class="cell-head">
+          <h2>AdamInternalsInspector</h2>
+          <a class="solo" href="/dev/widget-lab/demos/AdamInternalsInspector/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <AdamInternalsInspector client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-AttentionMatrixHeatmap">
+        <header class="cell-head">
+          <h2>AttentionMatrixHeatmap</h2>
+          <a class="solo" href="/dev/widget-lab/demos/AttentionMatrixHeatmap/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <AttentionMatrixHeatmap client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-BasisTranslator">
+        <header class="cell-head">
+          <h2>BasisTranslator</h2>
+          <a class="solo" href="/dev/widget-lab/demos/BasisTranslator/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <BasisTranslator client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-BayesGrid">
+        <header class="cell-head">
+          <h2>BayesGrid</h2>
+          <a class="solo" href="/dev/widget-lab/demos/BayesGrid/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <BayesGrid client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-BigramHeatmap">
+        <header class="cell-head">
+          <h2>BigramHeatmap</h2>
+          <a class="solo" href="/dev/widget-lab/demos/BigramHeatmap/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <BigramHeatmap client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-BigramTwoWays">
+        <header class="cell-head">
+          <h2>BigramTwoWays</h2>
+          <a class="solo" href="/dev/widget-lab/demos/BigramTwoWays/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <BigramTwoWays client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-BnTrainEvalToggle">
+        <header class="cell-head">
+          <h2>BnTrainEvalToggle</h2>
+          <a class="solo" href="/dev/widget-lab/demos/BnTrainEvalToggle/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <BnTrainEvalToggle client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-BpeMergeStepper">
+        <header class="cell-head">
+          <h2>BpeMergeStepper</h2>
+          <a class="solo" href="/dev/widget-lab/demos/BpeMergeStepper/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <BpeMergeStepper client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-BuildTheBlock">
+        <header class="cell-head">
+          <h2>BuildTheBlock</h2>
+          <a class="solo" href="/dev/widget-lab/demos/BuildTheBlock/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <BuildTheBlock client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-CdfSampler">
+        <header class="cell-head">
+          <h2>CdfSampler</h2>
+          <a class="solo" href="/dev/widget-lab/demos/CdfSampler/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <CdfSampler client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-ChainRuleComposition">
+        <header class="cell-head">
+          <h2>ChainRuleComposition</h2>
+          <a class="solo" href="/dev/widget-lab/demos/ChainRuleComposition/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <ChainRuleComposition client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-ChainRulePaths">
+        <header class="cell-head">
+          <h2>ChainRulePaths</h2>
+          <a class="solo" href="/dev/widget-lab/demos/ChainRulePaths/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <ChainRulePaths client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-CovarianceScatter">
+        <header class="cell-head">
+          <h2>CovarianceScatter</h2>
+          <a class="solo" href="/dev/widget-lab/demos/CovarianceScatter/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <CovarianceScatter client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-CrossEntropyDuel">
+        <header class="cell-head">
+          <h2>CrossEntropyDuel</h2>
+          <a class="solo" href="/dev/widget-lab/demos/CrossEntropyDuel/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <CrossEntropyDuel client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-DirectPathInspector">
+        <header class="cell-head">
+          <h2>DirectPathInspector</h2>
+          <a class="solo" href="/dev/widget-lab/demos/DirectPathInspector/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <DirectPathInspector client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-DotProductPlayground">
+        <header class="cell-head">
+          <h2>DotProductPlayground</h2>
+          <a class="solo" href="/dev/widget-lab/demos/DotProductPlayground/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <DotProductPlayground client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-DropoutMaskScrub">
+        <header class="cell-head">
+          <h2>DropoutMaskScrub</h2>
+          <a class="solo" href="/dev/widget-lab/demos/DropoutMaskScrub/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <DropoutMaskScrub client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-EigenHunter">
+        <header class="cell-head">
+          <h2>EigenHunter</h2>
+          <a class="solo" href="/dev/widget-lab/demos/EigenHunter/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <EigenHunter client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-EmbeddingPluck">
+        <header class="cell-head">
+          <h2>EmbeddingPluck</h2>
+          <a class="solo" href="/dev/widget-lab/demos/EmbeddingPluck/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <EmbeddingPluck client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-EntropyOfEnglishGame">
+        <header class="cell-head">
+          <h2>EntropyOfEnglishGame</h2>
+          <a class="solo" href="/dev/widget-lab/demos/EntropyOfEnglishGame/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <EntropyOfEnglishGame client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-GaussianForge">
+        <header class="cell-head">
+          <h2>GaussianForge</h2>
+          <a class="solo" href="/dev/widget-lab/demos/GaussianForge/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <GaussianForge client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-GradientCompass">
+        <header class="cell-head">
+          <h2>GradientCompass</h2>
+          <a class="solo" href="/dev/widget-lab/demos/GradientCompass/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <GradientCompass client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-GradientDecay">
+        <header class="cell-head">
+          <h2>GradientDecay</h2>
+          <a class="solo" href="/dev/widget-lab/demos/GradientDecay/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <GradientDecay client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-GradientNoiseBall">
+        <header class="cell-head">
+          <h2>GradientNoiseBall</h2>
+          <a class="solo" href="/dev/widget-lab/demos/GradientNoiseBall/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <GradientNoiseBall client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-JointMarginalScrub">
+        <header class="cell-head">
+          <h2>JointMarginalScrub</h2>
+          <a class="solo" href="/dev/widget-lab/demos/JointMarginalScrub/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <JointMarginalScrub client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-JvpPlayground">
+        <header class="cell-head">
+          <h2>JvpPlayground</h2>
+          <a class="solo" href="/dev/widget-lab/demos/JvpPlayground/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <JvpPlayground client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-KlAsymmetryCanvas">
+        <header class="cell-head">
+          <h2>KlAsymmetryCanvas</h2>
+          <a class="solo" href="/dev/widget-lab/demos/KlAsymmetryCanvas/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <KlAsymmetryCanvas client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-KvCacheTimeline">
+        <header class="cell-head">
+          <h2>KvCacheTimeline</h2>
+          <a class="solo" href="/dev/widget-lab/demos/KvCacheTimeline/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <KvCacheTimeline client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-LnPlacementGrad">
+        <header class="cell-head">
+          <h2>LnPlacementGrad</h2>
+          <a class="solo" href="/dev/widget-lab/demos/LnPlacementGrad/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <LnPlacementGrad client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-LossCurveDoctor">
+        <header class="cell-head">
+          <h2>LossCurveDoctor</h2>
+          <a class="solo" href="/dev/widget-lab/demos/LossCurveDoctor/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <LossCurveDoctor client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-LossLandscapeNavigator">
+        <header class="cell-head">
+          <h2>LossLandscapeNavigator</h2>
+          <a class="solo" href="/dev/widget-lab/demos/LossLandscapeNavigator/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <LossLandscapeNavigator client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-M18ForwardSmoke">
+        <header class="cell-head">
+          <h2>M18ForwardSmoke</h2>
+          <a class="solo" href="/dev/widget-lab/demos/M18ForwardSmoke/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <M18ForwardSmoke client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-M18TrainSmoke">
+        <header class="cell-head">
+          <h2>M18TrainSmoke</h2>
+          <a class="solo" href="/dev/widget-lab/demos/M18TrainSmoke/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <M18TrainSmoke client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-MatrixDraggable">
+        <header class="cell-head">
+          <h2>MatrixDraggable</h2>
+          <a class="solo" href="/dev/widget-lab/demos/MatrixDraggable/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <MatrixDraggable client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-MleClimber">
+        <header class="cell-head">
+          <h2>MleClimber</h2>
+          <a class="solo" href="/dev/widget-lab/demos/MleClimber/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <MleClimber client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-MlpContextDial">
+        <header class="cell-head">
+          <h2>MlpContextDial</h2>
+          <a class="solo" href="/dev/widget-lab/demos/MlpContextDial/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <MlpContextDial client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-MultiHeadSplitter">
+        <header class="cell-head">
+          <h2>MultiHeadSplitter</h2>
+          <a class="solo" href="/dev/widget-lab/demos/MultiHeadSplitter/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <MultiHeadSplitter client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-NucleusCutoff">
+        <header class="cell-head">
+          <h2>NucleusCutoff</h2>
+          <a class="solo" href="/dev/widget-lab/demos/NucleusCutoff/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <NucleusCutoff client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-OneHotCollapse">
+        <header class="cell-head">
+          <h2>OneHotCollapse</h2>
+          <a class="solo" href="/dev/widget-lab/demos/OneHotCollapse/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <OneHotCollapse client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-ParamBudgetPie">
+        <header class="cell-head">
+          <h2>ParamBudgetPie</h2>
+          <a class="solo" href="/dev/widget-lab/demos/ParamBudgetPie/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <ParamBudgetPie client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-PartialSlicer">
+        <header class="cell-head">
+          <h2>PartialSlicer</h2>
+          <a class="solo" href="/dev/widget-lab/demos/PartialSlicer/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <PartialSlicer client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-PermutationEquivarianceLab">
+        <header class="cell-head">
+          <h2>PermutationEquivarianceLab</h2>
+          <a class="solo" href="/dev/widget-lab/demos/PermutationEquivarianceLab/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <PermutationEquivarianceLab client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-PerplexityDial">
+        <header class="cell-head">
+          <h2>PerplexityDial</h2>
+          <a class="solo" href="/dev/widget-lab/demos/PerplexityDial/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <PerplexityDial client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-PmfSurpriseLab">
+        <header class="cell-head">
+          <h2>PmfSurpriseLab</h2>
+          <a class="solo" href="/dev/widget-lab/demos/PmfSurpriseLab/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <PmfSurpriseLab client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-PriorPenaltyEquivalence">
+        <header class="cell-head">
+          <h2>PriorPenaltyEquivalence</h2>
+          <a class="solo" href="/dev/widget-lab/demos/PriorPenaltyEquivalence/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <PriorPenaltyEquivalence client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-QkVectorPlayground">
+        <header class="cell-head">
+          <h2>QkVectorPlayground</h2>
+          <a class="solo" href="/dev/widget-lab/demos/QkVectorPlayground/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <QkVectorPlayground client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-ResidualGradientFlow">
+        <header class="cell-head">
+          <h2>ResidualGradientFlow</h2>
+          <a class="solo" href="/dev/widget-lab/demos/ResidualGradientFlow/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <ResidualGradientFlow client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-ResidualStreamScope">
+        <header class="cell-head">
+          <h2>ResidualStreamScope</h2>
+          <a class="solo" href="/dev/widget-lab/demos/ResidualStreamScope/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <!-- ResidualStreamScope throws during SSR (its own solo demo page
+               is broken too); client:only skips SSR so the gallery prerenders. -->
+          <ResidualStreamScope client:only="svelte" />
+        </div>
+      </article>
+      <article class="cell" id="w-RopeRotationDial">
+        <header class="cell-head">
+          <h2>RopeRotationDial</h2>
+          <a class="solo" href="/dev/widget-lab/demos/RopeRotationDial/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <RopeRotationDial client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-SaddleScanner">
+        <header class="cell-head">
+          <h2>SaddleScanner</h2>
+          <a class="solo" href="/dev/widget-lab/demos/SaddleScanner/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <SaddleScanner client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-ScheduleDesigner">
+        <header class="cell-head">
+          <h2>ScheduleDesigner</h2>
+          <a class="solo" href="/dev/widget-lab/demos/ScheduleDesigner/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <ScheduleDesigner client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-SecantToTangent">
+        <header class="cell-head">
+          <h2>SecantToTangent</h2>
+          <a class="solo" href="/dev/widget-lab/demos/SecantToTangent/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <SecantToTangent client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-ShiftByOneBatch">
+        <header class="cell-head">
+          <h2>ShiftByOneBatch</h2>
+          <a class="solo" href="/dev/widget-lab/demos/ShiftByOneBatch/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <ShiftByOneBatch client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-SlopeOfLine">
+        <header class="cell-head">
+          <h2>SlopeOfLine</h2>
+          <a class="solo" href="/dev/widget-lab/demos/SlopeOfLine/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <SlopeOfLine client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-SoftmaxSatExplorer">
+        <header class="cell-head">
+          <h2>SoftmaxSatExplorer</h2>
+          <a class="solo" href="/dev/widget-lab/demos/SoftmaxSatExplorer/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <SoftmaxSatExplorer client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-SvdEllipse">
+        <header class="cell-head">
+          <h2>SvdEllipse</h2>
+          <a class="solo" href="/dev/widget-lab/demos/SvdEllipse/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <SvdEllipse client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-TangentDemo">
+        <header class="cell-head">
+          <h2>TangentDemo</h2>
+          <a class="solo" href="/dev/widget-lab/demos/TangentDemo/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <TangentDemo client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-TemperatureBars">
+        <header class="cell-head">
+          <h2>TemperatureBars</h2>
+          <a class="solo" href="/dev/widget-lab/demos/TemperatureBars/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <TemperatureBars client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-TokenInspector">
+        <header class="cell-head">
+          <h2>TokenInspector</h2>
+          <a class="solo" href="/dev/widget-lab/demos/TokenInspector/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <TokenInspector client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-UnitConvertor">
+        <header class="cell-head">
+          <h2>UnitConvertor</h2>
+          <a class="solo" href="/dev/widget-lab/demos/UnitConvertor/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <UnitConvertor client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-UnrolledRNN">
+        <header class="cell-head">
+          <h2>UnrolledRNN</h2>
+          <a class="solo" href="/dev/widget-lab/demos/UnrolledRNN/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <UnrolledRNN client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-VarianceFanOut">
+        <header class="cell-head">
+          <h2>VarianceFanOut</h2>
+          <a class="solo" href="/dev/widget-lab/demos/VarianceFanOut/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <VarianceFanOut client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-VectorAddDemo">
+        <header class="cell-head">
+          <h2>VectorAddDemo</h2>
+          <a class="solo" href="/dev/widget-lab/demos/VectorAddDemo/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <VectorAddDemo client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-WarmupStabilizer">
+        <header class="cell-head">
+          <h2>WarmupStabilizer</h2>
+          <a class="solo" href="/dev/widget-lab/demos/WarmupStabilizer/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <WarmupStabilizer client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-BalanceSolver">
+        <header class="cell-head">
+          <h2>BalanceSolver</h2>
+          <a class="solo" href="/dev/widget-lab/demos/BalanceSolver/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <BalanceSolver client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-ExpressionTreeBuilder">
+        <header class="cell-head">
+          <h2>ExpressionTreeBuilder</h2>
+          <a class="solo" href="/dev/widget-lab/demos/ExpressionTreeBuilder/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <ExpressionTreeBuilder client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-FractionUnitBar">
+        <header class="cell-head">
+          <h2>FractionUnitBar</h2>
+          <a class="solo" href="/dev/widget-lab/demos/FractionUnitBar/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <FractionUnitBar client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-NotationToggle">
+        <header class="cell-head">
+          <h2>NotationToggle</h2>
+          <a class="solo" href="/dev/widget-lab/demos/NotationToggle/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <NotationToggle client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-NumberLineWalker">
+        <header class="cell-head">
+          <h2>NumberLineWalker</h2>
+          <a class="solo" href="/dev/widget-lab/demos/NumberLineWalker/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <NumberLineWalker client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-PeelInversesGame">
+        <header class="cell-head">
+          <h2>PeelInversesGame</h2>
+          <a class="solo" href="/dev/widget-lab/demos/PeelInversesGame/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <PeelInversesGame client:visible />
+        </div>
+      </article>
+      <article class="cell" id="w-SignFlipMirror">
+        <header class="cell-head">
+          <h2>SignFlipMirror</h2>
+          <a class="solo" href="/dev/widget-lab/demos/SignFlipMirror/">solo &rarr;</a>
+        </header>
+        <div class="frame">
+          <SignFlipMirror client:visible />
+        </div>
+      </article>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .gallery {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: clamp(1.5rem, 4vw, 3rem) 1.25rem 5rem;
+  }
+  .gallery-head { margin-bottom: 2rem; }
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-coral);
+    margin: 0 0 0.4rem;
+  }
+  .gallery-head h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2rem, 4.5vw, 3rem);
+    letter-spacing: -0.02em;
+    margin: 0 0 0.75rem;
+  }
+  .lede {
+    font-size: 1.02rem;
+    line-height: 1.6;
+    color: var(--site-fg-muted);
+    max-width: 60ch;
+    margin: 0 0 1.25rem;
+  }
+  .jump {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+  .jump a {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    padding: 0.22rem 0.5rem;
+    border-radius: 6px;
+    border: 1px solid color-mix(in srgb, var(--site-fg) 12%, transparent);
+    color: var(--site-fg-muted);
+    text-decoration: none;
+    transition: border-color 120ms ease, color 120ms ease;
+  }
+  .jump a:hover { border-color: var(--ink-red); color: var(--ink-red); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+    gap: 1.25rem;
+    align-items: start;
+  }
+  @media (max-width: 540px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  .cell {
+    border: 1px solid var(--site-border);
+    border-radius: 16px;
+    background: var(--site-bg);
+    overflow: hidden;
+    /* Offset for the sticky nav so #w-Name jump links land below it. */
+    scroll-margin-top: 5rem;
+  }
+  .cell-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid var(--site-border);
+    background: var(--demo-stage);
+  }
+  .cell-head h2 {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--site-fg);
+  }
+  .solo {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--ink-red);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .solo:hover { text-decoration: underline; }
+  .frame {
+    padding: 1rem;
+    overflow-x: auto;
+  }
+</style>

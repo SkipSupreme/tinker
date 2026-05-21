@@ -1,7 +1,7 @@
 ---
 title: Jacobians and the Multivariable Chain Rule
 module: m6-multivariable
-summary: When a function returns multiple numbers, stack its gradients into a grid — that's the Jacobian. Compose two functions and their Jacobians multiply. Neural networks are exactly this, about a hundred times in a row.
+summary: When a function returns multiple numbers, stack its gradients into a grid, and that grid is the Jacobian. Compose two functions and their Jacobians multiply. Neural networks are exactly this, about a hundred times in a row.
 estimatedMinutes: 20
 order: 4
 prereqs:
@@ -27,7 +27,7 @@ $$
 
 Concrete example: $\mathbf{F}(x, y) = (x^2 - y,\; x y)$. Two inputs, two outputs.
 
-A neural-network layer is exactly this — a vector-in, vector-out function. Every layer.
+A neural-network layer is exactly this: a vector-in, vector-out function. Every layer.
 </Step>
 
 <Step title="The Jacobian, as a stack of gradients">
@@ -43,7 +43,7 @@ $$
 
 This is the **Jacobian matrix**. It has $m$ rows (one per output) and $n$ columns (one per input). Row $i$ is the gradient of $F_i$, written sideways.
 
-**Convention pledge** (this matters and we're picking a side): *numerator layout* — rows indexed by the output, columns indexed by the input. Some textbooks use the transpose. Don't mix.
+**Convention pledge** (this matters and we're picking a side): *numerator layout*, rows indexed by the output, columns indexed by the input. Some textbooks use the transpose. Don't mix.
 
 For $f: \mathbb{R}^n \to \mathbb{R}$ (scalar output), the Jacobian is a single row: $1 \times n$. That row *is* the gradient, written sideways. Gradient and Jacobian aren't different animals; the gradient is the Jacobian of a scalar-output function.
 </Step>
@@ -68,7 +68,7 @@ For $\mathbf{F}(x, y) = (x^2 - y,\; x y)$, compute $J_{1,1}$ (row 1, column 1) a
 Same $\mathbf{F}$. Now compute $J_{2,2}$ (row 2, column 2) at $(1, 2)$.
 </StepCheck>
 
-<Step title="The multivariable chain rule — one output">
+<Step title="The multivariable chain rule: one output">
 Take a composed function. Input $t$ goes through a curve $\mathbf{r}(t)$ in 2D, output of that curve gets fed into a scalar function $f$. In symbols, $z(t) = f(\mathbf{r}(t))$.
 
 We want $dz/dt$. Multivariable version of the chain rule: differentiate $f$ along the curve's path.
@@ -91,7 +91,7 @@ This is also where last lesson's promised proof lives: if $\mathbf{r}(t)$ stays 
 >
 Let $z = x^2 + y^2$ where $x = \cos t$ and $y = \sin t$. Compute $dz/dt$.
 
-(No decimals — the answer is an integer.)
+(No decimals. The answer is an integer.)
 </StepCheck>
 
 <Step title="The chain rule in full generality, as a graph.">
@@ -107,7 +107,7 @@ $$
 \frac{\partial z}{\partial x_j} \;=\; \sum_{i} \frac{\partial z}{\partial y_i}\, \frac{\partial y_i}{\partial x_j}.
 $$
 
-For each input $x_j$, sum — over all the intermediate variables $y_i$ — the products of "how $z$ depends on $y_i$" times "how $y_i$ depends on $x_j$." **Sum over paths, multiply along edges.**
+For each input $x_j$, sum over all the intermediate variables $y_i$ the products of "how $z$ depends on $y_i$" times "how $y_i$ depends on $x_j$." **Sum over paths, multiply along edges.**
 
 The widget below makes this literal. Click edges to highlight partials, or press a button to assemble the chain-rule sum for $\partial z / \partial x$ or $\partial z / \partial y$ as a sum over the two paths from input to output.
 
@@ -125,7 +125,7 @@ The shape of the formula *is* the shape of the graph. If you've ever drawn a com
 >
 Let $\mathbf{g}(x) = (x,\; x^2)$ and $f(u, v) = u + v$. Compute $\dfrac{d}{dx}(f \circ \mathbf{g})(x)$ at $x = 1$.
 
-Try it two ways — compose first and differentiate, or multiply the Jacobians. Same answer.
+Try it two ways: compose first and differentiate, or multiply the Jacobians. Same answer.
 </StepCheck>
 
 <Step title="Shape hygiene">
@@ -139,7 +139,7 @@ In ML frameworks, shape errors are the single most common bug. Track the shapes,
 <Step title="Teaser: what this unlocks">
 Every neural network is a long composition: input → linear layer → nonlinearity → linear layer → ... → loss. Dozens of functions in series. The derivative of the loss with respect to any parameter, by the chain rule, is a long product of Jacobians.
 
-But here's the twist we'll develop in the next lesson: we never compute the full Jacobians. We multiply them onto a *row vector* (the gradient of the loss), working from the output backward to the input. That multiplication — row times matrix — is called a **vector–Jacobian product**, and it is exactly what `loss.backward()` computes.
+But here's the twist we'll develop in the next lesson: we never compute the full Jacobians. We multiply them onto a *row vector* (the gradient of the loss), working from the output backward to the input. That multiplication (row times matrix) is called a **vector–Jacobian product**, and it is exactly what `loss.backward()` computes.
 
 Next lesson pulls that thread.
 </Step>
