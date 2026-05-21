@@ -34,5 +34,5 @@ conceptsCovered:
     kv-cache,
     attention-not-explanation,
   ]
-endgameConnection: 'Attention is one operation: every position broadcasts a query, every position offers a key, the softmax-weighted match decides whose values you pull back. Residuals, layer norm, and the MLP that follows are plumbing around that core idea — and you are now one layer of glue away from a real transformer.'
+endgameConnection: 'Attention is one operation: every position broadcasts a query, every position offers a key, the softmax-weighted match decides whose values you pull back. Residuals, layer norm, and the MLP that follows are plumbing around that core idea, and you are now one layer of glue away from a real transformer.'
 ---

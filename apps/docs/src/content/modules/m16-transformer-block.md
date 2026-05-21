@@ -28,5 +28,5 @@ conceptsCovered:
     model-parameter-budget,
     bigram-as-zero-layer,
   ]
-endgameConnection: 'Tokens at the bottom. Attention and MLPs in the middle. Unembedding at the top. Bigram NLL on the outside. Stack N, train with Adam, warm up the LR. That is GPT — there is nothing else.'
+endgameConnection: 'Tokens at the bottom. Attention and MLPs in the middle. Unembedding at the top. Bigram NLL on the outside. Stack N, train with Adam, warm up the LR. That is GPT: there is nothing else.'
 ---

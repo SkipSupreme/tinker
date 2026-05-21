@@ -89,7 +89,7 @@ That's it. Divide every logit by $\tau$, then run the usual softmax. Three regim
 - **$\tau \to 0^+$** sharpens the distribution. Logit gaps grow, the highest logit dominates, softmax collapses to a one-hot at the argmax. Greedy.
 - **$\tau \to \infty$** flattens the distribution. Logit gaps shrink toward zero, every token's probability approaches $1/\lvert V \rvert$. Uniform random.
 
-Concrete: logits $\ell = (2, 1, 0)$. At $\tau = 1$, softmax gives $(0.665,\, 0.245,\, 0.090)$. At $\tau = 0.5$, the logits effectively double to $(4, 2, 0)$, and softmax gives $(0.867,\, 0.117,\, 0.016)$ — the top token nearly doubles its share, the bottom token nearly disappears. At $\tau = 2$, the logits halve, and the distribution moves toward uniform: $(0.506,\, 0.307,\, 0.186)$.
+Concrete: logits $\ell = (2, 1, 0)$. At $\tau = 1$, softmax gives $(0.665,\, 0.245,\, 0.090)$. At $\tau = 0.5$, the logits effectively double to $(4, 2, 0)$, and softmax gives $(0.867,\, 0.117,\, 0.016)$: the top token nearly doubles its share, the bottom token nearly disappears. At $\tau = 2$, the logits halve, and the distribution moves toward uniform: $(0.506,\, 0.307,\, 0.186)$.
 
 The widget reuses the bigram you saw in M14, but the operation is identical for transformer logits. Drag the temperature slider and watch the bars.
 
@@ -119,7 +119,7 @@ Same logits $(2,\, 1,\, 0)$, now at $\tau = 0.5$. **What is $p_1$**, to two deci
 </StepCheck>
 
 <Step title="Top-k: chop off the tail by rank">
-Temperature alone leaves the long tail of the distribution alive. Even with $\tau = 0.7$, the 50,000th most-likely token still has nonzero probability — and rare tokens summed over a long tail have surprisingly high total mass. Sometimes a typo wins.
+Temperature alone leaves the long tail of the distribution alive. Even with $\tau = 0.7$, the 50,000th most-likely token still has nonzero probability, and rare tokens summed over a long tail have surprisingly high total mass. Sometimes a typo wins.
 
 Top-k sampling solves this by chopping the tail off by rank. Keep only the $k$ highest-logit tokens; set every other logit to $-\infty$ (so its softmax probability becomes 0); renormalize the kept tokens.
 
@@ -127,7 +127,7 @@ $$
 \ell'_i \;=\; \begin{cases} \ell_i & i \in \mathrm{TopK}(\ell, k) \\ -\infty & \text{otherwise} \end{cases}
 $$
 
-Top-k = 1 is greedy. Top-k = $\lvert V \rvert$ is "off." Production LMs often use $k$ in the 40–200 range. The widget above has a top-k slider — slide it down and watch the bars not in the top-$k$ vanish.
+Top-k = 1 is greedy. Top-k = $\lvert V \rvert$ is "off." Production LMs often use $k$ in the 40–200 range. The widget above has a top-k slider; slide it down and watch the bars not in the top-$k$ vanish.
 </Step>
 
 <Step title="Top-p (nucleus): chop off the tail by mass">
@@ -182,27 +182,27 @@ def sample(logits, tau, k, p):
     return probs                                 # 4. sample externally
 ```
 
-Three transforms applied to the logit vector, then one categorical draw. None of them know about the others — they each just write into the same array.
+Three transforms applied to the logit vector, then one categorical draw. None of them know about the others; they each just write into the same array.
 </Step>
 
 <Step title="Why we don't use beam search">
 Beam search tracks the top-$B$ partial sequences by *joint* probability, expanding each one step at a time, pruning to keep only the best $B$ overall. It is the dominant decoding algorithm for translation, where the source sentence tightly constrains the target distribution and the joint maximum-likelihood path is genuinely the right path.
 
-Open-ended language modeling is the wrong setting for it. The Holtzman finding from earlier in this lesson holds: the joint MLE path concentrates on degenerate cycles. Beam search makes this *worse*, not better — it explicitly searches for the highest-likelihood path, which is the path most likely to repeat itself. GPT-2/3/4 do not use beam search. LLaMA does not. Sampling-based decoding is the rule for generative text.
+Open-ended language modeling is the wrong setting for it. The Holtzman finding from earlier in this lesson holds: the joint MLE path concentrates on degenerate cycles. Beam search makes this *worse*, not better: it explicitly searches for the highest-likelihood path, which is the path most likely to repeat itself. GPT-2/3/4 do not use beam search. LLaMA does not. Sampling-based decoding is the rule for generative text.
 
 Beam search remains the right choice for translation, summarization, and other "constrained generation" tasks where there is a single best answer. It is the wrong choice everywhere creativity matters.
 </Step>
 
 <Step title="The KV cache, again">
-Every step of the autoregressive loop runs the M16 forward pass on a *growing* prefix. Naively, that means at step $t$ the model recomputes keys and values for all $t$ tokens — even though the keys and values for tokens 0 to $t-1$ haven't changed since the previous step.
+Every step of the autoregressive loop runs the M16 forward pass on a *growing* prefix. Naively, that means at step $t$ the model recomputes keys and values for all $t$ tokens, even though the keys and values for tokens 0 to $t-1$ haven't changed since the previous step.
 
 The KV cache (M15) avoids that recompute. Maintain a per-layer cache of every key and value vector ever computed; at each step, only project the new token's key and value, then run attention against the cached prefix. Same final output, much less arithmetic.
 
 <KvCacheTimeline client:visible />
 
-The cumulative cost without a cache scales as $O(T^2)$ — at every step you redo all the past work. With the cache, every step is $O(T)$, dominated by the new token's attention over the cache.
+The cumulative cost without a cache scales as $O(T^2)$: at every step you redo all the past work. With the cache, every step is $O(T)$, dominated by the new token's attention over the cache.
 
-This is inference-only. Training already has all positions in parallel inside one matrix multiply — there is no "past" to cache.
+This is inference-only. Training already has all positions in parallel inside one matrix multiply; there is no "past" to cache.
 </Step>
 
 <StepCheck
@@ -215,8 +215,8 @@ This is inference-only. Training already has all positions in parallel inside on
 Without a KV cache, generating $T$ tokens has total compute complexity $\mathcal{O}(T^?)$. **What is the exponent?**
 </StepCheck>
 
-<Step title="Seed, prompt, sampler — the full control surface">
-Once the weights are frozen, three things — and only three things — change the output:
+<Step title="Seed, prompt, sampler: the full control surface">
+Once the weights are frozen, three things, and only three things, change the output:
 
 1. **The prompt.** What you condition on.
 2. **The sampler settings.** $\tau$, $k$, $p$.
@@ -228,5 +228,5 @@ This is the entire interface for "controlling" a generative LM at inference time
 
 That distribution came from training. Training came from the loss curve. The loss curve came from the data loader. The data loader read tokens from a tokenizer. The tokenizer was a list of merges fit to a corpus.
 
-That is the whole stack — bytes to vectors, vectors to weights, weights back to bytes. Next module: you train one in your browser.
+That is the whole stack: bytes to vectors, vectors to weights, weights back to bytes. Next module: you train one in your browser.
 </Step>

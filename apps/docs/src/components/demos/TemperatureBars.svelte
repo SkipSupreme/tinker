@@ -2,13 +2,13 @@
   import { onDestroy } from 'svelte';
 
   interface Props {
-    /** Initial logits (length 27 by default — same vocab as the bigram lessons). */
+    /** Initial logits (length 27 by default; same vocab as the bigram lessons). */
     initialLogits?: number[];
     initialTemperature?: number;
     initialTopK?: number;
   }
 
-  // Default logits: shaped after a realistic "what comes after a vowel" row —
+  // Default logits: shaped after a realistic "what comes after a vowel" row;
   // common consonants (n, r, l, s, t) get higher logits, rarer letters get
   // lower, and the start/end token · sits in the middle.
   function defaultLogits(): number[] {
@@ -63,7 +63,7 @@
     return s > 0 ? masked.map((p) => p / s) : masked;
   });
 
-  // The argmax — used to highlight that argmax is invariant under temperature.
+  // The argmax: used to highlight that argmax is invariant under temperature.
   const argmax = $derived.by(() => {
     let m = -Infinity, idx = 0;
     for (let i = 0; i < V; i++) if (probs[i] > m) { m = probs[i]; idx = i; }
@@ -185,7 +185,7 @@
     const yInPlot = Math.max(0, Math.min(plotH, yLocal - padT));
     // Map to a probability target, then to a logit.
     // We hold all other logits fixed and adjust this one to *want* a
-    // certain probability — solve softmax for the corresponding logit.
+    // certain probability; solve softmax for the corresponding logit.
     const targetProb = Math.max(0.001, Math.min(0.99, 1 - yInPlot / plotH));
     // Compute denominator from other logits (stable form).
     const otherScaled = logits.map((l, k) => (k === i ? -Infinity : l / temperature));
@@ -347,7 +347,7 @@
 
   <p class="caption">
     Drag any bar's top to set its probability directly. The temperature
-    slider stretches or squeezes the whole distribution — but notice the
+    slider stretches or squeezes the whole distribution; but notice the
     argmax (highlighted character) doesn't change for any T &gt; 0. Top-k
     censors all but the largest k bars before sampling. Empirical samples
     appear as coral ticks above each bar; with enough samples they lock

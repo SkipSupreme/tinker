@@ -18,7 +18,7 @@
   // svelte-ignore state_referenced_locally
   let y = $state(initialY);
 
-  // Fires once on mount with the initial pair, then again for every update —
+  // Fires once on mount with the initial pair, then again for every update;
   // tests can assert lastCall's args.
   $effect(() => {
     onChange?.(x, y);

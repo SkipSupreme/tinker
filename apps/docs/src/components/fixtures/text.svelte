@@ -5,7 +5,7 @@
   // etc. as JS string escapes in attribute position.
   const eulersIdentity = String.raw`e^{i\pi} + 1 = 0`;
   const baselZeta = String.raw`\sum_{n=1}^{\infty} \frac{1}{n^2}`;
-  // KaTeX CSS is not imported — apps/docs doesn't declare `katex` as a
+  // KaTeX CSS is not imported; apps/docs doesn't declare `katex` as a
   // direct dep (it comes transitively via svelte-mafs). The rendered
   // fallback HTML is still visually stable for regression purposes.
 </script>

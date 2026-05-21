@@ -43,7 +43,7 @@ describe("<Point>", () => {
 
   it("default opacity is 1", () => {
     const circle = getCircle({ x: 0, y: 0 });
-    // fill-opacity omitted or 1 — either is valid.
+    // fill-opacity omitted or 1; either is valid.
     const op = circle.getAttribute("fill-opacity");
     if (op !== null) expect(op).toBe("1");
   });

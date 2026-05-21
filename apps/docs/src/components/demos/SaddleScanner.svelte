@@ -2,7 +2,7 @@
   import { Mafs, Coordinates, Plot, Line, Point } from 'svelte-mafs';
 
   /**
-   * SaddleScanner — set the curvature signs (a, b) of f(x, y) = a x² + b y²,
+   * SaddleScanner: set the curvature signs (a, b) of f(x, y) = a x² + b y²,
    * then sweep a probe ray angle θ from the origin. The right panel plots
    * f along that ray as a function of distance t. The classification badge
    * (min / max / saddle) updates from the signs of a and b.

@@ -1,4 +1,4 @@
-// LayerNorm backward — dGamma / dBeta branch.
+// LayerNorm backward: dGamma / dBeta branch.
 //   Inputs : dy [rows, d], x [rows, d]
 //   Outputs: dGamma [d] (write), dBeta [d] (write)
 // Each thread handles one column k, summing over all rows. Dispatch ceil(d/WG)

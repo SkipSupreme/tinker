@@ -48,7 +48,7 @@
   };
 
   function buildWeights(L: number, H: number, std: number, seed: number): Float32Array[] {
-    // PRNG seeded — reset Math.random shimming via xorshift wouldn't
+    // PRNG seeded; reset Math.random shimming via xorshift wouldn't
     // affect Math.random; for this demo deterministic-per-seed weight
     // matrices aren't critical, so we just regenerate fresh per call.
     void seed;
@@ -165,7 +165,7 @@
     </div>
     <div class="meta">
       <span class="meta-key">layer-{layers} variance</span>
-      <span class="meta-val">{stats[layers - 1]?.variance.toFixed(3) ?? '—'}</span>
+      <span class="meta-val">{stats[layers - 1]?.variance.toFixed(3) ?? 'n/a'}</span>
     </div>
     <div class="meta">
       <span class="meta-key">saturation @ layer {layers}</span>
@@ -222,8 +222,8 @@
     Each histogram shows the distribution of post-tanh activations across a
     batch of {batch} inputs at one layer of a {layers}-layer MLP with
     {hidden} units per layer. Drag σ<sub>W</sub> low and the activations
-    decay toward zero — every histogram becomes a single spike at 0,
-    gradients die. Drag it high and tanh saturates — every histogram
+    decay toward zero; every histogram becomes a single spike at 0,
+    gradients die. Drag it high and tanh saturates; every histogram
     becomes two walls at ±1, gradients also die. The presets land at the
     known good values; only Xavier and He keep the histograms stable
     across all 10 layers.

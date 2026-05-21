@@ -18,7 +18,7 @@
   let activation: 'tanh' | 'relu' = $state(initialActivation);
 
   // Per-layer multiplicative factor on gradient magnitude during backprop.
-  // Numbers are pedagogical — chosen so the lesson's "ten to twenty orders
+  // Numbers are pedagogical, chosen so the lesson's "ten to twenty orders
   // of magnitude" claim shows up at depth ~12 with no residual + tanh.
   function factor(): number {
     if (residual) {
@@ -147,7 +147,7 @@
     Each row is one layer; bar width is its gradient magnitude on a log₁₀
     axis. Backprop multiplies by ∂h<sub>i</sub>/∂h<sub>i−1</sub> at each
     step. Without residuals, that Jacobian shrinks the gradient at every
-    layer (worse for tanh than ReLU) — by the time you reach the input,
+    layer (worse for tanh than ReLU); by the time you reach the input,
     the signal is gone. Flip residuals ON and ∂h<sub>i</sub>/∂h<sub>i−1</sub>
     becomes <em>I + ∂F/∂x</em> ≈ <em>I</em>, and the gradient cruises
     through unchanged. The identity term in the Jacobian is the entire

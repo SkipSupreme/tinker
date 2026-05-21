@@ -1,7 +1,7 @@
 ---
 title: Three projections of the same X
 module: m15-attention
-summary: Self-attention is the same operation as last lesson, applied in parallel — every token is both a querier and a query target. Q, K, V are three linear projections of the same X. Causal masking and the permutation-equivariance bug come for free.
+summary: Self-attention is the same operation as last lesson, applied in parallel. Every token is both a querier and a query target. Q, K, V are three linear projections of the same X. Causal masking and the permutation-equivariance bug come for free.
 estimatedMinutes: 18
 order: 3
 prereqs:
@@ -23,9 +23,9 @@ import AttentionMatrixHeatmap from '../../components/demos/AttentionMatrixHeatma
 import PermutationEquivarianceLab from '../../components/demos/PermutationEquivarianceLab.svelte';
 
 <Step title="Every position queries, every position answers">
-The last two lessons built attention with one query against $T$ keys. That's enough to define the operation but not enough to do useful work — a transformer layer needs *every* position to attend to every other position, in one parallel sweep.
+The last two lessons built attention with one query against $T$ keys. That's enough to define the operation but not enough to do useful work: a transformer layer needs *every* position to attend to every other position, in one parallel sweep.
 
-The leap is small. Take the input sequence $X \in \mathbb{R}^{T\times d}$, where each row is a token's vector. We're going to make every row both a *querier* and a *query target* — same data, three roles.
+The leap is small. Take the input sequence $X \in \mathbb{R}^{T\times d}$, where each row is a token's vector. We're going to make every row both a *querier* and a *query target*: same data, three roles.
 </Step>
 
 <Step title="Three projections of the same X">
@@ -44,7 +44,7 @@ qkv = nn.Linear(d, 3 * d)(x)        # one matmul, no bias
 q, k, v = qkv.split(d, dim=-1)       # then three views
 ```
 
-This is the canonical nanoGPT pattern, and it is the reason a learner who sees `qkv` instead of `q, k, v` in code shouldn't panic — they're the same three projections, packed.
+This is the canonical nanoGPT pattern, and it is the reason a learner who sees `qkv` instead of `q, k, v` in code shouldn't panic: they're the same three projections, packed.
 
 The point worth carrying with you: **Q, K, V are not three different inputs.** They are three views of the same $X$, computed by three different matrices. A single token at position $i$ contributes its query $q_i$ (when *it* is doing the asking), its key $k_i$ (when others might match against it), and its value $v_i$ (the payload it delivers if matched).
 </Step>
@@ -58,13 +58,13 @@ $$
 
 That is the equation you came to this module for. Let's walk through it shape by shape.
 
-- $Q K^\top$ is a $(T, T)$ matrix of all pairwise scores. Cell $(i, j)$ is $q_i \cdot k_j$ — how strongly query $i$ matches key $j$.
-- Divide by $\sqrt{d_k}$ — last lesson's variance fix.
-- Softmax along the last axis (the key axis) — every row becomes a probability distribution over the $T$ keys.
-- Multiply by $V$ — each row of the output is a weighted average of the value vectors, weighted by that row's attention distribution.
+- $Q K^\top$ is a $(T, T)$ matrix of all pairwise scores. Cell $(i, j)$ is $q_i \cdot k_j$: how strongly query $i$ matches key $j$.
+- Divide by $\sqrt{d_k}$: last lesson's variance fix.
+- Softmax along the last axis (the key axis): every row becomes a probability distribution over the $T$ keys.
+- Multiply by $V$: each row of the output is a weighted average of the value vectors, weighted by that row's attention distribution.
 - Output: $(T, d_v)$. Same number of rows as input. Same shape passport, plus mixing.
 
-The "shape passport" — the chain of tensor shapes — is the single most useful debugging tool when reading attention code. If you can recite it, you can localize a bug in someone else's transformer in about forty-five seconds.
+The "shape passport" (the chain of tensor shapes) is the single most useful debugging tool when reading attention code. If you can recite it, you can localize a bug in someone else's transformer in about forty-five seconds.
 </Step>
 
 <StepCheck
@@ -77,17 +77,17 @@ The "shape passport" — the chain of tensor shapes — is the single most usefu
 With $T = 4$ tokens, $d = 8$ model dimension, and $d_k = 4$ key dimension, $Q K^\top$ has shape $(T, T) = (4, 4)$. **How many scalar entries does $Q K^\top$ have?**
 </StepCheck>
 
-<Step title="Self vs. cross — same op, different bindings">
+<Step title="Self vs. cross: same op, different bindings">
 A quick clarifier in case you read older transformer papers and got confused by encoder–decoder diagrams.
 
 - **Self-attention**: $Q$, $K$, $V$ all come from the same sequence. $X = X^{(\mathrm{src})}$, and the formula above is unchanged. This is what GPT-style decoder-only models use.
 - **Cross-attention**: $Q$ comes from one sequence, $K$ and $V$ from another. Used in encoder–decoder translation models, where the decoder's queries attend to the encoder's keys/values. Same equation, different argument bindings.
 
-The implementation is identical. The codepath is one function. Don't think of cross-attention as a different mechanism — think of it as the same `Attention(Q, K, V)` call with different inputs in two of its three slots. We will spend the rest of this module on self-attention because it is what a decoder-only transformer needs.
+The implementation is identical. The codepath is one function. Don't think of cross-attention as a different mechanism: think of it as the same `Attention(Q, K, V)` call with different inputs in two of its three slots. We will spend the rest of this module on self-attention because it is what a decoder-only transformer needs.
 </Step>
 
 <Step title="Mask the future">
-At training time, a decoder-only language model wants every position to predict the *next* token from positions up to and including itself. So position $i$ must not be allowed to read positions $j > i$. The future is what we are trying to predict — leaking it would let the model memorize the answer.
+At training time, a decoder-only language model wants every position to predict the *next* token from positions up to and including itself. So position $i$ must not be allowed to read positions $j > i$. The future is what we are trying to predict: leaking it would let the model memorize the answer.
 
 But at training time we *do* feed the entire $T$-length sequence into the layer in one forward pass. We don't recompute attention $T$ times for $T$ different prefixes. So the question is: how do you, in a single $\mathrm{softmax}(Q K^\top / \sqrt{d_k}) V$ call, force every row $i$ to ignore the positions $j > i$?
 
@@ -101,7 +101,7 @@ After softmax, $\exp(-\infty) = 0$, so every entry above the diagonal becomes a 
 
 <AttentionMatrixHeatmap client:visible />
 
-Toggle the mask off and back on. Off — every query reads every key (this is what an encoder, like a BERT, does). On — every row's distribution lives only on the diagonal and below; the upper triangle is zeroed. The row sums on the right stay at 1.00 either way, because the masking happens *in score space*, not weight space.
+Toggle the mask off and back on. Off: every query reads every key (this is what an encoder, like a BERT, does). On: every row's distribution lives only on the diagonal and below; the upper triangle is zeroed. The row sums on the right stay at 1.00 either way, because the masking happens *in score space*, not weight space.
 
 The same Q, K, V trains as a bidirectional encoder or as a causal decoder, depending on a single line of code: whether you add the mask. That is the whole architectural difference between BERT and GPT, and it lives in this one tensor.
 </Step>
@@ -131,7 +131,7 @@ $$
 \mathrm{SelfAttn}(P X) \;=\; P\,\mathrm{SelfAttn}(X) \quad \text{for any permutation matrix } P.
 $$
 
-That property is called **permutation equivariance**. It is *the* reason a transformer is fast and parallel — every position is processed identically, no recurrence, no fixed window. It is also the reason a transformer, in the form we have built so far, *literally cannot tell `dog bites man` from `man bites dog`*. The model has no notion of position. It operates over sets, not sequences.
+That property is called **permutation equivariance**. It is *the* reason a transformer is fast and parallel: every position is processed identically, no recurrence, no fixed window. It is also the reason a transformer, in the form we have built so far, *literally cannot tell `dog bites man` from `man bites dog`*. The model has no notion of position. It operates over sets, not sequences.
 </Step>
 
 <StepCheck
@@ -145,9 +145,9 @@ With positional encoding **off** and any permutation $P$ applied to the input, *
 </StepCheck>
 
 <Step title="The fix is the next lesson">
-Now flip positional encoding **on** in the widget and swap two chips. The verdict flips to *outputs do not match*. Adding position information to the inputs breaks the permutation equivariance — *on purpose*. We want the model to know that position 0 is the start of the sequence and position $T-1$ is the most recent token, because the meaning of a sentence depends on order.
+Now flip positional encoding **on** in the widget and swap two chips. The verdict flips to *outputs do not match*. Adding position information to the inputs breaks the permutation equivariance, *on purpose*. We want the model to know that position 0 is the start of the sequence and position $T-1$ is the most recent token, because the meaning of a sentence depends on order.
 
-There are several ways to inject position. Sinusoidal encodings, learned absolute encodings, rotary encodings — each has a different geometry and a different trade-off. That's what the next lesson covers.
+There are several ways to inject position. Sinusoidal encodings, learned absolute encodings, rotary encodings: each has a different geometry and a different trade-off. That's what the next lesson covers.
 
-The key thing to leave this lesson with: **positional encoding is not decoration.** It is the fix to a specific, named symptom — the fact that scaled dot-product attention, on its own, is blind to order. Once you have seen the bug, the patch is unsurprising.
+The key thing to leave this lesson with: **positional encoding is not decoration.** It is the fix to a specific, named symptom: the fact that scaled dot-product attention, on its own, is blind to order. Once you have seen the bug, the patch is unsurprising.
 </Step>

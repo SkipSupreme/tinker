@@ -28,7 +28,7 @@ A vector, to a mathematician, is *anything you can add together and scale*, whic
 
 For this whole module, pick either side of that first sentence. Both are right. We switch between them constantly.
 
-(Tinker writes vectors as row tuples like $[3, 2]$ throughout — that matches NumPy / PyTorch / JAX, where data rows are vectors and matrices apply on the right with `x @ W`. It saves a year of mysterious transposes.)
+(Tinker writes vectors as row tuples like $[3, 2]$ throughout, which matches NumPy / PyTorch / JAX, where data rows are vectors and matrices apply on the right with `x @ W`. It saves a year of mysterious transposes.)
 </Step>
 
 <Step title="Coordinates are just addresses">
@@ -54,13 +54,13 @@ An arrow runs from the origin to the point $(-1, 4)$. If you write it as a coord
 <Step title="Adding arrows, head to tail">
 $[2, 1] + [-1, 3]$ componentwise is $[1, 4]$. That's the programmer's rule.
 
-Geometrically, it's head-to-tail: place the tail of the second arrow at the tip of the first, and the sum is the arrow from the original origin to the final tip. Both operations give the same $[1, 4]$. That's the whole point of the duality — the algebra and the geometry are two ways of computing the same move.
+Geometrically, it's head-to-tail: place the tail of the second arrow at the tip of the first, and the sum is the arrow from the original origin to the final tip. Both operations give the same $[1, 4]$. That's the whole point of the duality: the algebra and the geometry are two ways of computing the same move.
 
 Drag either arrow's tip below. The coral arrow is the sum, computed both ways at once.
 
 <VectorAddDemo client:visible />
 
-The dashed parallelogram lines aren't decoration — they're the head-to-tail recipe drawn twice. Either path gets you to the sum.
+The dashed parallelogram lines aren't decoration; they're the head-to-tail recipe drawn twice. Either path gets you to the sum.
 </Step>
 
 <StepCheck
@@ -74,12 +74,12 @@ Compute $[2, 1] + [-1, 3]$ and give the $x$-component (first component) of the r
 </StepCheck>
 
 <Step title="Scaling">
-Multiplying a vector by a number scales it. $2 \cdot [3, 2] = [6, 4]$ — same direction, twice as long. $-1 \cdot [3, 2] = [-3, -2]$ — same length, flipped.
+Multiplying a vector by a number scales it. $2 \cdot [3, 2] = [6, 4]$: same direction, twice as long. $-1 \cdot [3, 2] = [-3, -2]$: same length, flipped.
 
 Every operation in linear algebra is some combination of adding vectors and scaling them. Master those two moves and the rest is choreography.
 </Step>
 
-<Step title="Linear combinations — the fundamental operation">
+<Step title="Linear combinations: the fundamental operation">
 A **linear combination** of two vectors $\mathbf{u}$ and $\mathbf{v}$ is any expression of the form
 
 $$
@@ -88,19 +88,19 @@ $$
 
 for two scalars $a, b$. Sweep $(a, b)$ through all possible values and the set of results traces out something geometric. That set is called the **span** of $\mathbf{u}$ and $\mathbf{v}$.
 
-- If $\mathbf{u}$ and $\mathbf{v}$ point in different directions, their span is a **plane** — you can reach every point in 2D by some combination of them.
-- If they point in the same (or opposite) direction, their span is just a **line** — no combination of parallel arrows can get you off that line.
+- If $\mathbf{u}$ and $\mathbf{v}$ point in different directions, their span is a **plane**: you can reach every point in 2D by some combination of them.
+- If they point in the same (or opposite) direction, their span is just a **line**: no combination of parallel arrows can get you off that line.
 - If both are the zero arrow, the span is just the origin.
 
 "Span" is the first conceptual word of linear algebra that isn't a scalar operation. Keep it. It'll come back when we ask what a matrix can and cannot reach.
 </Step>
 
 <Step title="When two vectors are secretly one">
-Two vectors are **linearly dependent** when one is a scalar multiple of the other — i.e., they lie on the same line through the origin.
+Two vectors are **linearly dependent** when one is a scalar multiple of the other (i.e., they lie on the same line through the origin).
 
 $[2, 4]$ and $[1, 2]$ are dependent: the first is $2\times$ the second. Their span is a line.
 
 $[1, 0]$ and $[0, 1]$ are independent: neither is a multiple of the other. Their span is the full plane.
 
-This distinction — are my vectors independent, or are they wasting my budget? — becomes the question "is my matrix singular?" a few lessons from now. Same idea wearing a new name.
+This distinction (are my vectors independent, or are they wasting my budget?) becomes the question "is my matrix singular?" a few lessons from now. Same idea wearing a new name.
 </Step>

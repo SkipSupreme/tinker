@@ -25,7 +25,7 @@ The widget below has a fixed matrix $A$. Drag the red probe vector $\mathbf{v}$ 
 
 <EigenHunter client:visible />
 
-For most directions, $A\mathbf{v}$ points somewhere different from $\mathbf{v}$ — the transformation rotates you off your line.
+For most directions, $A\mathbf{v}$ points somewhere different from $\mathbf{v}$: the transformation rotates you off your line.
 
 But for a few special directions, $A\mathbf{v}$ stays *on the same line* as $\mathbf{v}$. The widget will cheer when you find one. There are two for this matrix. Find both.
 
@@ -39,7 +39,7 @@ $$
 A\mathbf{v} \;=\; \lambda\, \mathbf{v}.
 $$
 
-Read that: "$A$ applied to $\mathbf{v}$ equals a scalar multiple of $\mathbf{v}$." Which is exactly what your hands found — the transformation stretched $\mathbf{v}$ without rotating it.
+Read that: "$A$ applied to $\mathbf{v}$ equals a scalar multiple of $\mathbf{v}$." Which is exactly what your hands found: the transformation stretched $\mathbf{v}$ without rotating it.
 
 $\lambda$ can be:
 
@@ -94,11 +94,11 @@ Give the sum of the two eigenvalues.
 <Step title="Same arrow, different address.">
 Here's the trick that becomes a hammer.
 
-Drag the basis arrows $\mathbf{v}_1, \mathbf{v}_2$ below. The coral point $P$ stays put — but its **coordinates in the basis $\{\mathbf{v}_1, \mathbf{v}_2\}$** change.
+Drag the basis arrows $\mathbf{v}_1, \mathbf{v}_2$ below. The coral point $P$ stays put, but its **coordinates in the basis $\{\mathbf{v}_1, \mathbf{v}_2\}$** change.
 
 <BasisTranslator client:visible />
 
-The arrow in space is unchanged. Only the address moves. That's all change of basis is — a translation dictionary, not a change in meaning.
+The arrow in space is unchanged. Only the address moves. That's all change of basis is: a translation dictionary, not a change in meaning.
 
 Why care? Suppose you have a hard matrix $A$ that has two linearly independent eigenvectors $\mathbf{v}_1, \mathbf{v}_2$. Build a coordinate system using *those* as basis arrows. Let $P$ be the matrix of eigenvectors as columns. Then in this **eigenbasis**, the same transformation $A$ looks like:
 
@@ -106,21 +106,21 @@ $$
 P^{-1} A P \;=\; \begin{bmatrix} \lambda_1 & 0 \\ 0 & \lambda_2 \end{bmatrix} \;=\; D.
 $$
 
-A diagonal matrix. The weird transformation, in the right basis, is just two independent stretches — one along each eigenvector, by its eigenvalue.
+A diagonal matrix. The weird transformation, in the right basis, is just two independent stretches: one along each eigenvector, by its eigenvalue.
 </Step>
 
 <Step title="Diagonalization pays for itself">
 Once you've diagonalized $A = P D P^{-1}$, you get things cheap.
 
-Powers of $A$: $A^k = P D^k P^{-1}$. And $D^k$ is just $\mathrm{diag}(\lambda_1^k, \lambda_2^k)$ — trivial. Without diagonalization, $A^{10}$ would take nine matrix multiplications. With it, it's one diagonal power and two sandwich multiplications.
+Powers of $A$: $A^k = P D^k P^{-1}$. And $D^k$ is just $\mathrm{diag}(\lambda_1^k, \lambda_2^k)$, which is trivial. Without diagonalization, $A^{10}$ would take nine matrix multiplications. With it, it's one diagonal power and two sandwich multiplications.
 
-Solving systems, simulating dynamics, computing the long-run behavior of iterated transformations (Markov chains, for example) — all tractable in the eigenbasis and miserable otherwise. Diagonalization is the move that transforms a hard problem into a trivial one by *changing what coordinates you use*.
+Solving systems, simulating dynamics, computing the long-run behavior of iterated transformations (Markov chains, for example) are all tractable in the eigenbasis and miserable otherwise. Diagonalization is the move that transforms a hard problem into a trivial one by *changing what coordinates you use*.
 
 Not every matrix is diagonalizable. Some are missing independent eigenvectors. There's a generalization (Jordan form) that handles these, but we won't need it. The next tool is much more general.
 </Step>
 
 <Step title="Every matrix is rotate-stretch-rotate.">
-The **singular value decomposition** is the universal generalization. Every real matrix $A$ — square or not, diagonalizable or not — factors as
+The **singular value decomposition** is the universal generalization. Every real matrix $A$, square or not, diagonalizable or not, factors as
 
 $$
 A \;=\; U \Sigma V^\top
@@ -128,35 +128,35 @@ $$
 
 where $U$ and $V$ are rotations (orthogonal matrices) and $\Sigma$ is diagonal with nonnegative entries $\sigma_1 \ge \sigma_2 \ge \cdots \ge 0$, the **singular values**.
 
-Drive the animation slider below from 0 to 3 to watch the unit circle pass through each stage: $V^\top$ (rotate), $\Sigma$ (axis-aligned stretch), then $U$ (rotate again). The circle becomes an ellipse, then a rotated ellipse — the image of $A$.
+Drive the animation slider below from 0 to 3 to watch the unit circle pass through each stage: $V^\top$ (rotate), $\Sigma$ (axis-aligned stretch), then $U$ (rotate again). The circle becomes an ellipse, then a rotated ellipse: the image of $A$.
 
 <SvdEllipse client:visible />
 
-Drop $\sigma_2$ to zero. The ellipse collapses to a line — that's the best **rank-1 approximation** of $A$. Every matrix is rotate-stretch-rotate. That's the theorem.
+Drop $\sigma_2$ to zero. The ellipse collapses to a line: that's the best **rank-1 approximation** of $A$. Every matrix is rotate-stretch-rotate. That's the theorem.
 </Step>
 
-<Step title="Low-rank approximation — the practical payoff">
+<Step title="Low-rank approximation: the practical payoff">
 You can form a **rank-$k$ approximation** of $A$ by keeping only the $k$ largest singular values (and their associated columns of $U$ and $V$) and throwing away the rest:
 
 $$
 A_k \;=\; \sum_{i=1}^{k} \sigma_i \mathbf{u}_i \mathbf{v}_i^\top.
 $$
 
-This is the *best* rank-$k$ approximation to $A$ in a precise sense — it minimizes the error over all possible rank-$k$ matrices. If your data has a handful of large singular values and a long tail of small ones, you can compress dramatically by keeping only the top handful and lose almost nothing.
+This is the *best* rank-$k$ approximation to $A$ in a precise sense: it minimizes the error over all possible rank-$k$ matrices. If your data has a handful of large singular values and a long tail of small ones, you can compress dramatically by keeping only the top handful and lose almost nothing.
 
 That's PCA, in one sentence. It's also the engine behind low-rank adapters (LoRA) in ML, latent-semantic indexing, image compression, and anything else labeled "find the underlying structure." You'll see SVD again.
 </Step>
 
 <Step title="Where this shows up in the transformer">
-The final callback for the module — we've earned it now.
+The final callback for the module, and we've earned it now.
 
 An attention layer does three things:
 
-1. Projects token embeddings into query, key, and value spaces: $Q = X W_q$, $K = X W_k$, $V = X W_v$. Each projection is matrix multiplication — a linear combination of the columns of a learned weight matrix.
-2. Computes pairwise dot products between queries and keys, scaled: $Q K^\top / \sqrt{d_k}$. A similarity table — exactly the kind of object the dot product was built for.
+1. Projects token embeddings into query, key, and value spaces: $Q = X W_q$, $K = X W_k$, $V = X W_v$. Each projection is matrix multiplication: a linear combination of the columns of a learned weight matrix.
+2. Computes pairwise dot products between queries and keys, scaled: $Q K^\top / \sqrt{d_k}$. A similarity table, exactly the kind of object the dot product was built for.
 3. Uses a softmax-normalized attention matrix to produce weighted sums of value vectors.
 
 Every step is linear algebra. The transformer **is** a stack of linear transformations separated by mild nonlinearities, and the mild nonlinearities are there specifically to prevent the whole thing from being equivalent to a single linear transformation (which, by the eigendecomposition reasoning you just did, would be a single rotate-stretch-rotate and therefore woefully underpowered).
 
-You now understand 80% of a transformer. The remaining 20% — learned weights, backprop, scale — is in the coming modules. The linear algebra is yours.
+You now understand 80% of a transformer. The remaining 20% (learned weights, backprop, scale) is in the coming modules. The linear algebra is yours.
 </Step>

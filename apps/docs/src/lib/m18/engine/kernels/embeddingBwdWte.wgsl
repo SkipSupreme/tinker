@@ -1,4 +1,4 @@
-// Embedding backward — wte branch.
+// Embedding backward: wte branch.
 //   Inputs : dEmb [N, d] (upstream gradient on the embedded vector), tokIds [N]
 //   Output : dWte [V, d] (read-modify-write: ADDS to existing content so the
 //                         tied-unembedding gradient already in dWte is preserved)

@@ -1,4 +1,4 @@
-// M18 capstone — locked architecture (see docs/plans/2026-04-29-m18-capstone-implementation.md §0).
+// M18 capstone: locked architecture (see docs/plans/2026-04-29-m18-capstone-implementation.md §0).
 // Trainable params ≈ 196,608 (12 · d² · n_layer = 12 · 64² · 4) plus 8,320 token-embed
 // (tied with unembed) and 4,096 learned positional → ~209k total. The honest
 // "200k-parameter" number we ship in lessons.

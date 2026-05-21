@@ -1,5 +1,5 @@
 <script lang="ts">
-  // 4 tokens, d_model = 4. Fixed embeddings — orthogonal-ish so attention has
+  // 4 tokens, d_model = 4. Fixed embeddings (orthogonal-ish) so attention has
   // visible structure rather than collapsing to uniform.
   const TOKEN_LABELS = ['a', 'b', 'c', 'd'];
   const X: number[][] = [
@@ -187,7 +187,7 @@
     </span>
     <span class="verdict-text">
       {#if isIdentity}
-        identity ordering — swap two chips to test
+        identity ordering; swap two chips to test
       {:else if equivalent}
         outputs match permutation: <em>Y′ = P · Y</em> (delta {delta.toExponential(1)})
       {:else}

@@ -2,7 +2,7 @@
   import { Mafs, Coordinates, Plot, Vector, Point } from 'svelte-mafs';
 
   /**
-   * SvdEllipse — every matrix is rotate-stretch-rotate. Pick singular
+   * SvdEllipse: every matrix is rotate-stretch-rotate. Pick singular
    * values σ₁, σ₂ and two rotations Vᵀ and U; the widget composes
    * A = U Σ Vᵀ and shows the unit circle progressively transformed.
    *
@@ -11,7 +11,7 @@
    *   1–2 : apply Σ (axis-aligned stretch, becomes ellipse)
    *   2–3 : apply U (final rotation)
    *
-   * Drop σ₂ to zero — ellipse collapses to a line. Best rank-1 approx.
+   * Drop σ₂ to zero: ellipse collapses to a line. Best rank-1 approx.
    */
 
   let sigma1 = $state(1.8);
@@ -110,7 +110,7 @@
   </div>
 
   <p class="note">
-    Push σ₂ to zero. The ellipse collapses to a line — that's the best rank-1 approximation of <em>A</em>. Every matrix factors this way: rotate, stretch, rotate.
+    Push σ₂ to zero. The ellipse collapses to a line, which is the best rank-1 approximation of <em>A</em>. Every matrix factors this way: rotate, stretch, rotate.
   </p>
 </div>
 

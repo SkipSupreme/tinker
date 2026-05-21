@@ -13,7 +13,7 @@ export async function loadTinyShakespeare(url = '/m18/tinyshakespeare.txt'): Pro
   const res = await fetch(url);
   if (!res.ok) throw new Error(`failed to fetch ${url}: ${res.status}`);
   const text = await res.text();
-  // Build vocab — sorted by character code, like nanoGPT's
+  // Build vocab, sorted by character code, like nanoGPT's
   // `chars = sorted(list(set(text)))`.
   const set = new Set<string>(); for (const c of text) set.add(c);
   const vocab = Array.from(set).sort().join('');

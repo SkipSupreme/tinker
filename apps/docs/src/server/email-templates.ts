@@ -4,11 +4,11 @@
 // muted shades that read on every major email client. If the brand color
 // shifts, update this block and DESIGN.md notes the parity.
 const COLORS = {
-  fg: '#17181a', // body text — matches --site-fg
-  fgMuted: '#585a60', // disclaimers — matches --site-fg-muted
+  fg: '#17181a', // body text: matches --site-fg
+  fgMuted: '#585a60', // disclaimers: matches --site-fg-muted
   fgQuiet: '#888888', // footer text
-  border: '#e4e4e0', // hairline — matches --site-border
-  bg: '#fdfdfc', // body bg — matches --site-bg
+  border: '#e4e4e0', // hairline: matches --site-border
+  bg: '#fdfdfc', // body bg: matches --site-bg
   cta: '#17181a', // dark button (high contrast on light email canvas)
   ctaFg: '#fdfdfc',
 } as const;

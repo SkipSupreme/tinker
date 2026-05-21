@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * PeelInversesGame — solving a·x + b = c by choosing inverse operations
+   * PeelInversesGame: solving a·x + b = c by choosing inverse operations
    * outside-in on an AST, watching the equation peel down step-by-step.
    */
 
@@ -128,7 +128,7 @@
       rhs = choice.applyRhs(rhs);
       peeled += 1;
       if (peeled >= layers.length) {
-        showFeedback('x isolated — check the verification below!', 'ok');
+        showFeedback('x isolated; check the verification below!', 'ok');
       } else {
         showFeedback('', 'ok');
       }
@@ -137,7 +137,7 @@
       const outer = currentOuter!;
       const opName = outer.kind === 'add' ? 'adding' : 'multiplying by';
       showFeedback(
-        `That applies ${opName} ${fmt(outer.operand)} again instead of undoing it — the equation became ${wrongRhs % 1 === 0 ? wrongRhs : wrongRhs.toFixed(2)}. Try the operation that reverses it.`,
+        `That applies ${opName} ${fmt(outer.operand)} again instead of undoing it; the equation became ${wrongRhs % 1 === 0 ? wrongRhs : wrongRhs.toFixed(2)}. Try the operation that reverses it.`,
         'bad'
       );
     }

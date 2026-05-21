@@ -17,9 +17,9 @@ import ResidualStreamScope from '../../components/demos/ResidualStreamScope.svel
 import DirectPathInspector from '../../components/demos/DirectPathInspector.svelte';
 
 <Step title="A reframe before the math">
-The previous two lessons treated the residual stream as plumbing — a wire that carries information between blocks, with the blocks doing the "real" work. That framing is fine for getting through the architecture diagram. It's wrong for understanding what the model is actually doing.
+The previous two lessons treated the residual stream as plumbing: a wire that carries information between blocks, with the blocks doing the "real" work. That framing is fine for getting through the architecture diagram. It's wrong for understanding what the model is actually doing.
 
-The reframe — due to Anthropic's mech-interp lineage (Elhage et al. 2021) — is this: **the residual stream is the noun**. The blocks are *read/write operations on it*. Every sub-layer reads the current state of the stream, computes a delta, and adds the delta back. The state of the model at any layer is *the stream*, not the block.
+The reframe (due to Anthropic's mech-interp lineage, Elhage et al. 2021) is this: **the residual stream is the noun**. The blocks are *read/write operations on it*. Every sub-layer reads the current state of the stream, computes a delta, and adds the delta back. The state of the model at any layer is *the stream*, not the block.
 
 This isn't a stylistic choice. It changes what you can do.
 </Step>
@@ -31,22 +31,22 @@ $$
 h_N \;=\; h_0 \;+\; \sum_{\ell=1}^{N} \Delta_\ell
 $$
 
-where each $\Delta_\ell$ is the sum of that block's two sub-layer contributions. The whole forward pass — the entire computation that turns input embeddings into output logits — is *a sum of vectors*. There is no nonlinear composition between blocks; the only nonlinearity inside any one $\Delta_\ell$ is GELU and softmax-attention.
+where each $\Delta_\ell$ is the sum of that block's two sub-layer contributions. The whole forward pass, the entire computation that turns input embeddings into output logits, is *a sum of vectors*. There is no nonlinear composition between blocks; the only nonlinearity inside any one $\Delta_\ell$ is GELU and softmax-attention.
 
 This has two consequences worth pinning down:
 
 1. **You can attribute any final-layer activation to a particular block** by reading off that block's contribution to the relevant dimension. If block 3's $\Delta$ wrote $+0.7$ into dimension 17 of the residual stream at position 5, that contribution is unambiguous and additive.
-2. **You can decompose the forward pass into "paths"** — direct path (just embedding → unembedding), single-block paths, two-block paths. This is the substrate of circuit-level analysis.
+2. **You can decompose the forward pass into "paths"**: direct path (just embedding → unembedding), single-block paths, two-block paths. This is the substrate of circuit-level analysis.
 </Step>
 
 <Step title="Look at the stream">
-Below is the same scripted toy model from lesson 16.1, with a new mode flipped on: **decompose**. Click any cell in the grid to pick a residual-stream state. Then flip the toggle in the vector pane to see the full additive breakdown — which sources contributed what to that vector.
+Below is the same scripted toy model from lesson 16.1, with a new mode flipped on: **decompose**. Click any cell in the grid to pick a residual-stream state. Then flip the toggle in the vector pane to see the full additive breakdown: which sources contributed what to that vector.
 
 <ResidualStreamScope client:visible />
 
-Pick a cell deep in the stack (say, position 4 at the top row). In *raw* mode you see the cumulative vector — sea bars positive, coral bars negative. Switch to *decompose*. The same vector is now split into one row per source: $h_0$ at the top (orange), then attn-1 (sea), ffn-1 (coral), attn-2, ffn-2, all the way up. Each row is one sub-layer's contribution to *this exact vector*. They sum component-wise to the raw vector you saw before.
+Pick a cell deep in the stack (say, position 4 at the top row). In *raw* mode you see the cumulative vector: sea bars positive, coral bars negative. Switch to *decompose*. The same vector is now split into one row per source: $h_0$ at the top (orange), then attn-1 (sea), ffn-1 (coral), attn-2, ffn-2, all the way up. Each row is one sub-layer's contribution to *this exact vector*. They sum component-wise to the raw vector you saw before.
 
-Notice that block 3's FFN contributes much more to position 4 than to other positions — that's the scripted late-layer "output specialization" baked into the demo data. In a real trained model you would see real specialization, but the structural rule is the same: every block's contribution at every position is additive, isolated, and inspectable.
+Notice that block 3's FFN contributes much more to position 4 than to other positions; that's the scripted late-layer "output specialization" baked into the demo data. In a real trained model you would see real specialization, but the structural rule is the same: every block's contribution at every position is additive, isolated, and inspectable.
 </Step>
 
 <StepCheck
@@ -62,7 +62,7 @@ At some position, block $\ell$'s delta vector is exactly the zero vector. **What
 <Step title="The bigram floor">
 There is a particularly tidy special case of the additive picture: *what does the model predict if you turn off every block?*
 
-With $N = 0$ — every block replaced by the identity map — the forward pass collapses to:
+With $N = 0$ (every block replaced by the identity map) the forward pass collapses to:
 
 $$
 \mathrm{logits} \;=\; \mathrm{LN}(W_E[t] + p_t)\, W_E^\top
@@ -74,13 +74,13 @@ Every transformer is a bigram model with a stack of additive corrections. Each b
 
 <DirectPathInspector client:visible />
 
-Drag the block budget from $k = 0$ (bigram floor) to $k = 4$ (full model). At $k = 0$, the next-token distribution after "h" is whatever the embedding geometry gives you — basically random, because token embeddings at initialization don't know about co-occurrence. As $k$ grows, each block's delta nudges the residual stream toward the direction of the right next token. By $k = 4$, the model has committed to "e" with high probability.
+Drag the block budget from $k = 0$ (bigram floor) to $k = 4$ (full model). At $k = 0$, the next-token distribution after "h" is whatever the embedding geometry gives you, basically random, because token embeddings at initialization don't know about co-occurrence. As $k$ grows, each block's delta nudges the residual stream toward the direction of the right next token. By $k = 4$, the model has committed to "e" with high probability.
 
-The point isn't which block does what — it's that the answer is *built up additively* from a bigram baseline. You can stop the computation at any depth and read off "the model's current best guess." That trick is called the *logit lens* (nostalgebraist 2020) and it works because of weight tying plus pre-LN: every intermediate residual-stream vector is decodable by the same unembedding matrix.
+The point isn't which block does what: the answer is *built up additively* from a bigram baseline. You can stop the computation at any depth and read off "the model's current best guess." That trick is called the *logit lens* (nostalgebraist 2020) and it works because of weight tying plus pre-LN: every intermediate residual-stream vector is decodable by the same unembedding matrix.
 </Step>
 
 <Step title="Bandwidth contention">
-One more consequence of the additive framing — slightly more advanced, important enough to flag.
+One more consequence of the additive framing, slightly more advanced but important enough to flag.
 
 The residual stream has $d$ dimensions. Each block's two sub-layers want to write into it. With $h$ heads per block and an FFN of width $4d$, the *number of computational dimensions that want to deposit information* into the stream at each layer is much larger than $d$. In GPT-2-small (with $h = 12$, $d_{\text{head}} = 64$, $d_{\text{ff}} = 3072$, $d = 768$):
 
@@ -99,13 +99,13 @@ This bandwidth pressure is the reason architectures with very many small heads t
   tolerance={0.01}
   hint="FFN's W_2 has 4d output components writing into d output dims, so 4d / d = 4."
 >
-GPT-2-small has $d = 768$ and FFN width $4d = 3072$. **What is the ratio (FFN output dims) : (residual-stream dims)** — i.e., how many "computational dimensions" want to write at each layer relative to $d$?
+GPT-2-small has $d = 768$ and FFN width $4d = 3072$. **What is the ratio (FFN output dims) : (residual-stream dims)**, i.e., how many "computational dimensions" want to write at each layer relative to $d$?
 </StepCheck>
 
 <Step title="Why this matters past M16">
 Three reasons to keep the residual-stream framing in your head, even though we won't directly use it for the next two lessons:
 
-1. **Interpretability research lives here.** Every interpretability technique worth knowing — logit lens, tuned lens, attribution patching, sparse autoencoders, induction-head circuits — is some operation on the residual stream. They don't make sense if you think of the model as "blocks transforming a vector."
+1. **Interpretability research lives here.** Every interpretability technique worth knowing (logit lens, tuned lens, attribution patching, sparse autoencoders, induction-head circuits) is some operation on the residual stream. They don't make sense if you think of the model as "blocks transforming a vector."
 2. **Editing the model becomes possible.** Once you see that block 4 wrote a specific direction into the stream at position 5, you can intervene: zero out that specific direction and observe what changes. This is how Anthropic's circuits work proceeds.
 3. **Stacking is associative.** $h_N = h_0 + \sum_\ell \Delta_\ell$ doesn't care about order. The model does (each $\Delta_\ell$ depends on the cumulative state up to its layer), but the *bookkeeping* doesn't. This is why thinking in terms of paths through the stream is tractable.
 

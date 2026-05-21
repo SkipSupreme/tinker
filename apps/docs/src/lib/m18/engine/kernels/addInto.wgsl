@@ -1,4 +1,4 @@
-// In-place accumulator: b += a (elementwise). Distinct buffers required —
+// In-place accumulator: b += a (elementwise). Distinct buffers required;
 // WGSL forbids the same buffer being bound as read AND read_write within a
 // single compute pass, so we can't fold this into residualAdd(a, b, a).
 

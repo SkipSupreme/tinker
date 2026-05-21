@@ -119,7 +119,7 @@
     return m;
   });
 
-  // Inspector — show details for the hovered or focused-row hovered cell.
+  // Inspector: show details for the hovered or focused-row hovered cell.
   const inspectedCell = $derived(
     hovered ?? (focused != null ? null : null),
   );
@@ -225,7 +225,7 @@
         {/if}
       </span>
     {:else if focused != null}
-      <span class="ins-hint">Row <code>{display(VOCAB[focused])}</code> is focused — hover any cell to read its conditional probability. Distribution below.</span>
+      <span class="ins-hint">Row <code>{display(VOCAB[focused])}</code> is focused; hover any cell to read its conditional probability. Distribution below.</span>
     {:else}
       <span class="ins-hint">{hint}</span>
     {/if}

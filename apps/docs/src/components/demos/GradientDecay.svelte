@@ -65,7 +65,7 @@
   );
 
   // For the Jacobian-as-ellipse visualization (left panel).
-  // The ellipse is just a circle scaled by ρ on one axis — visually "stretched."
+  // The ellipse is just a circle scaled by ρ on one axis, visually "stretched."
   const ellipseW = $derived(40 + rho * 18);
   const ellipseH = $derived(40);
 
@@ -92,7 +92,7 @@
       <span class="meta-key">memory horizon</span>
       <span class="meta-val" class:dead={horizonStep == null}>
         {#if horizonStep == null}
-          (none — gradient already vanished)
+          (none; gradient already vanished)
         {:else}
           t = {horizonStep}
         {/if}
@@ -184,11 +184,11 @@
 
   <p class="caption">
     Each box is one timestep. Brightness is ‖∂L/∂h<sub>t</sub>‖ on a log
-    scale — bright = gradient survived, faded = gradient gone. The Jacobian
+    scale; bright = gradient survived, faded = gradient gone. The Jacobian
     of W<sub>h</sub> is an ellipse: ρ &lt; 1 squashes it (contracts, gradient
     fades exponentially as you go back); ρ &gt; 1 stretches it (explodes).
     For ρ = 0.7, the gradient at t = 0 from a loss at t = 29 is about
-    0.7<sup>29</sup> ≈ 5×10<sup>−5</sup> — already past the horizon.
+    0.7<sup>29</sup> ≈ 5×10<sup>−5</sup>, already past the horizon.
     There is no software fix for this; it's a property of repeated linear
     contraction.
   </p>

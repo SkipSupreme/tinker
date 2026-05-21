@@ -1,12 +1,12 @@
 <script lang="ts">
   /**
-   * Tinker the Apple — the live mascot. Spec in DESIGN.md §Mascot.
+   * Tinker the Apple: the live mascot. Spec in DESIGN.md §Mascot.
    *
    * Idle behavior: always-on bob (±6px) + cursor-aware tilt. Every 6–18s
    * Tinker also self-initiates a tiny wiggle or a hop so the mascot reads
    * as alive instead of merely animated. Idle actions pause while the user
-   * is touching the page, while sleeping, or under reduced motion — and
-   * are silent (no jump sound), since they aren't user-driven.
+   * is touching the page, while sleeping, or under reduced motion; they are
+   * silent (no jump sound), since they aren't user-driven.
    *
    * Click triggers a bounce, the cartoon-jump sound, and a math-symbol
    * burst. Every 10th click is a bigger milestone burst. Reduced motion
@@ -49,7 +49,7 @@
   }: Props = $props();
 
   const sizeCss = $derived(typeof size === 'number' ? `${size}px` : size);
-  // Natural intrinsic ratio of /logo-mark.png — the apple cropped out of
+  // Natural intrinsic ratio of /logo-mark.png: the apple cropped out of
   // the full lockup. 432, 477 (slight portrait, ~0.89:1). Asset IS the
   // apple, so no aspect-ratio crop hack is needed.
   const NATURAL_W = 432;
@@ -63,7 +63,7 @@
   let sleeping = $state(false);
   let idleAction = $state<'none' | 'wiggle' | 'hop' | 'lean'>('none');
 
-  // Hero-region reactivity state — exposed as data-tinker-state on the
+  // Hero-region reactivity state, exposed as data-tinker-state on the
   // root for integration tests and for any CSS hooks. Default 'idle';
   // shifts to 'focus' / 'drag' / 'threshold' / 'success' when the
   // homepage hero wires up TINKER_HERO_EVENT listeners. Phase 2 work
@@ -98,7 +98,7 @@
     sleepTimer = window.setTimeout(() => {
       sleeping = true;
     }, SLEEP_MS);
-    // Push idle action back too — Tinker shouldn't twitch while the user
+    // Push idle action back too. Tinker shouldn't twitch while the user
     // is touching the page.
     scheduleIdleAction();
   }
@@ -159,7 +159,7 @@
     if (root) burst(root, { count: 8 });
   });
 
-  // Hero region tracking — when on the homepage, the apple watches what
+  // Hero region tracking: when on the homepage, the apple watches what
   // the visitor does to the hero widget. Coordinates in events are
   // normalized to hero region [0,1]; we map drag/focus x into the same
   // tilt range as the cursor-tilt mechanic so the apple "looks at" the
@@ -410,7 +410,7 @@
     z-index: 1;
     width: 100%;
     height: 100%;
-    /* Asset IS the apple — no crop / no overflow. contain preserves the
+    /* Asset IS the apple: no crop, no overflow. contain preserves the
        full apple at any container size; cover would do the same here
        because container aspect matches asset aspect, but contain is
        safer if the asset gets re-exported with different padding. */
@@ -443,7 +443,7 @@
     50%      { translate: 0 -6px; }
   }
 
-  /* Click bounce — fires regardless of reduced-motion since it's a
+  /* Click bounce: fires regardless of reduced-motion since it's a
      deliberate response to user input. Brief enough that vestibular-
      sensitive users won't be bothered. */
   .tinker--bouncing .tinker-img {
@@ -461,10 +461,10 @@
   /* === Self-initiated idle behaviors ===
      Layered on top of the perpetual bob via the `rotate` and `scale`
      properties (independent of `transform`/`translate`, which are already
-     used by the static tilt and the bob). Silent — no sound on these,
+     used by the static tilt and the bob). Silent, no sound on these,
      since they aren't user-driven. */
 
-  /* Wiggle — quick "what was that" head shake. Most common idle action. */
+  /* Wiggle: quick "what was that" head shake. Most common idle action. */
   .tinker--wiggle .tinker-img {
     animation:
       tinker-bob 4.6s ease-in-out infinite,
@@ -477,7 +477,7 @@
     80%      { rotate: -3deg; }
   }
 
-  /* Hop — vertical jump with squash/stretch. The bob keeps running underneath
+  /* Hop: vertical jump with squash/stretch. The bob keeps running underneath
      (it uses `translate`); the hop adds an additive translateY via a
      wrapper-style scale + raise. Bigger than the click bounce. */
   .tinker--hop .tinker-img {
@@ -493,7 +493,7 @@
     100% { scale: 1; rotate: 0deg; }
   }
 
-  /* Lean — slow look-around, side to side. Rare. */
+  /* Lean: slow look-around, side to side. Rare. */
   .tinker--lean .tinker-img {
     animation:
       tinker-bob 4.6s ease-in-out infinite,
@@ -506,7 +506,7 @@
   }
 
   /* Reduced motion: no bob, no cursor tilt, no idle actions. Click
-     bounce stays — it's a deliberate user response. */
+     bounce stays: it's a deliberate user response. */
   .tinker--reduced .tinker-img {
     animation: none;
     transform: rotate(var(--tinker-tilt));

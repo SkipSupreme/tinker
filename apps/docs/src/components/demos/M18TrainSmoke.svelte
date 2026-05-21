@@ -1,5 +1,5 @@
 <script lang="ts">
-  // M18 train smoke — runs the full 2,000-iter convergence gate live in the
+  // M18 train smoke: runs the full 2,000-iter convergence gate live in the
   // browser. Pulls the reference CSV from /m18/nanogpt-reference.csv, plots the
   // WGSL train_nll/val_nll on a Canvas next to the reference trajectory, and
   // raises a pass / fail badge if the WGSL curve stays within ±0.1 nat at every
@@ -7,7 +7,7 @@
   //
   // Pre-flight: a numerical-gradient sanity check at small scale, comparing the
   // analytical AdamW+backward path to (L(θ+ε) − L(θ−ε))/2ε on a tiny subset of
-  // parameters. M12 canonical debugging tool — protects the gate against
+  // parameters. M12 canonical debugging tool: protects the gate against
   // backward bugs the per-kernel CPU twins miss.
 
   import { onMount } from 'svelte';
@@ -154,7 +154,7 @@
   async function preflightGradCheck(engine: Engine, corpus: CorpusBundle): Promise<{ delta: number; ok: boolean; report: string }> {
     // Numerical gradient check: pick one parameter element per layer-type,
     // perturb by eps, compare (L(θ+ε) − L(θ−ε)) / (2ε) to the analytical
-    // gradient. M12 canonical debugging tool — catches a bad backward kernel
+    // gradient. M12 canonical debugging tool: catches a bad backward kernel
     // that the per-kernel CPU twins missed.
     const rng = seededRng('preflight');
     const { x, y } = getBatch(corpus.trainIds, BATCH, T, rng);
@@ -231,7 +231,7 @@
     errorMsg = '';
     if (!('gpu' in navigator)) {
       phase = 'error';
-      errorMsg = 'WebGPU is not available — try Chrome / Edge / Firefox 141+ on desktop.';
+      errorMsg = 'WebGPU is not available. Try Chrome, Edge, or Firefox 141+ on desktop.';
       return;
     }
     phase = 'loading';
@@ -366,7 +366,7 @@
     <dd>
       {#if refAt(currentIter)}
         {fmt(refAt(currentIter)!.trainNll, 4)} / {fmt(refAt(currentIter)!.valNll, 4)}
-      {:else}—{/if}
+      {:else}n/a{/if}
     </dd>
     <dt>checkpoints within ±0.1 nat</dt>
     <dd>
@@ -382,7 +382,7 @@
           {sci(preflightDelta)}
         </span>
         <span class="muted"> · tolerance {sci(preflightTolerance)}</span>
-      {:else}—{/if}
+      {:else}n/a{/if}
     </dd>
   </dl>
 
@@ -397,7 +397,7 @@
     train_nll = faded); the band around it is the ±0.1-nat envelope. Dark blue
     = the WGSL engine's curve. The gate passes when every WGSL checkpoint
     sits inside the band. If it fails despite the per-kernel CPU twins all
-    passing, do <em>not</em> silently switch runtimes — flag it and stop.
+    passing, do <em>not</em> silently switch runtimes; flag it and stop.
   </p>
 </div>
 

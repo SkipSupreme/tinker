@@ -6,7 +6,7 @@
  * `apps/docs/public/`. Same `play()` API; call sites unchanged.
  *
  * Mute toggle persists to localStorage (`tinker:sound-muted`). Default is
- * unmuted, EXCEPT when the user prefers reduced motion — then mute is on
+ * unmuted, EXCEPT when the user prefers reduced motion; then mute is on
  * by default per DESIGN.md §Sound rules.
  *
  * If audio fails to load or play (older browsers, autoplay block before
@@ -123,7 +123,7 @@ export function play(name: SoundName): void {
   if (!a) return;
   // Reset to start so rapid back-to-back plays restart instead of being
   // ignored. Browsers may reject play() before the first user gesture;
-  // silently swallow that — every Tinker trigger is itself a user gesture
+  // silently swallow that; every Tinker trigger is itself a user gesture
   // so subsequent calls work.
   try {
     a.currentTime = 0;

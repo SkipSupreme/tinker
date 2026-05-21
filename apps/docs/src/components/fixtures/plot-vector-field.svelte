@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Mafs, Coordinates, Plot } from "svelte-mafs";
 
-  // Rotational field (-y, x) — sampling is deterministic on a grid so
+  // Rotational field (-y, x): sampling is deterministic on a grid so
   // visual regression stays stable run-to-run.
 </script>
 

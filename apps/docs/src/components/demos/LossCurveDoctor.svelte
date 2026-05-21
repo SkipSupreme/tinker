@@ -51,14 +51,14 @@
       const climb = t > 18 ? 0.025 * (t - 18) : 0;
       return decay + climb + 0.05 * r();
     });
-    return { train, val, answer: 'overfit', why: 'Train keeps falling but val turns up around step 20 — model is memorizing past the point of generalization.' };
+    return { train, val, answer: 'overfit', why: 'Train keeps falling but val turns up around step 20. The model is memorizing past the point of generalization.' };
   }
 
   function plateau(seed: number): Case {
     const r = noise(seed);
     const train = Array.from({ length: STEPS }, (_, t) => 2.4 + 0.55 * Math.exp(-t / 18) + 0.04 * r());
     const val = Array.from({ length: STEPS }, (_, t) => 2.55 + 0.55 * Math.exp(-t / 18) + 0.06 * r());
-    return { train, val, answer: 'plateau', why: 'Both curves bottom out around 2.4 — the model never learned much. Underfitting or an optimization problem.' };
+    return { train, val, answer: 'plateau', why: 'Both curves bottom out around 2.4; the model never learned much. Underfitting or an optimization problem.' };
   }
 
   function diverge(seed: number): Case {
@@ -80,10 +80,10 @@
     const baseline = 3.3;
     const train = Array.from({ length: STEPS }, () => baseline + 0.04 * r());
     const val = Array.from({ length: STEPS }, () => baseline + 0.05 * r());
-    return { train, val, answer: 'dead', why: 'Loss never drops from −log(1/27). The network is not learning at all — almost always bad init or the wrong loss.' };
+    return { train, val, answer: 'dead', why: 'Loss never drops from −log(1/27). The network is not learning at all; almost always bad init or the wrong loss.' };
   }
 
-  // 6 cases — every diagnosis appears at least once, plus one extra
+  // 6 cases; every diagnosis appears at least once, plus one extra
   // overfit (the most common real-world pathology).
   const cases: Case[] = [
     clean(11),

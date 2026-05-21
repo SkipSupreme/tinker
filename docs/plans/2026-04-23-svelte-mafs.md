@@ -2,19 +2,19 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Ship a production-quality, tree-shakeable **Svelte 5** library for interactive math visualization — a faithful port of [Mafs](https://mafs.dev) (React) with native Svelte 5 runes, SVG rendering, KaTeX labels, adaptive function sampling, draggable points, and keyboard/a11y support. First public release in ~4 weeks of focused solo work.
+**Goal:** Ship a production-quality, tree-shakeable **Svelte 5** library for interactive math visualization, a faithful port of [Mafs](https://mafs.dev) (React) with native Svelte 5 runes, SVG rendering, KaTeX labels, adaptive function sampling, draggable points, and keyboard/a11y support. First public release in ~4 weeks of focused solo work.
 
-**Architecture:** SVG-based declarative components. A root `<Mafs>` component establishes an `<svg viewBox>` and publishes a coordinate-system context. Child components read context via `getContext()`, convert user-space coordinates to SVG space through pure math helpers, and render SVG primitives. Pan/zoom/drag are Svelte actions using Pointer Events with pointer capture. All reactivity via runes (`$state`, `$derived`, `$effect`) — no stores in the public API. Pure functions (vector/scalar math, sampling, intervals) live in `math.ts` / `vec.ts` and are 100% unit-tested before any component code is written.
+**Architecture:** SVG-based declarative components. A root `<Mafs>` component establishes an `<svg viewBox>` and publishes a coordinate-system context. Child components read context via `getContext()`, convert user-space coordinates to SVG space through pure math helpers, and render SVG primitives. Pan/zoom/drag are Svelte actions using Pointer Events with pointer capture. All reactivity via runes (`$state`, `$derived`, `$effect`), no stores in the public API. Pure functions (vector/scalar math, sampling, intervals) live in `math.ts` / `vec.ts` and are 100% unit-tested before any component code is written.
 
 **Tech Stack:**
 - **Svelte 5** (runes mode) + **TypeScript strict**
 - **Vite** (library mode for package build, app mode for demo site)
 - **Vitest** (unit + component), **@testing-library/svelte** (DOM queries), **Playwright** (visual regression + drag e2e)
 - **KaTeX 0.16** (build-time rendering for static labels, runtime for dynamic)
-- **pnpm workspaces** — monorepo: `packages/svelte-mafs` (lib) + `apps/docs` (**Astro 6 + @astrojs/svelte** demo site)
+- **pnpm workspaces**, monorepo: `packages/svelte-mafs` (lib) + `apps/docs` (**Astro 6 + @astrojs/svelte** demo site)
 - **Changesets** for versioned releases, **ESLint + Prettier** + **tsc --noEmit** in CI
 
-**Naming note (decide before Task 1):** `svelte-mafs` is used throughout this plan. Check npm before locking in. Alternatives if the name is taken: `locus`, `axiom`, `chalkboard`, `plotfield`, `@<your-scope>/mafs`. Mafs is MIT — a port is legally fine, full stop.
+**Naming note (decide before Task 1):** `svelte-mafs` is used throughout this plan. Check npm before locking in. Alternatives if the name is taken: `locus`, `axiom`, `chalkboard`, `plotfield`, `@<your-scope>/mafs`. Mafs is MIT, a port is legally fine, full stop.
 
 **Scope (in / out):**
 - **IN:** `<Mafs>` root, Cartesian coordinates + grid, `<Plot.OfX/OfY/Parametric/Inequality/VectorField>`, `<Point>`, `<MovablePoint>`, `<Line.Segment/ThroughPoints/Parallel/etc>`, `<Vector>`, `<Circle>`, `<Ellipse>`, `<Polygon>`, `<Text>` (KaTeX), `<Transform>`, theme, pan/zoom, adaptive sampling, SSR-safe mount, a11y for movable points.
@@ -85,7 +85,7 @@ svelte-mafs/
 
 ---
 
-## Phase 0 — Scaffolding (Day 1, ~4 hours)
+## Phase 0: Scaffolding (Day 1, ~4 hours)
 
 ### Task 0.1: Initialize repo + pnpm workspace
 
@@ -231,7 +231,7 @@ git commit -m "chore: initialize pnpm workspace with strict tsconfig"
 }
 ```
 
-**Step 2: `vite.config.ts`** — lib mode
+**Step 2: `vite.config.ts`**, lib mode
 ```ts
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
@@ -312,7 +312,7 @@ git commit -m "chore(svelte-mafs): scaffold lib with vite + vitest + playwright"
 
 ---
 
-### Task 0.3: Scaffold `apps/docs` (Astro 6 demo site) — defer details
+### Task 0.3: Scaffold `apps/docs` (Astro 6 demo site): defer details
 
 Placeholder Astro 6 app with the Svelte integration. We fully populate it in Phase 8; Phase 0 just gets a running app that imports the lib so we can `pnpm dev` and eyeball components as we build.
 
@@ -329,22 +329,22 @@ git commit -m "chore(docs): scaffold Astro 6 demo app with Svelte integration"
 
 ---
 
-## Phase 1 — Pure Math Core (Days 2–3)
+## Phase 1: Pure Math Core (Days 2–3)
 
-Everything in this phase is pure functions: no Svelte, no DOM. TDD is cheap here — write the test, write the function, done. These become the bedrock that every component depends on, so bugs caught here never surface later.
+Everything in this phase is pure functions: no Svelte, no DOM. TDD is cheap here, write the test, write the function, done. These become the bedrock that every component depends on, so bugs caught here never surface later.
 
 `★ Insight ─────────────────────────────────────`
-- Why pure functions first: component tests are slow (jsdom mount, Svelte lifecycle). Unit tests on pure math run at ~10,000/sec. If coordinate transforms have a bug, we want a test named `mapsUserSpaceToScreenSpace_flipsYAxis` to fail — not a visual regression diff of `<Plot>` that leaves you guessing what broke.
+- Why pure functions first: component tests are slow (jsdom mount, Svelte lifecycle). Unit tests on pure math run at ~10,000/sec. If coordinate transforms have a bug, we want a test named `mapsUserSpaceToScreenSpace_flipsYAxis` to fail, not a visual regression diff of `<Plot>` that leaves you guessing what broke.
 - We deliberately copy Mafs' `math.ts` and `vec.ts` APIs nearly verbatim. Staying source-compatible at the math layer means anyone porting a Mafs example to Svelte can paste their math helpers unchanged, and when Mafs adds a new sampling trick we can crib it in an afternoon.
 `─────────────────────────────────────────────────`
 
-### Task 1.1: `vec.ts` — 2D vector utilities
+### Task 1.1: `vec.ts`: 2D vector utilities
 
 **Files:**
 - Create: `packages/svelte-mafs/src/vec.ts`
 - Create: `packages/svelte-mafs/src/vec.test.ts`
 
-**Step 1: Write failing tests first** — `vec.test.ts`
+**Step 1: Write failing tests first**, `vec.test.ts`
 ```ts
 import { describe, expect, it } from "vitest";
 import { add, sub, scale, dot, mag, normalize, rotate, lerp, type Vec2 } from "./vec";
@@ -384,13 +384,13 @@ describe("vec", () => {
 });
 ```
 
-**Step 2: Run — expect FAIL**
+**Step 2: Run, expect FAIL**
 ```bash
 pnpm -F svelte-mafs test vec
 ```
 Expected: module-not-found errors.
 
-**Step 3: Implement** — `vec.ts`
+**Step 3: Implement**, `vec.ts`
 ```ts
 export type Vec2 = readonly [number, number];
 
@@ -416,17 +416,17 @@ export const lerp = (a: Vec2, b: Vec2, t: number): Vec2 => [
 ];
 ```
 
-**Step 4: Run — expect PASS**
+**Step 4: Run, expect PASS**
 
 **Step 5: Commit**
 ```bash
 git add packages/svelte-mafs/src/vec.*
-git commit -m "feat(svelte-mafs): vec.ts — 2D vector primitives with tests"
+git commit -m "feat(svelte-mafs): vec.ts, 2D vector primitives with tests"
 ```
 
 ---
 
-### Task 1.2: `math.ts` — scalar + interval helpers
+### Task 1.2: `math.ts`: scalar + interval helpers
 
 **Files:**
 - Create: `packages/svelte-mafs/src/math.ts`
@@ -434,11 +434,11 @@ git commit -m "feat(svelte-mafs): vec.ts — 2D vector primitives with tests"
 
 Mirror Mafs' `math.ts`: `clamp`, `nearestPowerOfTen`, `snapAngleToDegrees`, `round`, `mapRange`, `inferLabels` (tick generation). TDD each: write test, implement, commit. Roughly 8 small functions, ~2 hours total. One commit per function for clean history.
 
-Key one to get right: `mapRange(value, fromMin, fromMax, toMin, toMax)` — this is the guts of the coordinate transform. Test both the forward and inverse case, plus edge cases (zero-width range should return `toMin`).
+Key one to get right: `mapRange(value, fromMin, fromMax, toMin, toMax)`: this is the guts of the coordinate transform. Test both the forward and inverse case, plus edge cases (zero-width range should return `toMin`).
 
 ---
 
-### Task 1.3: `sampling.ts` — adaptive curve sampling
+### Task 1.3: `sampling.ts`: adaptive curve sampling
 
 **Files:**
 - Create: `packages/svelte-mafs/src/sampling.ts`
@@ -467,7 +467,7 @@ Commit per-function. Budget: 2–3 hours (this is the algorithmic heart, worth s
 
 ---
 
-## Phase 2 — Root + Coordinate Context (Days 4–5)
+## Phase 2: Root + Coordinate Context (Days 4–5)
 
 ### Task 2.1: Define coordinate-context types
 
@@ -511,10 +511,10 @@ Behavior:
 3. Wrap children in `<svg viewBox="..." style="aspect-ratio: w/h">` with an inner `<g transform="scale(1, -1)">` so children can use y-up math coordinates.
 4. Publish context via `setCoordContext`.
 
-**Test plan (component):** mount `<Mafs width={400} height={300} viewBox={{x:[-5,5], y:[-5,5]}}/>` with a child that prints `userToPx([0,0])` — assert it's `[200, 150]`. Assert `pxToUser([200, 150])` is `[0, 0]`. Commit.
+**Test plan (component):** mount `<Mafs width={400} height={300} viewBox={{x:[-5,5], y:[-5,5]}}/>` with a child that prints `userToPx([0,0])`: assert it's `[200, 150]`. Assert `pxToUser([200, 150])` is `[0, 0]`. Commit.
 
 `★ Insight ─────────────────────────────────────`
-- **Why the `<g transform="scale(1,-1)">` wrapper**: SVG's native y-axis points down (screen convention), math convention is y-up. Flipping once at the root means every child component can write SVG as if positive y goes up, which matches what users think when they read `<Point x={0} y={3}>`. Without this flip, every single component needs to negate its y coord — and someone will forget.
+- **Why the `<g transform="scale(1,-1)">` wrapper**: SVG's native y-axis points down (screen convention), math convention is y-up. Flipping once at the root means every child component can write SVG as if positive y goes up, which matches what users think when they read `<Point x={0} y={3}>`. Without this flip, every single component needs to negate its y coord, and someone will forget.
 - **Trade-off**: the flip also mirrors text. So `<Text>` will apply a `scale(1,-1)` back to itself before rendering. We isolate that one awkwardness into the `Text` component rather than spraying sign-flips across every other component.
 `─────────────────────────────────────────────────`
 
@@ -536,23 +536,23 @@ export function panZoom(node: SVGSVGElement, opts: PanZoomOptions) {
 }
 ```
 
-**Tests:** use Playwright, not jsdom — pointer events with capture are flaky in jsdom. Spec: open `/test/pan-zoom-fixture` page in docs app, drag with pointer, assert viewBox in DOM attribute changed. Commit.
+**Tests:** use Playwright, not jsdom, pointer events with capture are flaky in jsdom. Spec: open `/test/pan-zoom-fixture` page in docs app, drag with pointer, assert viewBox in DOM attribute changed. Commit.
 
 ---
 
-## Phase 3 — Display Primitives (Days 6–8)
+## Phase 3: Display Primitives (Days 6–8)
 
 One commit per component. For each: prop contract → snapshot test → implementation → visual-regression screenshot.
 
 **Component order (easiest to hardest):**
-1. `<Point>` — single `<circle>` at transformed coords
-2. `<Line.Segment>` — two endpoints, one `<line>`
-3. `<Line.ThroughPoints>` — extends to viewBox edges (needs `math.ts` clip-to-rect)
-4. `<Circle>` — center + radius
+1. `<Point>`: single `<circle>` at transformed coords
+2. `<Line.Segment>`: two endpoints, one `<line>`
+3. `<Line.ThroughPoints>`: extends to viewBox edges (needs `math.ts` clip-to-rect)
+4. `<Circle>`: center + radius
 5. `<Ellipse>`
-6. `<Polygon>` — array of points, one `<polygon>`
-7. `<Vector>` — line + arrowhead (SVG marker)
-8. `<Text>` — KaTeX via `katex.renderToString`, injected as `<foreignObject>`
+6. `<Polygon>`: array of points, one `<polygon>`
+7. `<Vector>`: line + arrowhead (SVG marker)
+8. `<Text>`: KaTeX via `katex.renderToString`, injected as `<foreignObject>`
 
 **Shared pattern for each:**
 ```svelte
@@ -590,7 +590,7 @@ it("renders at correct pixel position", async () => {
 });
 ```
 
-(Note: `children` / snippet syntax in Svelte 5 tests is still evolving — may need Playwright fallback if vitest-svelte snippet rendering hits issues. Reassess at Task 2.2.)
+(Note: `children` / snippet syntax in Svelte 5 tests is still evolving, may need Playwright fallback if vitest-svelte snippet rendering hits issues. Reassess at Task 2.2.)
 
 Commit after each component. Visual-regression screenshot (Playwright) added per-component on the demo site once `<Coordinates>` exists (Task 3.9).
 
@@ -607,7 +607,7 @@ Once this lands, enable visual-regression screenshots for all prior primitives o
 
 ---
 
-## Phase 4 — Plot Components (Days 9–11)
+## Phase 4: Plot Components (Days 9–11)
 
 `<Plot>` is a namespace object, not a single component. In Svelte 5 we export it as an object of components:
 
@@ -632,17 +632,17 @@ Consumer API:
 ```
 
 **Each Plot variant is one task:**
-- 4.1 `Plot.OfX` — sample via `sampling.sample`, render `<path>` with `d` string built from `userToPx` mapped samples
-- 4.2 `Plot.OfY` — rotate axes conceptually; reuse `OfX` with swapped args
-- 4.3 `Plot.Parametric` — `(t) => [x, y]`, sample on `t`
-- 4.4 `Plot.Inequality` — fill region; harder, defer if time tight
-- 4.5 `Plot.VectorField` — grid of arrows; reuse `<Vector>`
+- 4.1 `Plot.OfX`: sample via `sampling.sample`, render `<path>` with `d` string built from `userToPx` mapped samples
+- 4.2 `Plot.OfY`: rotate axes conceptually; reuse `OfX` with swapped args
+- 4.3 `Plot.Parametric`: `(t) => [x, y]`, sample on `t`
+- 4.4 `Plot.Inequality`: fill region; harder, defer if time tight
+- 4.5 `Plot.VectorField`: grid of arrows; reuse `<Vector>`
 
 Each: test first (assert path `d` attribute has expected number of segments for a known function), then implement, then Playwright screenshot.
 
 ---
 
-## Phase 5 — MovablePoint (Days 12–13)
+## Phase 5: MovablePoint (Days 12–13)
 
 **File:** `packages/svelte-mafs/src/interaction/MovablePoint.svelte`
 
@@ -672,32 +672,32 @@ export interface DragOptions {
 export function drag(node: SVGElement, opts: DragOptions) { /* ... */ }
 ```
 
-Tests: Playwright — click-drag over a fixture, assert `onDrag` callback received correct user-space coords.
+Tests: Playwright, click-drag over a fixture, assert `onDrag` callback received correct user-space coords.
 
 ### Task 5.2: `<MovablePoint>` component
 TDD: start with a test "dragging updates bound value". Component is ~80 lines. Keyboard handling is a separate test case.
 
 `★ Insight ─────────────────────────────────────`
-- **Why make `x,y` bindable instead of managed internally**: Svelte 5's `$bindable()` lets consumers write `<MovablePoint bind:x={pointX} bind:y={pointY}>` and reactively reflect the position anywhere. This is cleaner than Mafs' React approach of returning a hook (`const point = useMovablePoint(...)`), and it's the idiomatic Svelte way — the component becomes a form control, essentially.
+- **Why make `x,y` bindable instead of managed internally**: Svelte 5's `$bindable()` lets consumers write `<MovablePoint bind:x={pointX} bind:y={pointY}>` and reactively reflect the position anywhere. This is cleaner than Mafs' React approach of returning a hook (`const point = useMovablePoint(...)`), and it's the idiomatic Svelte way, the component becomes a form control, essentially.
 - **Constraint functions are the real pedagogy tool**: `constrain={(p) => [Math.round(p[0]), Math.round(p[1])]}` snaps to grid. `constrain={(p) => [p[0], f(p[0])]}` snaps to a curve. This is what turns a draggable dot into an educational interaction (e.g. "drag the point along the curve"). We ship 4 prebuilt constraints: `snapToGrid`, `snapToLine`, `snapToCurve`, `clamp`.
 `─────────────────────────────────────────────────`
 
 ---
 
-## Phase 6 — Transform, Theme, Polish (Days 14–15)
+## Phase 6: Transform, Theme, Polish (Days 14–15)
 
-### Task 6.1: `<Transform>` — matrix group
+### Task 6.1: `<Transform>`: matrix group
 Wraps children in `<g transform="matrix(...)">`. Props take an affine matrix; shortcut helpers `Transform.translate`, `Transform.rotate`, `Transform.scale` as named-export object (same pattern as `Plot`). Children are transformed in user-space, with the transform applied before the Mafs y-flip so rotations work the intuitive way.
 
 ### Task 6.2: Theme tokens (`theme.ts` + `core.css`)
-CSS custom properties: `--mafs-fg`, `--mafs-bg`, `--mafs-line-color`, `--mafs-grid-color`, `--mafs-blue`, `--mafs-red`, etc. Light + dark variants via `:where([data-theme="dark"]) .mafs-root { ... }`. No JS theme switcher — consumers toggle `data-theme` on an ancestor.
+CSS custom properties: `--mafs-fg`, `--mafs-bg`, `--mafs-line-color`, `--mafs-grid-color`, `--mafs-blue`, `--mafs-red`, etc. Light + dark variants via `:where([data-theme="dark"]) .mafs-root { ... }`. No JS theme switcher, consumers toggle `data-theme` on an ancestor.
 
 ### Task 6.3: `<Text>` with KaTeX
 `<Text x={1} y={1} latex="\int_0^1 x^2\,dx" />`. Builds on KaTeX's `renderToString` at component-mount, injects into `<foreignObject>` so SVG can contain HTML. Counter-flip y with inner `<div style="transform: scale(1, -1)">`.
 
 ---
 
-## Phase 7 — E2E + Visual Regression Harness (Day 16)
+## Phase 7: E2E + Visual Regression Harness (Day 16)
 
 ### Task 7.1: Playwright config
 ```ts
@@ -717,11 +717,11 @@ export default {
 One fixture page per example in `apps/docs/src/routes/examples/<slug>/+page.svelte`. Playwright spec takes a screenshot, compares against committed baseline. Threshold: 2% pixel diff (fonts, antialiasing).
 
 ### Task 7.3: Drag e2e tests
-Real pointer drag over `MovablePoint` fixtures — assert final position, keyboard nav, constrained drag stays on curve.
+Real pointer drag over `MovablePoint` fixtures, assert final position, keyboard nav, constrained drag stays on curve.
 
 ---
 
-## Phase 8 — Docs Site (Days 17–20)
+## Phase 8: Docs Site (Days 17–20)
 
 Astro 6 app at `apps/docs` (content-first pages + `client:visible` Svelte islands for interactive demos):
 - **Home**: hero with 3 live examples from Phase 7 fixtures
@@ -734,7 +734,7 @@ Deploy to **Cloudflare Pages** (fits your stack). Add GitHub Action for preview 
 
 ---
 
-## Phase 9 — Release Prep (Day 21)
+## Phase 9: Release Prep (Day 21)
 
 ### Task 9.1: Changesets
 ```bash
@@ -743,7 +743,7 @@ pnpm changeset init
 ```
 Configure `baseBranch: main`, `access: public`.
 
-### Task 9.2: CI workflow — `.github/workflows/ci.yml`
+### Task 9.2: CI workflow: `.github/workflows/ci.yml`
 Matrix: Node 20 + 22. Jobs: `lint`, `typecheck`, `test:unit`, `test:e2e`, `build`. Release job on `main` via `changesets/action@v1` publishing to npm.
 
 ### Task 9.3: README + CONTRIBUTING + LICENSE
@@ -775,7 +775,7 @@ Verify `dist/` contents, exports map resolves, types ship, no source maps leak c
 | Bundle size blows past 20 KB | Low | `sideEffects: false`, named exports only, no barrel-re-export of KaTeX |
 | KaTeX as dep adds 280 KB | Known | Keep as peerDep, document in README, consider build-time static rendering for docs site |
 | `svelte-mafs` name unavailable on npm | Low | Fallbacks ready: `locus`, `axiom`, `plotfield`, or scoped `@<you>/mafs` |
-| You run out of steam at Phase 4 (Plot) | Med | Phases 1–3 alone ship a useful lib (points, lines, polygons, circles, axes) — that's already past MVP for many Brilliant-style problems |
+| You run out of steam at Phase 4 (Plot) | Med | Phases 1–3 alone ship a useful lib (points, lines, polygons, circles, axes), that's already past MVP for many Brilliant-style problems |
 
 ---
 
@@ -784,7 +784,7 @@ Verify `dist/` contents, exports map resolves, types ship, no source maps leak c
 | Phase | Days | What ships |
 |-------|------|-----------|
 | 0. Scaffold | 1 | Monorepo, lib package, docs shell |
-| 1. Pure math core | 2 | vec, math, sampling — all tested |
+| 1. Pure math core | 2 | vec, math, sampling, all tested |
 | 2. Root + context | 2 | `<Mafs>`, coord context, pan/zoom |
 | 3. Primitives | 3 | Point, Line, Circle, Ellipse, Polygon, Vector, Text, Coordinates |
 | 4. Plots | 3 | Plot.OfX/OfY/Parametric/Inequality/VectorField |
@@ -803,5 +803,5 @@ Realistic solo calendar time: **4–6 weeks** accounting for context switches, S
 
 **Which approach do you want?**
 
-1. **Subagent-Driven (this session)** — I dispatch a fresh subagent per task, review between tasks, fast iteration. Good for Phase 0–1 where every decision compounds.
-2. **Parallel Session (separate)** — You open a new Claude Code session in this directory with `/executing-plans`, batch execution with checkpoints. Good if you want to start now and check in later.
+1. **Subagent-Driven (this session)**. I dispatch a fresh subagent per task, review between tasks, fast iteration. Good for Phase 0–1 where every decision compounds.
+2. **Parallel Session (separate)**. You open a new Claude Code session in this directory with `/executing-plans`, batch execution with checkpoints. Good if you want to start now and check in later.

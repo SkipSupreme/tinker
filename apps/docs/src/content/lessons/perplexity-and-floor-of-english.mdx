@@ -1,0 +1,173 @@
+---
+title: Perplexity and the floor of English
+module: m9-information-theory
+summary: Perplexity is cross-entropy on a branching-factor scale. Shannon (1951) bounded English at about 1.0 to 1.3 bits per character, a hard floor the m18 capstone's training curve approaches but cannot break.
+estimatedMinutes: 14
+order: 4
+prereqs:
+  - why-classifiers-have-softmax
+conceptsCovered:
+  - perplexity
+  - perplexity-vs-loss-table
+  - bpc-vs-nats
+  - entropy-of-english
+  - mutual-information-preview
+  - scope-of-shannon-in-ml
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import PerplexityDial from '../../components/demos/PerplexityDial.svelte';
+import EntropyOfEnglishGame from '../../components/demos/EntropyOfEnglishGame.svelte';
+import UnitConvertor from '../../components/demos/UnitConvertor.svelte';
+
+<Step title="val loss 1.5: what does that even mean?">
+You'll be staring at training-loss numbers for the rest of this course. Two facts about them make life confusing:
+
+1. The value is in *some* unit (nats, bits, bits-per-character), and papers report different ones without warning.
+2. The "good" range depends on the vocabulary size, the task, and the corpus.
+
+We need a unit-free way to read these numbers. The standard one is **perplexity**, and it has a beautiful interpretation that maps the loss to a single intuitive question: "how confused is the model, on average, about the next token?"
+</Step>
+
+<Step title="Perplexity is the cross-entropy, exponentiated">
+The definition:
+
+$$
+\mathrm{PPL}(Q) \;=\; \exp\!\bigl(H(P, Q)\bigr).
+$$
+
+Or equivalently, $\mathrm{PPL}(Q) = b^{H_b(P, Q)}$ for any base $b$ (bits, nats, bans, doesn't matter, because $b^{\log_b x} = x$). **Perplexity is base-invariant**. Two papers reporting different units for the loss can be compared by exponentiating each into the same perplexity scale.
+
+The widget below lets you play with this conversion. Type `1.5` into the input box and pick `nats`: the perplexity readout will display $e^{1.5} \approx 4.48$. Switch the input to `bits` and try the same number; you get a different perplexity, because 1.5 bits is a *bigger* loss than 1.5 nats. Hit "tiny-shakespeare val" to see the capstone's settled-state loss.
+
+<UnitConvertor client:visible initialValue={1.5} initialUnit="nats" />
+</Step>
+
+<StepCheck
+  title="Uniform on 27 symbols"
+  prompt="PPL = "
+  answer={27}
+  tolerance={0.1}
+  hint="Cross-entropy of ln 27 nats means PPL = exp(ln 27) = 27. The uniform on K outcomes is the maximum-entropy distribution; its perplexity equals K."
+>
+A character-level model produces a uniform distribution over the 26 letters plus space ($K = 27$). Its cross-entropy is $\ln 27$ nats per token.
+
+**What is its perplexity?**
+</StepCheck>
+
+<Step title="Perplexity is the effective branching factor">
+A uniform model over $K$ outcomes has perplexity exactly $K$. So if a real model has perplexity $35$, it's "as uncertain as a uniform over 35 options." If its perplexity is $4$, it's "as uncertain as a fair die with 4 faces," even if the actual vocab has 50,000 entries.
+
+This is the **effective branching factor** interpretation, and it is the single best mental model of perplexity. The widget below: a Shakespeare prefix with 10 candidate completions. Drag probability mass onto candidates. Watch the perplexity readout, and watch the orange "die" resize; its diameter scales with perplexity.
+
+<PerplexityDial client:visible />
+
+Try this experiment. Make the distribution uniform: perplexity = 10. Concentrate all mass on one candidate: perplexity → 1. Concentrate on two equally: perplexity = 2. The die diameter is reporting the same information your brain already understands: how many ways the model is still hedging.
+
+Press **Reveal truth**. The true continuation gets a red bar. Now the *NLL on that token* is shown: it's the negative log of the probability you put on the truth. Try making the model "confident on truth" with the button: PPL stays in the 4–5 range *but* the NLL drops sharply because you concentrated on the right answer. Two related numbers, two slightly different stories.
+</Step>
+
+<StepCheck
+  title="Bits per char to perplexity"
+  prompt="PPL = "
+  answer={16}
+  tolerance={0.1}
+  hint="PPL = 2^(bpc) = 2^4 = 16."
+>
+A character-level language model achieves $4.0$ bits per character on a corpus.
+
+**What is its perplexity?**
+</StepCheck>
+
+<Step title="Perplexity as a geometric mean">
+There's a second derivation of perplexity worth knowing. Starting from $\mathrm{PPL} = \exp(-\frac{1}{N}\sum_i \log Q(x_i))$, apply $\exp(\frac{1}{N}\sum) = (\prod)^{1/N}$:
+
+$$
+\mathrm{PPL}(Q) \;=\; \left(\prod_{i=1}^{N} \frac{1}{Q(x_i)}\right)^{1/N}.
+$$
+
+The geometric mean of $1 / Q(x_i)$, one over the probability your model assigned to each actually-observed token. If the model gave probability $0.25$ to every observed token, perplexity is $1 / 0.25 = 4$, exactly. Hence "effective branching factor": you can imagine the model rolling a 4-sided die at every position.
+
+Why geometric mean rather than arithmetic? Because cross-entropy averages *logs*, and exponentiating undoes the average multiplicatively. This is the right way to combine "how surprised was the model at each token" into one summary number.
+</Step>
+
+<Step title="Shannon 1951: printed English is between 0.6 and 1.3 bits per character">
+In 1951, Claude Shannon ran an experiment that is still the canonical reference for the entropy of natural language. He had a human (his wife Mary Shannon, by some reports) read short passages of English text one character at a time. At each character, before revealing it, she would guess. He recorded *how many guesses it took*.
+
+From the distribution of guess-ranks, Shannon derived rigorous upper and lower bounds on the entropy:
+
+$$
+H_{\text{English}} \;\in\; [\,0.6, 1.3\,] \text{ bits per character.}
+$$
+
+Cover and King (1978) refined this to about $1.25$ bpc using a gambling-based estimator. Brown et al. (1992) used a trigram model to *upper-bound* it at $1.75$ bpc. Modern neural language models report below $1.0$ bpc on specific benchmarks like enwik8.
+
+The headline number, "English has about 1 bit per character of irreducible information," is consistent with all of these. It is a *zone*, not a precise value, but the zone is real and it has consequences. No character-level LM can ever push its bpc below this floor. The remaining slack between any model's bpc and Shannon's floor *is* the room left for the model to improve.
+</Step>
+
+<Step title="Do Shannon's experiment yourself">
+You're about to predict Shakespearean English one character at a time. The first 12 characters are revealed as a hint. After that, you type your guess for the next character; if right, you advance; if wrong, you keep guessing on the *same* character. The widget tracks your average guesses-per-character and converts that into an implied bits-per-character.
+
+<EntropyOfEnglishGame client:visible />
+
+Play through 20–30 characters. Your implied bpc will land somewhere between 0.5 and 3.0 bpc depending on how well you know Shakespeare and how much context you've built up. Function-word completions ("th", "an", "of") will take one guess; the openings of content words will take more. Either way: you have now personally measured a bound on the entropy of English. Shannon would be pleased.
+</Step>
+
+<StepCheck
+  title="Convert val NLL to bpc"
+  prompt="bpc ≈ "
+  answer={2.164}
+  tolerance={0.02}
+  hint="bpc = nats / ln(2). 1.5 / ln(2) = 1.5 / 0.693 ≈ 2.164 bits/char."
+>
+A tiny transformer trained on tiny-shakespeare reaches val NLL $= 1.5$ nats/char.
+
+**What is this in bits per character?**
+</StepCheck>
+
+<Step title="The m18 capstone, in perplexity terms">
+Here is the most important number in this entire module. The tiny-shakespeare corpus uses a 65-character vocabulary. At initialization, a random transformer has cross-entropy $\approx \ln 65 \approx 4.17$ nats, perplexity $\approx 65$, "uniform-random over the vocab." After a few minutes of training on consumer-grade WebGPU, the val loss settles around $1.5$ nats, perplexity $\approx 4.5$, $\approx 2.16$ bpc.
+
+Shannon's floor for English is about $1.0$–$1.3$ bpc.
+
+So the m18 capstone, run end-to-end in your browser, will settle about $0.9$ bpc above the language's intrinsic floor. That gap is what scale, depth, attention quality, and more data would buy. The training curve isn't a slog toward zero; it's a sprint toward a known finish line, and you'll cover most of the distance in the first few minutes.
+
+Every val-loss number you'll see for the rest of the course is a cross-entropy in disguise. Perplexity is the same number on the branching-factor scale. The floor it cannot pass is the entropy of the language itself.
+</Step>
+
+<Step title="Mutual information: a one-paragraph preview">
+We won't develop it here, but you'll see it in modules 14 and 16:
+
+$$
+I(X; Y) \;=\; H(X) \;-\; H(X \mid Y).
+$$
+
+In words: how much does knowing $Y$ reduce your uncertainty about $X$? Mutual information is non-zero whenever $X$ and $Y$ have *any* statistical dependence, not just linear correlation, but any pattern at all. It shows up as the right objective for representation learning (InfoNCE, contrastive losses) and as a deep way to think about what attention is doing (m15).
+
+Worth knowing the name and the one-sentence intuition. Save the derivations for where they cash in.
+</Step>
+
+<Step title="What we did not cover, and why">
+Information theory is a huge field. We've covered exactly the pieces that load-bear in modern ML:
+
+- **Entropy.** What every loss curve is measuring against.
+- **Cross-entropy and KL.** What every loss function *is*, plus the asymmetry trap.
+- **The one-hot collapse and softmax-plus-NLL gradient.** Why every classifier looks the way it does.
+- **Perplexity.** Unit-free reporting of the same loss.
+- **The Shannon floor.** Where your training curve is racing to.
+
+What we skipped, and what to read if you want it:
+
+- **Source coding (Huffman, arithmetic coding).** MacKay Ch. 4–5 is the gold standard. Beautiful; not load-bearing for transformers.
+- **Channel coding (Shannon-Hartley, Shannon's noisy-channel theorem).** Cover & Thomas Ch. 7. The thing information theory was invented for; doesn't enter modern ML training.
+- **Rate-distortion theory.** Cover & Thomas Ch. 10. Comes up in compressive sensing and some image models; not central.
+
+This module is module 9 of 18 in a course about training transformers. We covered the parts that ship. The rest is excellent and waiting for you when you want a longer rabbit hole.
+</Step>
+
+<Step title="Where this lands: the end of Arc 1">
+Cross-entropy is the loss; perplexity is that loss exponentiated. The reason GPT-style models end in softmax-then-NLL traces directly back to the one-hot collapse from lesson 9.3. When the m18 capstone's training run plateaus near val NLL $\approx 1.5$, the floor it's approaching is the entropy of Shakespearean English itself, a number Shannon first measured in 1951.
+
+That's the end of Arc 1: the prerequisite math. From here, Arc 2 starts: optimization, neural networks, backpropagation, and training dynamics. Every loss function in those modules is a cross-entropy. Every gradient on a final-layer logit is $q - p$. Every "perplexity 4.5" in module 18 is the exponential of an average surprise. The names will change as we walk forward; the math you just learned will not.
+</Step>

@@ -2,7 +2,7 @@
 course: ml-math
 arc: arc-1-prereq-math
 order: 6
-title: 'Multivariable Calculus — Partial Derivatives, Gradients, Jacobians'
+title: 'Multivariable Calculus: Partial Derivatives, Gradients, Jacobians'
 summary: Functions of many variables. The gradient as a vector pointing uphill. The Jacobian as a gradient for vector-valued functions.
 status: drafting
 estimatedMinutes: 150

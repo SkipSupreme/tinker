@@ -1,4 +1,4 @@
-// Engine core. Pure WebGPU plumbing — no Vite-specific imports — so the same
+// Engine core. Pure WebGPU plumbing, no Vite-specific imports, so the same
 // class can run inside the Astro app (browser) and inside Bun's headless
 // WebGPU (the GPU smoke runner). Source strings are injected by the consumer.
 
@@ -406,7 +406,7 @@ export class EngineCore {
       logits: this.alloc([N, cfg.vocabSize]),
     };
 
-    // Backward scratch — gradient buffers reused across the chain.
+    // Backward scratch: gradient buffers reused across the chain.
     const back: BackwardScratch = {
       dlogits: this.alloc([N, cfg.vocabSize]),
       lossPer: this.alloc([N]),
@@ -430,7 +430,7 @@ export class EngineCore {
     const optM = this.makeGradMatchingParams();
     const optV = this.makeGradMatchingParams();
 
-    // Flat list of (theta, grad, m, v, n) tuples — drives grad-clip + AdamW.
+    // Flat list of (theta, grad, m, v, n) tuples; drives grad-clip + AdamW.
     const flat: ParamSlot[] = [];
     const push = (t: Tensor, g: Tensor, m: Tensor, v: Tensor): void => {
       flat.push({ theta: t, grad: g, m, v, n: t.shape.reduce((a, b) => a * b, 1) });
@@ -545,7 +545,7 @@ export class EngineCore {
     return loss;
   }
 
-  /** Forward + cross-entropy only — no backward, no parameter update. */
+  /** Forward + cross-entropy only; no backward, no parameter update. */
   async valLoss(tokens: Int32Array, targets: Int32Array): Promise<number> {
     const ctx = this.trainCtx; if (!ctx) throw new Error('initTraining() not called');
     const { B, N, acts, back } = ctx;
@@ -611,7 +611,7 @@ export class EngineCore {
     const cfg = this.cfg; const T = cfg.contextLen; const d = cfg.dModel; const V = cfg.vocabSize;
     const ctx = this.trainCtx!; const { acts, back } = ctx;
 
-    // 1. Loss backward — dlogits.
+    // 1. Loss backward: dlogits.
     this.dispatchSoftmaxCEBwd(pass, acts.logits, acts.tgt, back.dlogits, back.lossPer, N, V);
 
     // 2. Unembedding backward.
@@ -650,7 +650,7 @@ export class EngineCore {
       this.dispatchMatmulRhsT(pass, back.dFfn1P, blk.wFFN1, back.dLn2, N, cfg.dFF, d);
       this.dispatchMatmulLhsT(pass, a.ln2Out, back.dFfn1P, g.wFFN1, N, d, cfg.dFF);
 
-      // LN2 backward — writes into a separate buffer, then add to dRes (residual fan-in).
+      // LN2 backward: writes into a separate buffer, then add to dRes (residual fan-in).
       this.dispatchLnBwd(pass, back.dLn2, a.xMid, blk.ln2Gamma, back.dResAcc, N, d);
       this.dispatchLnBwdParams(pass, back.dLn2, a.xMid, g.ln2Gamma, g.ln2Beta, N, d);
       this.dispatchAddInto(pass, back.dResAcc, back.dRes, N * d);
@@ -665,7 +665,7 @@ export class EngineCore {
       this.dispatchMatmulRhsT(pass, back.dProj, blk.wAttnOut, back.dAttn, N, d, d);
       this.dispatchMatmulLhsT(pass, a.attnOut, back.dProj, g.wAttnOut, N, d, d);
 
-      // SDPA backward — writes dQkv from qkv + dAttn (must zero dQkv first since it accumulates).
+      // SDPA backward: writes dQkv from qkv + dAttn (must zero dQkv first since it accumulates).
       this.dispatchZero(pass, back.dQkv.buffer, N * 3 * d);
       this.dispatchSdpaBwd(pass, a.qkv, back.dAttn, back.dQkv, B, T, d, cfg.nHead);
 
@@ -676,13 +676,13 @@ export class EngineCore {
       this.dispatchMatmulRhsT(pass, back.dQkv, blk.wQKV, back.dLn1, N, 3 * d, d);
       this.dispatchMatmulLhsT(pass, a.ln1Out, back.dQkv, g.wQKV, N, d, 3 * d);
 
-      // LN1 backward — writes to dResAcc, then add to dRes.
+      // LN1 backward: writes to dResAcc, then add to dRes.
       this.dispatchLnBwd(pass, back.dLn1, a.xIn, blk.ln1Gamma, back.dResAcc, N, d);
       this.dispatchLnBwdParams(pass, back.dLn1, a.xIn, g.ln1Gamma, g.ln1Beta, N, d);
       this.dispatchAddInto(pass, back.dResAcc, back.dRes, N * d);
     }
 
-    // 5. Embedding backward — dRes is now the gradient on the post-embedding tensor.
+    // 5. Embedding backward: dRes is now the gradient on the post-embedding tensor.
     //    dWte already holds the unembedding-bwd contribution; embeddingBwdWte
     //    ADDS the scatter-add contribution. dWpe is fresh (assignment).
     this.copyTensor(pass, back.dRes, back.dEmb, N * d);
@@ -692,7 +692,7 @@ export class EngineCore {
 
   private runZeroGrads(pass: GPUComputePassEncoder, ctx: TrainContext): void {
     // Most grad buffers are written via assignment by their producing kernels,
-    // so they don't need clearing. The exceptions are wte (tied — accumulates
+    // so they don't need clearing. The exceptions are wte (tied, accumulates
     // unembedding bwd + embedding bwd), wpe (single writer but clearer to
     // zero), and dQkv (sdpaBwd accumulates). Zero everything for simplicity;
     // total bytes ≈ 800 KB so the pass is cheap.
@@ -860,7 +860,7 @@ export class EngineCore {
     pass.dispatchWorkgroups(Math.ceil(slot.n / 64));
   }
 
-  /** target += delta (elementwise). Uses addInto kernel — distinct buffers
+  /** target += delta (elementwise). Uses addInto kernel; distinct buffers
    *  required (WGSL forbids same-buffer read+read_write in one pass). */
   private dispatchAddInto(pass: GPUComputePassEncoder, delta: Tensor, target: Tensor, n: number): void {
     const u = this.uniform([n]);

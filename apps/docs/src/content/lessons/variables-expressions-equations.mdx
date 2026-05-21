@@ -19,30 +19,30 @@ import BalanceSolver from '../../components/demos/BalanceSolver.svelte';
 import PeelInversesGame from '../../components/demos/PeelInversesGame.svelte';
 
 <Step title="A variable is a named box">
-You already know what a variable is — you declare them all day. A math variable is the identical idea: a **named box** that holds a number.
+You already know what a variable is; you declare them all day. A math variable is the identical idea: a **named box** that holds a number.
 
 The only twist is that the box plays three different roles, and conflating them is what made school algebra feel slippery:
 
-- an **unknown** — a number you don't know yet and intend to find ("solve for $x$")
-- a **parameter** — a number chosen once, then held fixed
-- a **free variable** — a number allowed to range over a whole set of values
+- an **unknown**: a number you don't know yet and intend to find ("solve for $x$")
+- a **parameter**: a number chosen once, then held fixed
+- a **free variable**: a number allowed to range over a whole set of values
 
-Same syntax, three jobs — exactly like a variable in your code is sometimes a function argument, sometimes a config constant, sometimes a loop counter.
+Same syntax, three jobs, exactly like a variable in your code is sometimes a function argument, sometimes a config constant, sometimes a loop counter.
 </Step>
 
 <Step title="Expression versus equation">
 Two things that look similar and are not:
 
-- An **expression** — like $3x + 7$ — *evaluates*. Give $x$ a value and it collapses to a number. It's a question waiting for input.
-- An **equation** — like $3x + 7 = 19$ — *asserts*. It claims two expressions are the same number. It's a statement: true, false, or a **constraint** that holds only for certain $x$.
+- An **expression** (like $3x + 7$) *evaluates*. Give $x$ a value and it collapses to a number. It's a question waiting for input.
+- An **equation** (like $3x + 7 = 19$) *asserts*. It claims two expressions are the same number. It's a statement: true, false, or a **constraint** that holds only for certain $x$.
 
 In code you know this gap cold: `=` assigns, `==` asserts. Math spells both with one `=` and trusts you to read the context. Step one of never being confused again: know which one you're looking at.
 </Step>
 
 <Step title="Substitution: filling the box">
-To evaluate an expression you **substitute** — replace every occurrence of the variable with a number — and then climb the tree from the last lesson.
+To evaluate an expression you **substitute** (replace every occurrence of the variable with a number) and then climb the tree from the last lesson.
 
-Take $f(a,b,c) = a \times b + c$ at $a=2$, $b=-3$, $c=10$. Substitute to get $(2)(-3) + 10$, then evaluate by precedence — $\times$ before $+$ — which gives $-6 + 10 = 4$.
+Take $f(a,b,c) = a \times b + c$ at $a=2$, $b=-3$, $c=10$. Substitute to get $(2)(-3) + 10$, then evaluate by precedence ($\times$ before $+$), which gives $-6 + 10 = 4$.
 </Step>
 
 <StepCheck
@@ -59,21 +59,21 @@ Evaluate $a \times b + c$ at $a = 2$, $b = -3$, $c = 10$. Substitute first, then
 <Step title="An equation is a balance">
 Picture an equation as a balance scale that is currently level: the left side and the right side weigh the same. That is what the $=$ asserts.
 
-Now the rule that makes solving *safe*: **anything you do to one side, you must do to the other.** Do that, and the scale stays level — the equation stays true.
+Now the rule that makes solving *safe*: **anything you do to one side, you must do to the other.** Do that, and the scale stays level; the equation stays true.
 
 <BalanceSolver client:visible />
 
-Solve $3x + 7 = 19$ on the balance. Every move it offers is symmetric — applied to both pans at once. You literally cannot make an illegal move. Watch the left pan shed weight until a single $x$ stands alone.
+Solve $3x + 7 = 19$ on the balance. Every move it offers is symmetric, applied to both pans at once. You literally cannot make an illegal move. Watch the left pan shed weight until a single $x$ stands alone.
 </Step>
 
 <Step title="Which undo, and in what order">
-*Which* operations do you apply? The inverses from lesson 2 — the undo buttons. *In what order?* Read the expression's tree.
+*Which* operations do you apply? The inverses from lesson 2 (the undo buttons). *In what order?* Read the expression's tree.
 
-In $3x + 7$, the variable $x$ is wrapped first by "$\times 3$", then by "$+ 7$" on the outside. To free $x$ you unwrap from the **outside in** — peel the $+7$ first, then the $\times 3$.
+In $3x + 7$, the variable $x$ is wrapped first by "$\times 3$", then by "$+ 7$" on the outside. To free $x$ you unwrap from the **outside in**: peel the $+7$ first, then the $\times 3$.
 
 <PeelInversesGame client:visible />
 
-Click the outermost node and choose its inverse. Pick the wrong one and the panel shows you the equation didn't isolate $x$ — no harm, try again. Pick the right one and a layer peels away.
+Click the outermost node and choose its inverse. Pick the wrong one and the panel shows you the equation didn't isolate $x$; no harm, try again. Pick the right one and a layer peels away.
 </Step>
 
 <Step title="The peel, start to finish">
@@ -96,12 +96,12 @@ Solve $5x - 4 = 21$. Peel from the outside in: undo the $-4$ first, then undo th
 **What is $x$?**
 </StepCheck>
 
-<Step title="Verify — it's a free unit test">
+<Step title="Verify: it's a free unit test">
 You're not done when you have an answer. You're done when you've **checked** it.
 
 Substitute your $x$ back into the *original* equation and confirm both sides land on the same number. For $x = 4$ in $3x + 7 = 19$: $3(4) + 7 = 19$. ✓
 
-It costs five seconds and it catches almost every arithmetic slip. In code you'd call this an assertion. Same instinct: you ran the function — now assert the output.
+It costs five seconds and it catches almost every arithmetic slip. In code you'd call this an assertion. Same instinct: you ran the function, now assert the output.
 </Step>
 
 <StepCheck
@@ -116,13 +116,13 @@ Solve $-2x + 9 = 3$. Then substitute your answer back into the original equation
 </StepCheck>
 
 <Step title="What you actually learned">
-Look back at what "solving" turned out to be. You took an expression tree, found the operation wrapping the variable on the outside, and applied its **inverse to both sides** — then repeated, working inward, until the variable stood alone. Choosing inverses and applying them layer by layer through a tree.
+Look back at what "solving" turned out to be. You took an expression tree, found the operation wrapping the variable on the outside, and applied its **inverse to both sides**, then repeated, working inward, until the variable stood alone. Choosing inverses and applying them layer by layer through a tree.
 
-That has a name too. The forward pass climbs the tree leaves-to-root to get an answer. Working *back down* it — applying inverse operations layer by layer to figure out how to change the inputs — is the **backward pass**. Training a neural network is exactly this move, run on a tree with billions of nodes. You just did it by hand on a tree with two.
+That has a name too. The forward pass climbs the tree leaves-to-root to get an answer. Working *back down* it (applying inverse operations layer by layer to figure out how to change the inputs) is the **backward pass**. Training a neural network is exactly this move, run on a tree with billions of nodes. You just did it by hand on a tree with two.
 </Step>
 
 <Step title="Where this goes next">
 That's module 1. You can place any number on the line, you know the two operations and their undo buttons, you can read a fraction as the single number it is, you can parse an expression into its tree, and you can solve an equation by peeling that tree.
 
-Module 2 — Algebra — takes the lid off: expressions with many variables, functions and function composition, the full laws of exponents and logarithms, systems of equations. None of it is new in *kind*. It is this, with more boxes. You have the substrate now.
+Module 2 (Algebra) takes the lid off: expressions with many variables, functions and function composition, the full laws of exponents and logarithms, systems of equations. None of it is new in *kind*. It is this, with more boxes. You have the substrate now.
 </Step>

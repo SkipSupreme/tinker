@@ -1,4 +1,4 @@
-// LayerNorm backward — dx branch.
+// LayerNorm backward: dx branch.
 //   Inputs : dy [rows, d], x [rows, d], gamma [d]
 //   Outputs: dx [rows, d]
 //   Math   : g_k = γ_k · dy_k. dx_k = (1/σ) · (g_k − meanG − z_k · meanGz),
@@ -62,7 +62,7 @@ fn main(
   if (local == 0u) { invS = 1.0 / sqrt(varv + EPS); }
   workgroupBarrier();
 
-  // mean(g) and mean(g·z) — g = γ · dy, z = (x − μ)/σ
+  // mean(g) and mean(g·z), where g = γ · dy, z = (x − μ)/σ
   partial = 0.0;
   k = local;
   loop {

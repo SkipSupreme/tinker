@@ -12,7 +12,7 @@ const TILE: u32 = 16u;
 @group(0) @binding(2) var<storage, read_write>    C:    array<f32>;
 @group(0) @binding(3) var<uniform>                dims: vec4<u32>; // (M, K, N, _)
 
-var<workgroup> aTile: array<f32, 256>; // TILE*TILE — A elements indexed by (m_in_tile, k_in_tile)
+var<workgroup> aTile: array<f32, 256>; // TILE*TILE: A elements indexed by (m_in_tile, k_in_tile)
 var<workgroup> bTile: array<f32, 256>; // B elements indexed by (m_in_tile, n_in_tile)
 
 @compute @workgroup_size(16, 16, 1)

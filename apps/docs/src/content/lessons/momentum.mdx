@@ -1,5 +1,5 @@
 ---
-title: Momentum — Gradient Descent with a Memory
+title: 'Momentum: Gradient Descent with a Memory'
 module: m10-optimization
 summary: Teach gradient descent to remember its past moves. Persistent directions amplify; oscillating ones cancel. Ravines stop being slow.
 estimatedMinutes: 18
@@ -21,7 +21,7 @@ Module 10 Lesson 1 showed you the ravine problem. In a loss landscape like $f(x,
 The fix is so simple it's almost cheating. Give gradient descent a short-term memory. The gradient at step $t$ is a fresh observation; blend it with the running average of past gradients and use the blend as your step direction.
 </Step>
 
-<Step title="Exponential moving average — a 60-second refresher">
+<Step title="Exponential moving average: a 60-second refresher">
 An **exponential moving average** (EMA) of a scalar sequence $x_1, x_2, \ldots$ is
 
 $$
@@ -30,7 +30,7 @@ $$
 
 At each step, take $\beta$ (typically 0.9 or 0.99) fraction of the previous average and add the new observation weighted by $1 - \beta$. Older observations decay exponentially: the weight of $x_{t-k}$ in $\bar{y}_t$ is $(1-\beta)\beta^k$.
 
-The **effective window** — how far back the average "remembers" — is roughly $1/(1-\beta)$. $\beta = 0.9$ remembers about the last 10 observations; $\beta = 0.99$ about the last 100; $\beta = 0.999$ about the last 1000.
+The **effective window** (how far back the average "remembers") is roughly $1/(1-\beta)$. $\beta = 0.9$ remembers about the last 10 observations; $\beta = 0.99$ about the last 100; $\beta = 0.999$ about the last 1000.
 </Step>
 
 <StepCheck
@@ -74,7 +74,7 @@ With $\beta = 0.9$, $\mathbf{v}_0 = 0$, and gradient history $g_1 = g_2 = g_3 = 
 </StepCheck>
 
 <Step title="Race it yourself">
-Pull up the navigator. Pick the **narrow ravine**. Drag the start point off-axis — somewhere like $(1.8, 0.5)$. Set $\eta = 0.02$. Run SGD. Watch it zig-zag.
+Pull up the navigator. Pick the **narrow ravine**. Drag the start point off-axis, somewhere like $(1.8, 0.5)$. Set $\eta = 0.02$. Run SGD. Watch it zig-zag.
 
 Now switch to **SGD + momentum** with $\beta = 0.9$. Hit Reset, then Run. Watch it glide.
 
@@ -88,7 +88,7 @@ Try $\beta = 0.5$ (short memory, mild damping) vs $\beta = 0.95$ (long memory, a
 <Step title="What β actually controls">
 Pedagogical warning: **$\beta = 0.9$ does NOT mean "90% of the update is the previous update."** It means "90% of the velocity is the previous velocity, plus the new gradient." The recursion is on velocity, not on position.
 
-One consequence: along a direction where the gradient is constant, the velocity approaches $g / (1 - \beta)$ in the limit. So the effective step along that direction is $\eta \cdot g / (1 - \beta)$, which for $\beta = 0.9$ is $10 \eta g$ — ten times the vanilla SGD step. That's where the "acceleration" comes from.
+One consequence: along a direction where the gradient is constant, the velocity approaches $g / (1 - \beta)$ in the limit. So the effective step along that direction is $\eta \cdot g / (1 - \beta)$, which for $\beta = 0.9$ is $10 \eta g$, ten times the vanilla SGD step. That's where the "acceleration" comes from.
 
 Along a direction where the gradient flips sign every step, the velocity is dominated by cancellation. It stays small. That's where the "damping" comes from.
 </Step>
@@ -97,7 +97,7 @@ Along a direction where the gradient flips sign every step, the velocity is domi
 For a quadratic loss with Hessian eigenvalues in $[\lambda_\min, \lambda_\max]$:
 
 - **Vanilla GD** converges for $\eta < 2 / \lambda_\max$. Effective rate along the slowest direction: $1 - \eta \lambda_\min$. For condition number $\kappa = \lambda_\max / \lambda_\min = 100$, you crawl.
-- **Momentum** converges for $\eta < (2 + 2\beta) / \lambda_\max$. It raises the ceiling on $\eta$ by a factor of $\approx 20$ for $\beta = 0.9$. *And* it changes the effective rate: the slowest direction's contraction improves from $1 - \eta \lambda_\min$ to roughly $1 - \sqrt{\eta \lambda_\min}$. That square root is the theorem — momentum gives you asymptotically better conditioning.
+- **Momentum** converges for $\eta < (2 + 2\beta) / \lambda_\max$. It raises the ceiling on $\eta$ by a factor of $\approx 20$ for $\beta = 0.9$. *And* it changes the effective rate: the slowest direction's contraction improves from $1 - \eta \lambda_\min$ to roughly $1 - \sqrt{\eta \lambda_\min}$. That square root is the theorem: momentum gives you asymptotically better conditioning.
 
 You don't need the proof. You need the picture: momentum turns the ravine from "nearly uncrossable" into "merely narrow."
 

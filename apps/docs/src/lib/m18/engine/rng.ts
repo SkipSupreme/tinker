@@ -46,7 +46,7 @@ export function seededRng(seed: number | string): () => number {
   return sfc32(a, b, c, d);
 }
 
-// Box-Muller transform — converts two uniforms in (0, 1) to two
+// Box-Muller transform: converts two uniforms in (0, 1) to two
 // independent N(0, 1) samples. Used by the He / std=0.02 weight initializer.
 export function boxMuller(rng: () => number): [number, number] {
   let u1 = rng(); if (u1 < 1e-300) u1 = 1e-300;

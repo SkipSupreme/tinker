@@ -7,7 +7,7 @@
   }
 
   function defaultPoints(): [number, number][] {
-    // Loosely linear by default — gives r ≈ 0.85, Cov > 0.
+    // Loosely linear by default; gives r ≈ 0.85, Cov > 0.
     return [
       [-2.5, -1.8],
       [-1.4, -1.1],
@@ -39,7 +39,7 @@
   const xbar = $derived(points.reduce((s, p) => s + p.x, 0) / points.length);
   const ybar = $derived(points.reduce((s, p) => s + p.y, 0) / points.length);
 
-  // Sample covariance (with n-1 in the denominator — the unbiased estimator).
+  // Sample covariance (with n-1 in the denominator, the unbiased estimator).
   const cov = $derived.by(() => {
     if (points.length < 2) return 0;
     let s = 0;
@@ -142,7 +142,7 @@
     </div>
   </div>
   <p class="hint">
-    Drag points. The teal crosshair is the centroid <em>(x̄, ȳ)</em>. Coral arrows are the centered vectors <em>(x<sub>i</sub> − x̄, y<sub>i</sub> − ȳ)</em>. <strong>Cov(X, Y)</strong> is the average of the products of those arrow components; <strong>r</strong> is their cosine similarity — try pulling points into a tight diagonal and watch r approach ±1.
+    Drag points. The teal crosshair is the centroid <em>(x̄, ȳ)</em>. Coral arrows are the centered vectors <em>(x<sub>i</sub> − x̄, y<sub>i</sub> − ȳ)</em>. <strong>Cov(X, Y)</strong> is the average of the products of those arrow components; <strong>r</strong> is their cosine similarity. Try pulling points into a tight diagonal and watch r approach ±1.
   </p>
 </div>
 

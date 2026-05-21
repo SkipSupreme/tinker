@@ -10,7 +10,7 @@
   export interface Props {
     /** Parametric function f(t) = [x, y]. */
     xy: (t: number) => readonly [number, number];
-    /** t-range to sample over. No sensible viewport default — required. */
+    /** t-range to sample over. No sensible viewport default; required. */
     t: readonly [number, number];
     color?: string;
     opacity?: number;
@@ -34,7 +34,7 @@
   const ctx = getCoordContext();
   const vb = $derived(ctx.viewBox);
 
-  // Tolerance in output (x, y) space — scale against the smaller visible
+  // Tolerance in output (x, y) space; scale against the smaller visible
   // span so chord error is perceptually uniform on non-square viewBoxes.
   const tolerance = $derived(
     Math.min(vb.xMax - vb.xMin, vb.yMax - vb.yMin) / 500,

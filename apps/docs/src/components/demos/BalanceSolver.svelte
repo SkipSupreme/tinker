@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * BalanceSolver — visualises solving a·x + b = c as a pan-balance.
+   * BalanceSolver: visualises solving a·x + b = c as a pan-balance.
    * The only legal moves are applying the same inverse operation to BOTH sides.
    * The beam stays level throughout (the equation is always balanced).
    */

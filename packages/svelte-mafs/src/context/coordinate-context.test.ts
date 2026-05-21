@@ -35,7 +35,7 @@ describe("normalizeViewBox", () => {
 });
 
 describe("makeCoordContext", () => {
-  describe("userToPx — square viewBox", () => {
+  describe("userToPx (square viewBox)", () => {
     // x:[-5,5], y:[-5,5], 400x300 SVG → origin maps to center (200,150)
     const ctx = makeCoordContext(vb(-5, 5, -5, 5), 400, 300);
 
@@ -60,7 +60,7 @@ describe("makeCoordContext", () => {
     });
   });
 
-  describe("userToPx — wide viewBox (landscape)", () => {
+  describe("userToPx (wide viewBox, landscape)", () => {
     // x:[-10,10] (20 wide), y:[-1,1] (2 tall), 800x200 SVG
     const ctx = makeCoordContext(vb(-10, 10, -1, 1), 800, 200);
 
@@ -79,7 +79,7 @@ describe("makeCoordContext", () => {
     });
   });
 
-  describe("userToPx — tall viewBox (portrait)", () => {
+  describe("userToPx (tall viewBox, portrait)", () => {
     // x:[-1,1], y:[-10,10], 200x800
     const ctx = makeCoordContext(vb(-1, 1, -10, 10), 200, 800);
 
@@ -93,7 +93,7 @@ describe("makeCoordContext", () => {
     });
   });
 
-  describe("userToPx — negative-only range", () => {
+  describe("userToPx (negative-only range)", () => {
     // x:[-20,-10], y:[5,15]
     const ctx = makeCoordContext(vb(-20, -10, 5, 15), 400, 300);
 
@@ -122,8 +122,8 @@ describe("makeCoordContext", () => {
     });
   });
 
-  describe("userToPx — asymmetric y range crossing zero", () => {
-    // y:[-2,10] exposes the "-yMax" viewBox trick — if there were a sign bug,
+  describe("userToPx (asymmetric y range crossing zero)", () => {
+    // y:[-2,10] exposes the "-yMax" viewBox trick: if there were a sign bug,
     // a symmetric test wouldn't catch it.
     const ctx = makeCoordContext(vb(-5, 5, -2, 10), 400, 300);
 
@@ -144,7 +144,7 @@ describe("makeCoordContext", () => {
     });
   });
 
-  describe("pxToUser — exact inverse of userToPx", () => {
+  describe("pxToUser (exact inverse of userToPx)", () => {
     it("round-trips origin on square viewBox", () => {
       const ctx = makeCoordContext(vb(-5, 5, -5, 5), 400, 300);
       expect(ctx.pxToUser([200, 150])).toEqual([0, 0]);

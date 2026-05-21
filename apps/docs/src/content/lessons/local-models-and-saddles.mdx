@@ -1,6 +1,6 @@
 ---
 title: Local Linear Models and Saddle Points
-summary: Some critical points are bowls. Some are caps. Some are neither — saddles, where the function goes up in one direction and down in another. In high dimensions, saddles are everywhere.
+summary: Some critical points are bowls. Some are caps. Some are neither (saddles, where the function goes up in one direction and down in another). In high dimensions, saddles are everywhere.
 module: m6-multivariable
 estimatedMinutes: 16
 order: 3
@@ -27,7 +27,7 @@ Three shapes worth finding:
 2. Both **negative**. Every ray shows it falling. **Local maximum.**
 3. Opposite signs (one positive, one negative). Some rays climb, some fall. There's no consistent "down" or "up." **Saddle.**
 
-The first two cases have analogues you've seen in 1D (a parabola opens up or opens down). The saddle is new — it has no single-variable counterpart, and it's the case that matters most for ML.
+The first two cases have analogues you've seen in 1D (a parabola opens up or opens down). The saddle is new. It has no single-variable counterpart, and it's the case that matters most for ML.
 </Step>
 
 <Step title="The 1D recall">
@@ -49,7 +49,7 @@ $$
 f(x, y) \;\approx\; f(a, b) + f_x(a, b)\,(x - a) + f_y(a, b)\,(y - b).
 $$
 
-Same shape, two variables instead of one. The right-hand side is a **plane** — tilted by the partial derivatives, anchored at the height $f(a, b)$. Near $(a, b)$, the surface is indistinguishable from that plane.
+Same shape, two variables instead of one. The right-hand side is a **plane**, tilted by the partial derivatives and anchored at the height $f(a, b)$. Near $(a, b)$, the surface is indistinguishable from that plane.
 
 Using the gradient notation from the last lesson:
 
@@ -75,13 +75,13 @@ For $f(x, y) = x y^2$, use linearization at $(1, 2)$ to approximate $f(1.03, 1.9
 <Step title="Critical points">
 A **critical point** is a point where the gradient is zero: $\nabla f(\mathbf{p}) = \mathbf{0}$.
 
-In 1D, $f'(a) = 0$ meant "flat spot" — a candidate for a local min or max. In 2D it means the same thing, except "flat" now means flat in *every* direction simultaneously. No direction is uphill; no direction is downhill.
+In 1D, $f'(a) = 0$ meant "flat spot," a candidate for a local min or max. In 2D it means the same thing, except "flat" now means flat in *every* direction simultaneously. No direction is uphill; no direction is downhill.
 
 Three shapes a 2D flat spot can take:
 
 - A **local minimum** (bowl).
 - A **local maximum** (cap).
-- A **saddle** — up in some directions, down in others.
+- A **saddle** (up in some directions, down in others).
 
 You found all three in step 1. Now formalize.
 </Step>
@@ -116,9 +116,9 @@ The sign of your answer tells you what kind of critical point it is.
 </StepCheck>
 
 <Step title="Why saddles matter for ML">
-Intuition from one or two variables says: most flat spots are minima. Bowl, cap, occasional saddle. **In high dimensions this stops being true.** In dimensions ~millions — which is where neural-network loss functions live — saddles **dominate**. True local minima are rare; flat regions where the gradient is nearly zero but the function is actually a saddle are common.
+Intuition from one or two variables says: most flat spots are minima. Bowl, cap, occasional saddle. **In high dimensions this stops being true.** In dimensions ~millions (which is where neural-network loss functions live) saddles **dominate**. True local minima are rare; flat regions where the gradient is nearly zero but the function is actually a saddle are common.
 
-This is why plain gradient descent can feel slow: it's not stuck at a real minimum, it's crawling through a high-dimensional saddle where the gradient is small in most directions and only a tiny sub-space escapes. Modules 10 and 11 cover the tricks for dealing with this — momentum, Adam, learning-rate schedules. All of them are about detecting and escaping saddles.
+This is why plain gradient descent can feel slow: it's not stuck at a real minimum, it's crawling through a high-dimensional saddle where the gradient is small in most directions and only a tiny sub-space escapes. Modules 10 and 11 cover the tricks for dealing with this: momentum, Adam, learning-rate schedules. All of them are about detecting and escaping saddles.
 
 For now the single takeaway: **$\nabla f = \mathbf{0}$ doesn't mean "you won."** It means "stop and look more carefully."
 </Step>

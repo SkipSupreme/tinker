@@ -1,4 +1,4 @@
-# Signup & auth — v1 design
+# Signup & auth: v1 design
 
 Replace the stub waitlist on `index.astro` with a real signup flow. Build the user model, auth, progress tracking, bookmarks, notes, admin UI, and email infrastructure that gets Tinker out of "wait list" mode and into "real users have real accounts."
 
@@ -19,17 +19,17 @@ Replace the stub waitlist on `index.astro` with a real signup flow. Build the us
 | Auth methods | Magic links + Google OAuth + GitHub OAuth |
 | Scope of signed-in experience | Full: visited lessons, completion, exercise answers, bookmarks, notes |
 | Drop emails | Full admin UI under `/admin`, not a CLI |
-| Show learner count on course landing | Yes — easy to hide later |
+| Show learner count on course landing | Yes, easy to hide later |
 
 ## Architecture
 
 ### Stack additions
 
-- `better-auth` — auth library (magicLink, google, github plugins)
-- `drizzle-orm` + `drizzle-kit` — D1 ORM and migrations
-- `resend` — transactional + marketing email
-- `zod` — input validation on every endpoint
-- Cloudflare Turnstile — invisible bot check on signup form
+- `better-auth`: auth library (magicLink, google, github plugins)
+- `drizzle-orm` + `drizzle-kit`: D1 ORM and migrations
+- `resend`: transactional + marketing email
+- `zod`: input validation on every endpoint
+- Cloudflare Turnstile, invisible bot check on signup form
 
 Roughly +600KB to the dev tree, ~100KB shipped to the Worker after tree-shaking.
 
@@ -196,7 +196,7 @@ email_drop
 
 - `lesson_view` uses composite PK `(user_id, lesson_slug)` so the progress beacon is a single idempotent `INSERT … ON CONFLICT DO UPDATE`. No race conditions, no read-then-write.
 - Course/module slugs denormalized into `lesson_view` so course landing renders with no joins.
-- `exercise_answer` keeps every attempt rather than overwriting — supports "you've tried this 3 times" later. Latest row is current state.
+- `exercise_answer` keeps every attempt rather than overwriting, supports "you've tried this 3 times" later. Latest row is current state.
 - `note` is one body per lesson, not multi-note per lesson. Single textarea drawer. Splits later if needed.
 - `marketing_opt_in` lives in `user_profile`, not on `user`, so "delete my marketing prefs" doesn't touch auth.
 - Lesson slugs are stable in MDX frontmatter. Renames ship as one-shot SQL migrations.
@@ -223,7 +223,7 @@ email_drop
 |---|---|
 | Same email signs up via magic link, later via Google | Better Auth links the Google `account` row to the existing `user`. Email already verified → no friction. |
 | Different email per provider for same person | Treated as separate users. `/me` will offer manual account merge as a follow-up. |
-| Magic link opened on a different device | Works fine — token is the auth, not the device. Email body shows requesting device + IP. |
+| Magic link opened on a different device | Works fine, token is the auth, not the device. Email body shows requesting device + IP. |
 | Magic link clicked twice | First click consumes the token; second click → expired-token page with "Send another link". |
 | Magic link expired (>15 min) | Same expired-token page → resend flow. No silent retry. |
 | Rate-limit hit | Friendly 429 page: "Too many sign-in attempts. Wait 10 minutes or use Google/GitHub." Counter keyed in D1 with TTL row. |
@@ -297,7 +297,7 @@ GET    /api/unsubscribe?token=…       // HMAC-signed, no auth
 POST   /api/admin/drops               { subject, body_md, lesson_slug?, test_only? }
 ```
 
-All endpoints: session-required (except `/api/auth/*` and unsubscribe), CSRF-protected, Zod-validated, rate-limited at 60 req/min per user. Consistent error envelope: `{ error: { code, message } }`. `/api/me/state` is the single hydration call — every authed page fetches it once and feeds client components, avoiding N requests on lesson load.
+All endpoints: session-required (except `/api/auth/*` and unsubscribe), CSRF-protected, Zod-validated, rate-limited at 60 req/min per user. Consistent error envelope: `{ error: { code, message } }`. `/api/me/state` is the single hydration call, every authed page fetches it once and feeds client components, avoiding N requests on lesson load.
 
 ## Capacity messaging + email
 
@@ -309,9 +309,9 @@ Replace the existing waitlist band (lines 184–208 of `apps/docs/src/pages/inde
 > One course live today: *Math for Machine Learning*. New modules every week. Sign up to track your progress, save notes, and get the heads-up when new courses ship.
 >
 > [ Continue with Google ] [ Continue with GitHub ]
-> — or your email — [_______________] [ Send link ]
+>, or your email, [_______________] [ Send link ]
 
-Hero CTA (line 43): "Join the waitlist" → "Sign up — it's free." The "No signup to explore" line stays.
+Hero CTA (line 43): "Join the waitlist" → "Sign up, it's free." The "No signup to explore" line stays.
 
 ### Course landing
 
@@ -331,8 +331,8 @@ Thin alpha banner at the top:
 | Account deleted | `DELETE /api/me` | self |
 
 All sends go through `apps/docs/src/server/email.ts`:
-- `sendTransactional(to, template, props)` — magic link, welcome, deletion confirmation.
-- `sendMarketing(audience, template, props)` — drops only. Filters to opted-in users at query time.
+- `sendTransactional(to, template, props)`: magic link, welcome, deletion confirmation.
+- `sendMarketing(audience, template, props)`: drops only. Filters to opted-in users at query time.
 
 Templates are React-Email components rendered to HTML at build time, stored as static strings the Worker ships without bundling React at runtime.
 
@@ -360,9 +360,9 @@ Three layers, real coverage on the parts that matter.
 ### Unit (Vitest)
 
 Pure-logic boundaries:
-- `src/server/auth.ts` — provider config, callback URL builder, session-cookie options
-- `src/server/ratelimit.ts` — sliding-window math, key derivation, reset behavior
-- `src/server/email.ts` — template rendering, audience filter, HMAC signing/verification
+- `src/server/auth.ts`: provider config, callback URL builder, session-cookie options
+- `src/server/ratelimit.ts`: sliding-window math, key derivation, reset behavior
+- `src/server/email.ts`: template rendering, audience filter, HMAC signing/verification
 - Zod input schemas for every endpoint
 - Anonymous-progress merge function (idempotency, conflict resolution with `completed_at`)
 
@@ -411,7 +411,7 @@ Each step is independently shippable; the site stays working at every commit.
 2. **Auth backbone.** Wire Better Auth at `/api/auth/[...all]`. Register Google + GitHub OAuth apps (callbacks `https://learntinker.com/api/auth/callback/{provider}` + a localhost variant). Resend account, magic-link template, secrets stored via `wrangler secret put`.
 3. **Auth UI.** Build `/signup`, `/signin`, `/verify`, `/welcome`. Add `<UserMenu>` to nav. Site looks identical to logged-out users at this point.
 4. **Progress.** Ship `<ProgressBeacon>` and `/api/progress/*`. Add "Continue where you left off" CTA. Per-module checkmarks. Anonymous → authenticated merge endpoint.
-5. **Exercises, bookmarks, notes.** Each is an independent slice — endpoint + component + `/me` listing. Any order.
+5. **Exercises, bookmarks, notes.** Each is an independent slice, endpoint + component + `/me` listing. Any order.
 6. **Admin UI.** `/admin` dashboard, drop composer, drop detail, user list. Bootstrap own admin role via SQL.
 7. **Replace the waitlist.** Rewrite `#waitlist` band on `index.astro` into the sign-up band. Change hero CTA. Add alpha banner to course landing. Only user-visible step. ~30-line diff.
 8. **Testing pass.** Fill in unit + integration + E2E. CI gate.
@@ -423,19 +423,19 @@ Steps 1–6 are invisible to users. Step 7 is the one-way door, but reverting is
 
 Set via `wrangler secret put`. Localdev uses `.dev.vars` (gitignored).
 
-- `BETTER_AUTH_SECRET` — generate with `openssl rand -hex 32`
+- `BETTER_AUTH_SECRET`: generate with `openssl rand -hex 32`
 - `RESEND_API_KEY`
 - `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET`
 - `GITHUB_CLIENT_ID` + `GITHUB_CLIENT_SECRET`
-- `UNSUBSCRIBE_HMAC_SECRET` — generate with `openssl rand -hex 32`
+- `UNSUBSCRIBE_HMAC_SECRET`: generate with `openssl rand -hex 32`
 - `TURNSTILE_SECRET_KEY` (and matching public site key in client)
 
 ## Out-of-band setup needed from owner
 
-1. **Google OAuth app** — Google Cloud Console → APIs & Services → Credentials → Create OAuth client ID (Web). Authorized redirect URIs: `https://learntinker.com/api/auth/callback/google`, `http://localhost:4321/api/auth/callback/google`.
-2. **GitHub OAuth app** — GitHub → Settings → Developer settings → OAuth Apps → New. Same callback URLs.
-3. **Resend account** — sign up, verify `learntinker.com` (DKIM/SPF/DMARC records), generate API key.
-4. **Cloudflare Turnstile site** — Cloudflare dashboard → Turnstile → Add site. Use invisible widget mode.
+1. **Google OAuth app**. Google Cloud Console → APIs & Services → Credentials → Create OAuth client ID (Web). Authorized redirect URIs: `https://learntinker.com/api/auth/callback/google`, `http://localhost:4321/api/auth/callback/google`.
+2. **GitHub OAuth app**. GitHub → Settings → Developer settings → OAuth Apps → New. Same callback URLs.
+3. **Resend account**, sign up, verify `learntinker.com` (DKIM/SPF/DMARC records), generate API key.
+4. **Cloudflare Turnstile site**. Cloudflare dashboard → Turnstile → Add site. Use invisible widget mode.
 
 ## Out of scope for v1
 

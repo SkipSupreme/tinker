@@ -1,5 +1,5 @@
 /**
- * easterEggs — global keyboard listener + state for mascot easter eggs.
+ * easterEggs: global keyboard listener + state for mascot easter eggs.
  * DESIGN.md §Mascot easter eggs.
  */
 

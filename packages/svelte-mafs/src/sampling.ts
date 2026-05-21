@@ -14,7 +14,7 @@ export interface SampleOptions {
 
 export type Sample = readonly [number, number];
 
-// Treat values beyond this magnitude as asymptotic — emit a NaN gap instead.
+// Treat values beyond this magnitude as asymptotic; emit a NaN gap instead.
 // Useful for tan(x) near π/2 where Math.tan returns ~1.6e16 (finite but useless).
 const DIVERGENCE_THRESHOLD = 1e10;
 

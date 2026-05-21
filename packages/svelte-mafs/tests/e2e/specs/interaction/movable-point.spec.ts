@@ -54,7 +54,7 @@ test.describe("MovablePoint interaction", () => {
     // page.mouse. Playwright's CDP-based mouse simulation dispatches moves
     // at cursor coordinates, and SVG pointer-capture-via-setPointerCapture
     // doesn't reliably redirect those moves back to the circle once the
-    // circle has moved out from under the cursor — so the real-mouse path
+    // circle has moved out from under the cursor, so the real-mouse path
     // partially drags, then stops. Direct event dispatch bypasses that.
     // Unit tests still cover the drag math (drag.test.ts); this spec's
     // job is proving `use:drag` is mounted and reaches MovablePoint's
@@ -93,7 +93,7 @@ test.describe("MovablePoint interaction", () => {
 
   test("arrow keys nudge by step (0.1)", async ({ page }) => {
     await page.goto(FIXTURE);
-    // Wait for Svelte $effect to run — proves `use:drag` is attached and
+    // Wait for Svelte $effect to run, proving `use:drag` is attached and
     // onkeydown is active. Otherwise early interactions silently no-op.
     await page.waitForFunction(() => "__fixtureHydrated" in window);
     const slider = page.getByRole("slider");
@@ -112,7 +112,7 @@ test.describe("MovablePoint interaction", () => {
 
   test("Shift+arrow nudges by 10× step", async ({ page }) => {
     await page.goto(FIXTURE);
-    // Wait for Svelte $effect to run — proves `use:drag` is attached and
+    // Wait for Svelte $effect to run, proving `use:drag` is attached and
     // onkeydown is active. Otherwise early interactions silently no-op.
     await page.waitForFunction(() => "__fixtureHydrated" in window);
     const slider = page.getByRole("slider");

@@ -20,7 +20,7 @@ type ProbeProps = {
 };
 
 beforeAll(() => {
-  // Stream 3's drag test establishes the same polyfill — jsdom 25 doesn't
+  // Stream 3's drag test establishes the same polyfill; jsdom 25 doesn't
   // expose pointer-capture methods on Element.prototype, but the drag
   // action calls them defensively. Replicate here so the action mounts
   // cleanly inside MovablePoint.
@@ -171,7 +171,7 @@ describe("<MovablePoint>", () => {
         initialY: 0,
         constrain: clamp({ x: [-1, 1], y: [-1, 1] }),
       });
-      // Drag far out of bounds — should clamp to (1, -1) since pxToUser
+      // Drag far out of bounds; should clamp to (1, -1) since pxToUser
       // at the lower-right takes us to (large +x, large -y) and the
       // constraint pins to the box corner.
       after(circle, pe("pointerdown", { pointerId: 2, clientX: 200, clientY: 200 }));

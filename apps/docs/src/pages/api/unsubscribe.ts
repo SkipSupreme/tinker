@@ -26,7 +26,7 @@ function page(body: string, status = 200): Response {
   );
 }
 
-// Must be a function, not a const Response — Response bodies are streams and
+// Must be a function, not a const Response: Response bodies are streams and
 // re-serving the same Response object across requests throws after the first.
 const bad = () =>
   page(

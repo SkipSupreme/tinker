@@ -1,5 +1,5 @@
 <script lang="ts">
-  // ShiftByOneBatch — visualize Karpathy's `get_batch`.
+  // ShiftByOneBatch: visualize Karpathy's `get_batch`.
   //
   // A 1-D stream of token ids (rendered as character labels for clarity); a few
   // random offsets sampled, each carving an `x = data[i:i+T]` row and a
@@ -7,7 +7,7 @@
   //  • the batch size B
   //  • the context length T
   //  • a "resample" button (new random offsets)
-  //  • a "B·T predictions" readout — the answer to Step 17.3.7.
+  //  • a "B·T predictions" readout (the answer to Step 17.3.7).
 
   // Public-domain Shakespeare opening, character-level: the token stream we
   // pretend is data[]. The actual ids do not matter for pedagogy.
@@ -115,7 +115,7 @@
   <p class="caption">
     Each row is one (<code>x</code>, <code>y</code>) training example pair. Position
     <em>t</em> in <code>x</code> is supervised by position <em>t</em> in
-    <code>y</code> — and because the causal mask only lets the transformer see
+    <code>y</code>; and because the causal mask only lets the transformer see
     <code>x[:t+1]</code> when predicting <code>y[t]</code>, each row gives <code>T</code>
     honest next-token predictions in one forward pass. One step of training =
     <code>B · T</code> = {preds} supervised examples.

@@ -1,12 +1,12 @@
 // Sum-of-squares reduction over a single buffer.
-//   Input : g [N]  — a parameter's gradient
-//   Output: out[outIdx]  — single f32 slot in a small global "norm² of every
+//   Input : g [N], a parameter's gradient
+//   Output: out[outIdx], a single f32 slot in a small global "norm² of every
 //                          parameter" buffer the driver readbacks once per step.
 // Workgroup-local two-stage reduction: each WG sums its slice of g into a
 // shared partial; WG 0 then writes to out[outIdx]. To keep this simple at our
 // scale, we use *one* workgroup per call and stride threads through N. With
 // our largest grad buffer being d_model · d_ff = 64·256 = 16,384 f32, a single
-// 64-thread workgroup loops 256 times — fine.
+// 64-thread workgroup loops 256 times, which is fine.
 
 const WG: u32 = 64u;
 

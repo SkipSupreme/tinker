@@ -160,7 +160,7 @@ describe('mergeAnonProgress', () => {
         last_seen_at: '2026-01-01T00:01:00Z',
         view_count: 2,
       },
-      // missing lesson_slug — skipped
+      // missing lesson_slug: skipped
       {
         course_slug: 'ml-math',
         module_slug: 'm5',

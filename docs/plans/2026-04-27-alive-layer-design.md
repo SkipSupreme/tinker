@@ -1,4 +1,4 @@
-# Alive Layer — Design
+# Alive Layer: Design
 
 *Validated 2026-04-27 via `superpowers:brainstorming`. Backs the "give the learning app some life" pass against the shipped v2 mascot infrastructure (`lib/sound.ts`, `lib/confetti.ts`, `lib/xp.ts`, `Tinker.svelte`, `TinkerHop.svelte`).*
 
@@ -12,22 +12,22 @@ A coordinated "alive layer" pass across five surfaces, all backed by the same sh
 
 **Surfaces.**
 
-1. **Mid-lesson microcelebrations** — StepCheck correct/wrong choreography, Step advance, widget jiggle. Mascot stays out.
-2. **Lesson + module complete sequences** — multi-stage `async/await` chains (Spring fill → Tween XP tick → TinkerHop → confetti → chime).
-3. **Mascot backlog burndown** — Konami code sunglasses, "type tinker" anywhere, proactive hint pokes, milestone badges, birthday hat.
-4. **Hero/landing ambient life** — floating math-symbol decorations drift, sparkle marks pulse, mascot gets a sleepy yawn after long inactivity.
-5. **XP counter + streak chip polish** — Tween-driven counter (`Math.round(display.current)`), smoother +N floater, streak flame flicker via a custom `flame-flicker` keyframe.
+1. **Mid-lesson microcelebrations**. StepCheck correct/wrong choreography, Step advance, widget jiggle. Mascot stays out.
+2. **Lesson + module complete sequences**, multi-stage `async/await` chains (Spring fill → Tween XP tick → TinkerHop → confetti → chime).
+3. **Mascot backlog burndown**. Konami code sunglasses, "type tinker" anywhere, proactive hint pokes, milestone badges, birthday hat.
+4. **Hero/landing ambient life**, floating math-symbol decorations drift, sparkle marks pulse, mascot gets a sleepy yawn after long inactivity.
+5. **XP counter + streak chip polish**. Tween-driven counter (`Math.round(display.current)`), smoother +N floater, streak flame flicker via a custom `flame-flicker` keyframe.
 
 **Non-goals (locked).**
 
-- No swap of `lib/confetti.ts` or `lib/sound.ts` — math symbols + sine waves are brand (`DESIGN.md` Decisions Log, 2026-04-24 pivot v2).
+- No swap of `lib/confetti.ts` or `lib/sound.ts`: math symbols + sine waves are brand (`DESIGN.md` Decisions Log, 2026-04-24 pivot v2).
 - No Rive, GSAP, Motion, anime.js, or `canvas-confetti`.
 - No Tinker inside lesson bodies or widgets (`DESIGN.md` §Where Tinker does NOT appear).
 - No streak guilt, no leaderboards, no full-screen red.
 - No new color tokens; `--ink-red` stays primary, no purple, no introductions.
 - No paid asset generation. No timeline estimates anywhere in the doc.
 
-**Adds to `package.json`.** None — `Spring`/`Tween`/`prefersReducedMotion` are already in `svelte/motion` (Svelte 5.55+). The codebase has no Tailwind integration and isn't gaining one for this pass; ambient motion lives in hand-rolled `@keyframes`, consistent with the existing `global.css` + CSS-variable token system in `DESIGN.md`.
+**Adds to `package.json`.** None, `Spring`/`Tween`/`prefersReducedMotion` are already in `svelte/motion` (Svelte 5.55+). The codebase has no Tailwind integration and isn't gaining one for this pass; ambient motion lives in hand-rolled `@keyframes`, consistent with the existing `global.css` + CSS-variable token system in `DESIGN.md`.
 
 **Adds to `global.css`.** Six new keyframes (sparkle-flicker, tinker-z-rise, flame-flicker, sweep-green, halo-pulse, wrong-shake). No new tokens.
 
@@ -49,10 +49,10 @@ The whole design boils down to four primitives mapped to four motion archetypes.
 
 **Two new shared modules.**
 
-- `lib/celebrate.ts` — pure-function orchestrator. Exports `celebrateLesson()`, `celebrateModule()`, `celebrateCorrect(target)`, `celebrateWrong(target)`. Wraps the existing `play()`, `burst()`, XP, and `tinker:celebrate` event-fire into one async-chained sequence per moment. This is what `Lesson.astro` and `StepCheck.astro` will call instead of inline calls.
-- `lib/easterEggs.svelte.ts` — global keyboard listener (Konami, "type tinker"), a `$state`-backed `mascotMode = 'normal' | 'sunglasses' | 'birthday'`, and a `MascotEffects` slot the apple reads. Initialized once via `$effect.root` from `Tinker.svelte`.
+- `lib/celebrate.ts`: pure-function orchestrator. Exports `celebrateLesson()`, `celebrateModule()`, `celebrateCorrect(target)`, `celebrateWrong(target)`. Wraps the existing `play()`, `burst()`, XP, and `tinker:celebrate` event-fire into one async-chained sequence per moment. This is what `Lesson.astro` and `StepCheck.astro` will call instead of inline calls.
+- `lib/easterEggs.svelte.ts`: global keyboard listener (Konami, "type tinker"), a `$state`-backed `mascotMode = 'normal' | 'sunglasses' | 'birthday'`, and a `MascotEffects` slot the apple reads. Initialized once via `$effect.root` from `Tinker.svelte`.
 
-**Removed.** `Tinker.svelte:54-59` (`matchMedia` `onMount`) — replaced by the rune. The local `reducedMotion` state stays as a `$derived` from the rune for the CSS class binding.
+**Removed.** `Tinker.svelte:54-59` (`matchMedia` `onMount`), replaced by the rune. The local `reducedMotion` state stays as a `$derived` from the rune for the CSS class binding.
 
 ---
 
@@ -76,11 +76,11 @@ async function celebrateCorrect(checkBtn: HTMLElement) {
 
 `jiggleSpring` is a `Spring(1, { stiffness: 0.18, damping: 0.55 })` mounted on the widget root. Step exposes `--widget-scale: {jiggleSpring.current}` to the wrapping `<div>`. The halo is a `::after` pseudo-element driven by the `halo-pulse` keyframe (scale + opacity decay, 320ms one-shot).
 
-**Wrong StepCheck answer.** New behavior. `DESIGN.md` §A11y: "localized shake or border-color shift, not a full-screen red." Implement as `wrongShake` CSS keyframe (10px horizontal, 6 frames, 240ms) on the input + a 320ms border color shift to `--ink-coral` (NOT red — coral is the interactive token, red is the brand mascot color). No haptic, no sound — wrong answers are quiet by design. Aria-live announces "Try again. Read the hint."
+**Wrong StepCheck answer.** New behavior. `DESIGN.md` §A11y: "localized shake or border-color shift, not a full-screen red." Implement as `wrongShake` CSS keyframe (10px horizontal, 6 frames, 240ms) on the input + a 320ms border color shift to `--ink-coral` (NOT red, coral is the interactive token, red is the brand mascot color). No haptic, no sound, wrong answers are quiet by design. Aria-live announces "Try again. Read the hint."
 
 **Step advance.** Currently `Step.astro` with `EndgameCallback.astro` plays tick. Add a Svelte `transition:slide` (existing `svelte/transition`) with `easing: cubicOut, duration: 280` on the new step, plus a green ✓ flash via a small one-shot CSS keyframe (`step-flash`, opacity + color, ~280ms) on the prev-step's number badge. The `tick` sound and 10ms haptic stay where they are.
 
-**Widget interactions.** New shared `useDragSpring()` factory exported from `packages/svelte-mafs` — wraps `MovablePoint.svelte` drag in a `Spring` with low stiffness for snap-back when constraint-clamped. Optional, opt-in per widget.
+**Widget interactions.** New shared `useDragSpring()` factory exported from `packages/svelte-mafs`: wraps `MovablePoint.svelte` drag in a `Spring` with low stiffness for snap-back when constraint-clamped. Optional, opt-in per widget.
 
 **Aria-live mirror.** Single `<SrAnnouncer>` mounted in `Lesson.astro` listens for `tinker:announce` events; correct/wrong/advance push messages.
 
@@ -90,7 +90,7 @@ async function celebrateCorrect(checkBtn: HTMLElement) {
 
 Today these moments fire each piece independently inside `Lesson.astro` script tag. The design tightens them into one orchestrator each, in `lib/celebrate.ts`, chained with `async/await` so timing is explicit and tunable in one place.
 
-**`celebrateLesson()` — `DESIGN.md` §Motion lesson-complete row.**
+**`celebrateLesson()`: `DESIGN.md` §Motion lesson-complete row.**
 
 ```ts
 export async function celebrateLesson(card: HTMLElement) {
@@ -106,9 +106,9 @@ export async function celebrateLesson(card: HTMLElement) {
 }
 ```
 
-`progressSpring` and `scoreTween` are module-scoped instances; the lesson-progress bar and XP counter `$derived` from their `.current`. `sweepGreen` adds and removes a class — no JS animation.
+`progressSpring` and `scoreTween` are module-scoped instances; the lesson-progress bar and XP counter `$derived` from their `.current`. `sweepGreen` adds and removes a class, no JS animation.
 
-**`celebrateModule()` — `DESIGN.md` §Motion module-complete row.**
+**`celebrateModule()`: `DESIGN.md` §Motion module-complete row.**
 
 ```ts
 export async function celebrateModule(card: HTMLElement, nodeId: string, nextModuleName?: string) {
@@ -126,7 +126,7 @@ export async function celebrateModule(card: HTMLElement, nodeId: string, nextMod
 
 The `glowMasteredNode` call mutates the skill-tree node from `drafting` → `mastered` per `DESIGN.md` §Mastery, with a one-time pulse driven by a local CSS keyframe on the new state.
 
-**Reduced-motion fork (one branch in each function).** When `prefersReducedMotion.current` is true: `progressSpring.set(1, { instant: true })`, `scoreTween` set instant, `burst()` is already a no-op, `TinkerHop` is gated already. Sound + haptic still fire — they're deliberate user-earned responses, not ambient.
+**Reduced-motion fork (one branch in each function).** When `prefersReducedMotion.current` is true: `progressSpring.set(1, { instant: true })`, `scoreTween` set instant, `burst()` is already a no-op, `TinkerHop` is gated already. Sound + haptic still fire, they're deliberate user-earned responses, not ambient.
 
 **Why one orchestrator per moment.** Today, tweaking the lesson-complete feel means editing `Lesson.astro`, `StepCheck.astro`, and the inline event listeners. After this pass, it's one function. Tuning is a one-line edit.
 
@@ -154,23 +154,23 @@ export const eggs = new Eggs();
 
 `#onKey` keeps a rolling buffer of last 10 keys. Match against `↑↑↓↓←→←→ba` → `sunglasses = true`, `setTimeout` 10s to flip back. Last 6 keys match `tinker` (only when `document.activeElement` isn't an input/textarea/contenteditable) → `bouncePulse++`. `Tinker.svelte` adds a `$effect` reading `eggs.bouncePulse` to fire the click-bounce + teal `burst({ palette: ['teal'] })`.
 
-**Mascot accessory layer.** Add three optional props to `Tinker.svelte`: `sunglasses` (bound to `eggs.sunglasses`), `birthday: boolean` (server-passed from `session.birthdate` vs UTC today), `completedCourses: number` (server-passed). Each renders an absolutely-positioned SVG accessory over the apple — sunglasses across the eye-region, party hat on the leaves, one tiny grad-cap badge per completed course at fixed offset positions. PNG sprites in `public/mascot/` so no inline SVG bloat. Layered on `<div class="tinker-accessories">` siblings to `<img class="tinker-img">`.
+**Mascot accessory layer.** Add three optional props to `Tinker.svelte`: `sunglasses` (bound to `eggs.sunglasses`), `birthday: boolean` (server-passed from `session.birthdate` vs UTC today), `completedCourses: number` (server-passed). Each renders an absolutely-positioned SVG accessory over the apple, sunglasses across the eye-region, party hat on the leaves, one tiny grad-cap badge per completed course at fixed offset positions. PNG sprites in `public/mascot/` so no inline SVG bloat. Layered on `<div class="tinker-accessories">` siblings to `<img class="tinker-img">`.
 
 **Proactive hint poke.** New `components/lesson/StuckHint.svelte`. `StepCheck.astro` starts a 30s timer on mount, clears on submit. On expiry, dispatches `tinker:stuck` with `{ hint }`. `StuckHint` is mounted once in `Lesson.astro` (`client:idle`), listens, throttles via `localStorage` last-shown timestamp (2 min global). Renders bottom-right corner: `/logo-mark.png` thumbnail + speech bubble with the hint string, `Spring`-driven slide-in from off-canvas. Dismiss via click anywhere or Escape. Reduced motion → instant fade, no slide.
 
-**Birthday + milestone data.** Astro page reads `better-auth` session, computes `birthday: dob && sameUtcDay(dob, now)` and `completedCourses: profile.completedCourseIds.length`, passes to `<Tinker>` as props. SSR-safe — no JS needed for either.
+**Birthday + milestone data.** Astro page reads `better-auth` session, computes `birthday: dob && sameUtcDay(dob, now)` and `completedCourses: profile.completedCourseIds.length`, passes to `<Tinker>` as props. SSR-safe, no JS needed for either.
 
 ---
 
 ## 6. Hero / landing ambient life
 
-`DESIGN.md` §Decoration calls for "alive but calm" — max 5 floating decorations per hero, sparkle pulse on the apple, no carnival. Three additions, all CSS-only.
+`DESIGN.md` §Decoration calls for "alive but calm", max 5 floating decorations per hero, sparkle pulse on the apple, no carnival. Three additions, all CSS-only.
 
-**Floating math symbols on `index.astro`.** New small Svelte component `components/brand/FloatingMath.svelte`, mounted `client:visible` inside the dark hero band. Renders 5 absolutely-positioned `<span>`s — `π ∫ ∂ Δ ∑` — in Fraunces italic, palette `--ink-teal | --ink-pink | --ink-orange` (no purple, no red — red is reserved for the apple). Each has two CSS animations layered: `drift-y` (4.6–7.2s sine bob, ±14px) and `drift-x` (8–11s horizontal sway, ±8px), both `ease-in-out infinite` with staggered `animation-delay` so the field never pulses in unison. Opacity 0.18–0.35 per `DESIGN.md` §Decoration ambient range. Positioned via `inset` rules — not random JS — so SSR is identical to hydration. `prefers-reduced-motion: reduce` → freeze (`animation-play-state: paused`).
+**Floating math symbols on `index.astro`.** New small Svelte component `components/brand/FloatingMath.svelte`, mounted `client:visible` inside the dark hero band. Renders 5 absolutely-positioned `<span>`s, `π ∫ ∂ Δ ∑`: in Fraunces italic, palette `--ink-teal | --ink-pink | --ink-orange` (no purple, no red, red is reserved for the apple). Each has two CSS animations layered: `drift-y` (4.6–7.2s sine bob, ±14px) and `drift-x` (8–11s horizontal sway, ±8px), both `ease-in-out infinite` with staggered `animation-delay` so the field never pulses in unison. Opacity 0.18–0.35 per `DESIGN.md` §Decoration ambient range. Positioned via `inset` rules, not random JS, so SSR is identical to hydration. `prefers-reduced-motion: reduce` → freeze (`animation-play-state: paused`).
 
-**Sparkle pulse polish around the apple.** The three sparkles are baked into `/logo-mark.png` (bitmap, can't pulse the alpha). Solution: overlay three SVG 8-point stars at known offsets matching the baked sparkles, in the same teal/orange/red trio, each with a new `sparkle-flicker` keyframe (opacity 0.0 → 1.0 → 0.0, 4.6s, staggered delays 0s/1.5s/3s). Adds `<svg class="tinker-sparkles">` as a sibling to `<img class="tinker-img">` inside `Tinker.svelte`. The baked PNG sparkles stay visible underneath as the floor — the overlay modulates apparent brightness.
+**Sparkle pulse polish around the apple.** The three sparkles are baked into `/logo-mark.png` (bitmap, can't pulse the alpha). Solution: overlay three SVG 8-point stars at known offsets matching the baked sparkles, in the same teal/orange/red trio, each with a new `sparkle-flicker` keyframe (opacity 0.0 → 1.0 → 0.0, 4.6s, staggered delays 0s/1.5s/3s). Adds `<svg class="tinker-sparkles">` as a sibling to `<img class="tinker-img">` inside `Tinker.svelte`. The baked PNG sparkles stay visible underneath as the floor, the overlay modulates apparent brightness.
 
-**Sleepy yawn after long inactivity.** New idle state for `Tinker.svelte`. A document-level `pointermove`/`keydown`/`scroll` listener resets a 60s timer; on expiry, set `sleeping = true`. Visual: a `<span class="tinker-z">` containing a Fraunces-italic "z" appears above the apple, drifting up and fading via `tinker-z-rise` keyframe (translateY -28px, opacity 1 → 0, 2.4s, infinite). The bob slows to 7s. Any input → `sleeping = false`. Reduced motion → no z, no slow-bob change; sleeping is just a visual freeze (apple unchanged). `DESIGN.md` §Mascot already lists "sleeping (loading / idle)" as a planned expression — this is the implementation.
+**Sleepy yawn after long inactivity.** New idle state for `Tinker.svelte`. A document-level `pointermove`/`keydown`/`scroll` listener resets a 60s timer; on expiry, set `sleeping = true`. Visual: a `<span class="tinker-z">` containing a Fraunces-italic "z" appears above the apple, drifting up and fading via `tinker-z-rise` keyframe (translateY -28px, opacity 1 → 0, 2.4s, infinite). The bob slows to 7s. Any input → `sleeping = false`. Reduced motion → no z, no slow-bob change; sleeping is just a visual freeze (apple unchanged). `DESIGN.md` §Mascot already lists "sleeping (loading / idle)" as a planned expression, this is the implementation.
 
 **Two new global.css keyframes.** `sparkle-flicker`, `tinker-z-rise`. The `drift-x`/`drift-y` keyframes live local to `FloatingMath.svelte` since they're not reused.
 
@@ -178,7 +178,7 @@ export const eggs = new Eggs();
 
 ## 7. XP counter + streak chip polish
 
-`DESIGN.md` §Components — current state: "Promote to a standalone Svelte component if it grows beyond what fits in Nav." This is that moment.
+`DESIGN.md` §Components, current state: "Promote to a standalone Svelte component if it grows beyond what fits in Nav." This is that moment.
 
 **`components/nav/XpCounter.svelte` (promoted from Nav inline).**
 
@@ -211,7 +211,7 @@ Reads `streak` from a server-passed prop (`session.streak`). Hidden when `streak
 
 **Nav.astro changes.** Strip the inline XP/streak markup and the script-tag event listeners. Mount `<XpCounter client:load initial={session.xp} />` and `<StreakFlame client:load streak={session.streak} />` instead. The `client:load` matches `DESIGN.md` §Hydration table (persistent chrome, must work first paint).
 
-**Why this matters.** Today's manual scale pulse + immediate number swap reads as "data updated." Tween + fly-floater reads as "you earned this." Same data, completely different perceived feel — the smallest surface in the design but probably the most-seen.
+**Why this matters.** Today's manual scale pulse + immediate number swap reads as "data updated." Tween + fly-floater reads as "you earned this." Same data, completely different perceived feel, the smallest surface in the design but probably the most-seen.
 
 ---
 
@@ -221,12 +221,12 @@ Reads `streak` from a server-passed prop (`session.streak`). Hidden when `streak
 
 **`global.css` additions.** Six new keyframes (no new tokens):
 
-- `sparkle-flicker` — 4.6s opacity pulse for sparkle overlay
-- `tinker-z-rise` — sleepy "z" float-up
-- `flame-flicker` — one-shot 800ms streak bump shimmer
-- `sweep-green` — 640ms left-to-right gradient on lesson-complete card
-- `halo-pulse` — green halo on correct StepCheck
-- `wrong-shake` — 240ms 6-frame horizontal shake on wrong answer
+- `sparkle-flicker`: 4.6s opacity pulse for sparkle overlay
+- `tinker-z-rise`: sleepy "z" float-up
+- `flame-flicker`: one-shot 800ms streak bump shimmer
+- `sweep-green`: 640ms left-to-right gradient on lesson-complete card
+- `halo-pulse`: green halo on correct StepCheck
+- `wrong-shake`: 240ms 6-frame horizontal shake on wrong answer
 
 `drift-x`/`drift-y` (FloatingMath) and `tinker-yawn` (sleeping bob slowdown) live local to their components since they're not reused.
 
@@ -285,7 +285,7 @@ REMOVED
 | XpCounter | Tween transition | Replaced with `display.set(value, { instant: true })` |
 | Streak | Flame-flicker keyframe | n/a |
 
-Single source of truth: `prefersReducedMotion.current` from `svelte/motion`. Every component reads from this — no per-component matchMedia. The reactive rune means OS toggles flip behavior live without reload.
+Single source of truth: `prefersReducedMotion.current` from `svelte/motion`. Every component reads from this, no per-component matchMedia. The reactive rune means OS toggles flip behavior live without reload.
 
 **Aria-live mirror.** One `<SrAnnouncer>` mounted in `Lesson.astro`, listens for `tinker:announce` events. Every celebration calls `announce(msg)`:
 
@@ -294,12 +294,12 @@ Single source of truth: `prefersReducedMotion.current` from `svelte/motion`. Eve
 - Lesson complete: `"Lesson complete. Plus 20 XP."`
 - Module complete: `"Module complete. Plus 100 XP. {nextModuleName} unlocked."`
 - StuckHint: `"Hint: {hint}"`
-- XpCounter: announces *resting* value only — never every Math.round frame
+- XpCounter: announces *resting* value only, never every Math.round frame
 - Streak: `"Streak now {n} days"` on bump only
 
-**Mascot a11y.** Tinker stays `role="button" tabindex="0"` because it's an interactive easter-egg trigger (not purely decorative — it does something on click). Accessory overlays (sunglasses, party hat, grad caps) wrapped in `aria-hidden="true"` — they convey no state-changing affordance.
+**Mascot a11y.** Tinker stays `role="button" tabindex="0"` because it's an interactive easter-egg trigger (not purely decorative, it does something on click). Accessory overlays (sunglasses, party hat, grad caps) wrapped in `aria-hidden="true"`: they convey no state-changing affordance.
 
-**Photosensitive (WCAG 2.3.1, Level A).** Confetti particles are well below the 25%-of-viewport threshold. No full-screen red — wrong answers use `--ink-coral` localized border, not a full-bleed flash. Streak flame flicker is one-shot 800ms — well under 3 flashes/sec. No animation pairs saturated red with white.
+**Photosensitive (WCAG 2.3.1, Level A).** Confetti particles are well below the 25%-of-viewport threshold. No full-screen red, wrong answers use `--ink-coral` localized border, not a full-bleed flash. Streak flame flicker is one-shot 800ms, well under 3 flashes/sec. No animation pairs saturated red with white.
 
 **Testing.** Deploy to `learntinker.com` and verify there, not against `astro dev`. Manual checklist per surface: reduced-motion toggle on (System Settings → Display), confetti renders nothing; sound mute persists across reload; aria-live messages read by VoiceOver; iOS hardware mute silences sine palette (expected behavior); StuckHint throttle holds (no second poke within 2 min).
 
@@ -309,10 +309,10 @@ Single source of truth: `prefersReducedMotion.current` from `svelte/motion`. Eve
 
 Not blocking; resolve during implementation.
 
-1. **Mascot accessory sprites.** `sunglasses.png`, `party-hat.png`, `grad-cap.png` — handmade, sourced from open-licensed art, or hand-drawn SVG inline? Cheapest is hand-drawn SVG to keep `DESIGN.md`'s "always the approved asset" rule honest (overlays don't replace the apple). No paid generation regardless.
-2. **StuckHint copy.** The hint string comes from each step's `hint` prop, but most existing Math-for-ML steps don't have hints authored yet. Soft-fail when `hint` is empty — don't poke without a payload.
+1. **Mascot accessory sprites.** `sunglasses.png`, `party-hat.png`, `grad-cap.png`: handmade, sourced from open-licensed art, or hand-drawn SVG inline? Cheapest is hand-drawn SVG to keep `DESIGN.md`'s "always the approved asset" rule honest (overlays don't replace the apple). No paid generation regardless.
+2. **StuckHint copy.** The hint string comes from each step's `hint` prop, but most existing Math-for-ML steps don't have hints authored yet. Soft-fail when `hint` is empty, don't poke without a payload.
 3. **Streak opt-in flow.** `DESIGN.md` gates display on a 30-day-then-prompt flow that hasn't shipped. `bumpStreak()` already runs in `lib/xp.ts`. Display stays gated `streak > 0` for now; the opt-in prompt is out of scope for this pass.
-4. **Module-complete `nextModuleName`.** The aria-live announce string references an "unlocked" name. Source from the course manifest in `src/content/`. If unavailable, drop the second sentence — graceful degrade.
+4. **Module-complete `nextModuleName`.** The aria-live announce string references an "unlocked" name. Source from the course manifest in `src/content/`. If unavailable, drop the second sentence, graceful degrade.
 
 ---
 

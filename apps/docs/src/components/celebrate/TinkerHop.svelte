@@ -19,7 +19,7 @@
     /** Default level when triggered via the window event without a detail. */
     level?: 'lesson' | 'module';
     size?: number | string;
-    /** Auto-fire celebration on mount. Default false — usually triggered via window event. */
+    /** Auto-fire celebration on mount. Default false; usually triggered via window event. */
     autoplay?: boolean;
     src?: string;
   }
@@ -106,7 +106,7 @@
     z-index: 1;
     width: 100%;
     height: 100%;
-    /* /logo-mark.png is the apple, pre-cropped — contain just shows it whole. */
+    /* /logo-mark.png is the apple, pre-cropped; contain just shows it whole. */
     object-fit: contain;
     object-position: center;
     transform: rotate(-3deg);

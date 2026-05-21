@@ -2,7 +2,7 @@
   import { Mafs, Coordinates, Vector, MovablePoint, Line, Point } from 'svelte-mafs';
 
   /**
-   * BasisTranslator — same arrow, two coordinate addresses.
+   * BasisTranslator: same arrow, two coordinate addresses.
    *
    * A fixed point P sits in the plane (draggable). Two basis arrows v₁, v₂
    * are also draggable. The widget computes P's coordinates in the basis
@@ -64,7 +64,7 @@
     <div class="row alt">
       <span class="lab">P in basis {'{v₁, v₂}'}</span>
       {#if singular}
-        <span class="val warn">basis collapsed — det = 0</span>
+        <span class="val warn">basis collapsed, det = 0</span>
       {:else}
         <span class="val">({c1.toFixed(2)}, {c2.toFixed(2)})</span>
       {/if}

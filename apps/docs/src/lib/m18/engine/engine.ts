@@ -54,7 +54,7 @@ const SOURCES: KernelSources = {
 export class Engine extends EngineCore {
   static async create(cfg: ModelConfig): Promise<Engine> {
     if (!('gpu' in navigator)) {
-      throw new Error('WebGPU not available — try Chrome / Edge / Firefox 141+ / Safari 18+ on desktop.');
+      throw new Error('WebGPU not available. Try Chrome / Edge / Firefox 141+ / Safari 18+ on desktop.');
     }
     const adapter = await navigator.gpu.requestAdapter();
     if (!adapter) throw new Error('No WebGPU adapter.');

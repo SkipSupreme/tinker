@@ -51,7 +51,7 @@
       <span class="coord">({sx.toFixed(2)}, {sy.toFixed(2)})</span>
       <span class="mag">|{magS.toFixed(2)}|</span>
     </div>
-    <p class="hint">drag either arrow's dot — the sum follows</p>
+    <p class="hint">drag either arrow's dot; the sum follows</p>
   </div>
 </div>
 

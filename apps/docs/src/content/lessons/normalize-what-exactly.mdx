@@ -42,7 +42,7 @@ $$
 
 The $\epsilon$ (typically $10^{-5}$) is a tiny constant that prevents divide-by-zero when the batch variance is zero. Now $\hat x$ has mean 0 and variance 1 across the batch, by construction.
 
-Finally — and this matters — BN learns a per-feature affine transform on top:
+Finally (and this matters): BN learns a per-feature affine transform on top:
 
 $$
 y_i \;=\; \gamma\, \hat x_i \;+\; \beta.
@@ -52,7 +52,7 @@ $\gamma$ and $\beta$ are trainable parameters. Why? So the network can *undo* th
 </Step>
 
 <Step title="Train mode and inference mode are not the same">
-The above formula uses *batch statistics*. During training that's fine — we have a batch.
+The above formula uses *batch statistics*. During training that's fine; we have a batch.
 
 At inference time you might be feeding in a single example. There is no batch. So BN keeps a running exponential moving average of the per-feature mean and variance during training:
 
@@ -88,7 +88,7 @@ The fix is one line: call `model.eval()` before inference. This is the single mo
 
 <BnTrainEvalToggle client:visible />
 
-Drag *batch size* to 1, click *training step* a few times in **train** mode, and watch x̂ for the test point collapse to zero — the batch statistics are degenerate. Switch to **eval** at batch size 1 and the running stats save you. The asymmetry between modes is the bug.
+Drag *batch size* to 1, click *training step* a few times in **train** mode, and watch x̂ for the test point collapse to zero; the batch statistics are degenerate. Switch to **eval** at batch size 1 and the running stats save you. The asymmetry between modes is the bug.
 </Step>
 
 <StepCheck
@@ -102,7 +102,7 @@ A BatchNorm layer is run in *training mode* on a batch of size 1. The single exa
 </StepCheck>
 
 <Step title="BN's real mechanism (it's not what the original paper said)">
-The 2015 BN paper argued that BN works by reducing "internal covariate shift" — the idea that each layer's input distribution drifts during training and BN re-stabilizes it.
+The 2015 BN paper argued that BN works by reducing "internal covariate shift," the idea that each layer's input distribution drifts during training and BN re-stabilizes it.
 
 Three years later Santurkar et al. demonstrated this story is essentially wrong. They artificially injected non-stationary noise *after* the BN layer (so distributions still drift) and training was unaffected. The covariate-shift narrative does not predict the experiment.
 
@@ -119,7 +119,7 @@ $$
 \sigma^2 \;=\; \frac{1}{H}\sum_{j=1}^H (x_j - \mu)^2.
 $$
 
-Then $\hat x_j = (x_j - \mu)/\sqrt{\sigma^2 + \epsilon}$, and again learn an affine $y_j = \gamma_j \hat x_j + \beta_j$ — but now $\gamma$ and $\beta$ are *per-feature* vectors, not per-channel scalars.
+Then $\hat x_j = (x_j - \mu)/\sqrt{\sigma^2 + \epsilon}$, and again learn an affine $y_j = \gamma_j \hat x_j + \beta_j$, but now $\gamma$ and $\beta$ are *per-feature* vectors, not per-channel scalars.
 
 The crucial difference: LN does not care about the batch. It computes its statistics from a single example. There are no running stats. There is no train/eval discrepancy. With batch size 1, it works fine.
 
@@ -139,11 +139,11 @@ Apply LayerNorm to the token vector $x = [1, 2, 3]$ with $\gamma = 1$, $\beta = 
 <Step title="When to use BN and when to use LN">
 The taxonomy is "which axes do you reduce over."
 
-**BN:** reduce over the batch dimension, normalize per feature. Default for vision and CNNs with stable, large batches. Fragile when the batch is small or non-i.i.d. — you've seen the size-1 disaster.
+**BN:** reduce over the batch dimension, normalize per feature. Default for vision and CNNs with stable, large batches. Fragile when the batch is small or non-i.i.d., as you've seen in the size-1 disaster.
 
 **LN:** reduce over the feature dimension, normalize per example. Default for transformers. Variable sequence lengths, padded tokens, and single-example inference would all corrupt BN's batch statistics; LN is immune to all of it.
 
-The picture generalizes: **GroupNorm** reduces over a *group* of features per example. **InstanceNorm** reduces over each individual feature map per example. **RMSNorm** drops the mean term entirely and just rescales by root-mean-square — used by LLaMA-family models, slightly cheaper:
+The picture generalizes: **GroupNorm** reduces over a *group* of features per example. **InstanceNorm** reduces over each individual feature map per example. **RMSNorm** drops the mean term entirely and just rescales by root-mean-square, used by LLaMA-family models, slightly cheaper:
 
 $$
 y_j \;=\; \frac{x_j}{\sqrt{\frac{1}{H}\sum_k x_k^2 + \epsilon}}\,\gamma_j.
@@ -160,5 +160,5 @@ x = x + Attention(LayerNorm(x))
 x = x + MLP(LayerNorm(x))
 ```
 
-Two LayerNorms per block. No BatchNorm anywhere. The next lesson covers the `+ x` part — residual connections — and the warmup schedule that makes the whole thing trainable.
+Two LayerNorms per block. No BatchNorm anywhere. The next lesson covers the `+ x` part (residual connections) and the warmup schedule that makes the whole thing trainable.
 </Step>

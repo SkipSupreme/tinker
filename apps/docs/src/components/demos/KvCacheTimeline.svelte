@@ -115,11 +115,11 @@
 
   <div class="explainer">
     {#if cache}
-      <strong>cache on</strong> — each token's K and V are computed <em>once</em> at its
+      <strong>cache on</strong>: each token's K and V are computed <em>once</em> at its
       step (yellow flash) and reused on every subsequent step. Past columns
       stay filled.
     {:else}
-      <strong>cache off</strong> — every step recomputes K and V for the entire prefix.
+      <strong>cache off</strong>: every step recomputes K and V for the entire prefix.
       Watch all the past columns flash on each new generation: that work is being
       paid for, repeatedly, forever.
     {/if}
@@ -127,11 +127,11 @@
 
   <div class="param-bar">
     <div class="metric">
-      <span class="metric-label">cumulative work — cache on</span>
+      <span class="metric-label">cumulative work, cache on</span>
       <span class="metric-val">{cumCached.toLocaleString()} flops</span>
     </div>
     <div class="metric">
-      <span class="metric-label">cumulative work — cache off</span>
+      <span class="metric-label">cumulative work, cache off</span>
       <span class="metric-val">{cumUncached.toLocaleString()} flops</span>
     </div>
     <div class="metric hi">
@@ -141,7 +141,7 @@
   </div>
 
   <p class="legend">
-    work scales as <em>T²</em> with the cache, <em>T³</em> without. ratio grows linearly with sequence length — at <em>T = 1024</em> the cache buys roughly a 1000× speedup.
+    work scales as <em>T²</em> with the cache, <em>T³</em> without. ratio grows linearly with sequence length; at <em>T = 1024</em> the cache buys roughly a 1000× speedup.
   </p>
 </div>
 

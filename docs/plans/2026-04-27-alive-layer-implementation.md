@@ -13,7 +13,7 @@
 **Verification gates (no test runner in this project):**
 - After each task: `pnpm -F docs astro check` must pass with no new errors.
 - Before deploy: `pnpm -F docs build` must succeed.
-- After deploy: manual smoke on `learntinker.com` — never `astro dev`.
+- After deploy: manual smoke on `learntinker.com`: never `astro dev`.
 
 **Commit message style:** Match recent log (`docs(plan):`, `feat:`, `chore:`). Co-authored trailer per project convention.
 
@@ -40,15 +40,15 @@ Expected: type-check passes (warnings allowed, errors not). If errors exist on `
 pnpm -F docs build
 ```
 
-Expected: build succeeds. Bail and investigate if it doesn't — implementing on a broken baseline wastes the whole plan.
+Expected: build succeeds. Bail and investigate if it doesn't, implementing on a broken baseline wastes the whole plan.
 
 **Step 3: No commit.** Baseline gate only.
 
 ---
 
-## Phase 1 — Foundation
+## Phase 1: Foundation
 
-### ~~Task 1: Add `tw-animate-css` dependency~~ — **REMOVED**
+### ~~Task 1: Add `tw-animate-css` dependency~~: **REMOVED**
 
 **Why this was dropped:** Code-quality review caught that `tw-animate-css` is a Tailwind v4 plugin and this codebase has no Tailwind integration (no `tailwindcss` package, no `@astrojs/tailwind`, no `@tailwind`/`@apply` directives). The dependency would have been inert. The keyframes the alive-layer needs (`sparkle-flicker`, `tinker-z-rise`, `flame-flicker`, `sweep-green`, `halo-pulse`, `wrong-shake`) are all hand-rolled in Task 2 already, consistent with the existing `global.css` + CSS-variable token system in `DESIGN.md`. No replacement dependency needed.
 
@@ -65,7 +65,7 @@ Expected: build succeeds. Bail and investigate if it doesn't — implementing on
 
 ```css
 /* ─────────────────────────────────────────────────────────
-   Alive layer — keyframes
+ Alive layer, keyframes
    Each pairs with an animation declaration consumed by celebrate.ts or
    a Svelte component. There is no global reduced-motion gate here:
    ambient consumers (sparkle-flicker, drift-y/x, tinker-z-rise) gate
@@ -128,7 +128,7 @@ feat(motion): add alive-layer keyframes to global.css
 Six keyframes powering sparkle pulse, sleepy "z" rise, streak flame
 flicker, lesson-complete green sweep, correct-answer halo pulse,
 and wrong-answer localized shake. Reduced-motion handling is per
-consumer at use site, not gated here — see leading comment block.
+consumer at use site, not gated here, see leading comment block.
 
 Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>
 EOF
@@ -146,7 +146,7 @@ EOF
 
 ```ts
 /**
- * lib/celebrate.ts — orchestrator for earned-state celebrations.
+ * lib/celebrate.ts, orchestrator for earned-state celebrations.
  *
  * One async function per moment. Tuning the feel of any celebration
  * is a one-line edit here, not a sweep across StepCheck.astro,
@@ -170,7 +170,7 @@ export function announce(message: string) {
   );
 }
 
-// Module-scoped Spring/Tween instances — one per surface so multiple
+// Module-scoped Spring/Tween instances, one per surface so multiple
 // concurrent celebrations don't fight each other.
 export const progressSpring = new Spring(0, { stiffness: 0.12, damping: 0.4 });
 export const scoreTween = new Tween(0, { duration: 900, easing: cubicOut });
@@ -241,7 +241,7 @@ export async function celebrateModule(
 pnpm -F docs astro check
 ```
 
-Expected: no new type errors. `award`, `vibrate`, `XpEvent` may need to match the actual exports of `lib/xp.ts` — if `astro check` reports a name mismatch, read `apps/docs/src/lib/xp.ts` and adjust the imports to match what's actually exported. The design doc lists awards as `awardXp('correctFirstTry')`; the actual export name may be `award`. Either is fine — match what's there.
+Expected: no new type errors. `award`, `vibrate`, `XpEvent` may need to match the actual exports of `lib/xp.ts`: if `astro check` reports a name mismatch, read `apps/docs/src/lib/xp.ts` and adjust the imports to match what's actually exported. The design doc lists awards as `awardXp('correctFirstTry')`; the actual export name may be `award`. Either is fine, match what's there.
 
 **Step 3: Commit.**
 
@@ -271,7 +271,7 @@ EOF
 ```svelte
 <script lang="ts">
   /**
-   * SrAnnouncer — single aria-live="polite" mirror for the alive layer.
+ * SrAnnouncer, single aria-live="polite" mirror for the alive layer.
    * Listens for `tinker:announce` window events. Dropped into Lesson.astro
    * once; every celebration calls announce(msg) from lib/celebrate.ts.
    */
@@ -279,7 +279,7 @@ EOF
 
   $effect(() => {
     const onAnnounce = (e: CustomEvent<{ message: string }>) => {
-      // Re-set even if same string — screen readers announce on change,
+ // Re-set even if same string, screen readers announce on change,
       // so toggle empty first.
       message = '';
       queueMicrotask(() => {
@@ -336,7 +336,7 @@ EOF
 
 ---
 
-## Phase 2 — XP + Streak polish
+## Phase 2: XP + Streak polish
 
 ### Task 5: Create `XpCounter.svelte`
 
@@ -359,7 +359,7 @@ Copy the implementation from `docs/plans/2026-04-27-alive-layer-design.md` §7. 
 pnpm -F docs astro check
 ```
 
-Expected: passes. If `Tween` or `prefersReducedMotion` aren't in the installed `svelte/motion`, check `pnpm why svelte` — must be ≥5.8. The repo has `^5.55.5` per package.json which is fine.
+Expected: passes. If `Tween` or `prefersReducedMotion` aren't in the installed `svelte/motion`, check `pnpm why svelte`: must be ≥5.8. The repo has `^5.55.5` per package.json which is fine.
 
 **Step 3: Commit.**
 
@@ -499,7 +499,7 @@ In template, replace the inline XP `<span>` and streak chip with:
 
 Delete the inline `<script>` tag that listens for `tinker:xp` / `tinker:streak`. The components own that now.
 
-If `Astro.locals.session` doesn't exist yet on this project, fall back to `0`/`0` props — server-side hydration of session XP can land in a follow-up.
+If `Astro.locals.session` doesn't exist yet on this project, fall back to `0`/`0` props, server-side hydration of session XP can land in a follow-up.
 
 **Step 3: Verify.**
 
@@ -528,7 +528,7 @@ EOF
 
 ---
 
-## Phase 3 — Mid-lesson microcelebrations
+## Phase 3: Mid-lesson microcelebrations
 
 ### Task 8: Wire `StepCheck.astro` to `celebrateCorrect` / `celebrateWrong`
 
@@ -608,7 +608,7 @@ function clearStuckTimer() {
 
 Wire `startStuckTimer(hint)` when StepCheck mounts (read `data-hint` attribute from the host element). Wire `clearStuckTimer()` on submit (correct or wrong) and when the component disconnects.
 
-The component already accepts `hint` as a prop per existing schema — pass it through to the `data-hint` attribute on the root element if not already there.
+The component already accepts `hint` as a prop per existing schema, pass it through to the `data-hint` attribute on the root element if not already there.
 
 **Step 2: Verify.**
 
@@ -633,7 +633,7 @@ EOF
 
 ---
 
-## Phase 4 — Lesson + module endgame
+## Phase 4: Lesson + module endgame
 
 ### Task 10: Wire `Lesson.astro` endgame to `celebrateLesson` / `celebrateModule`
 
@@ -659,7 +659,7 @@ await celebrateLesson(lessonCardEl);
 await celebrateModule(lessonCardEl, moduleNodeId, nextModuleName);
 ```
 
-`lessonCardEl` is the lesson-complete card root element. `moduleNodeId` and `nextModuleName` come from frontmatter / content collection metadata. If `nextModuleName` isn't available, pass `undefined` — `celebrateModule` already drops the trailing sentence.
+`lessonCardEl` is the lesson-complete card root element. `moduleNodeId` and `nextModuleName` come from frontmatter / content collection metadata. If `nextModuleName` isn't available, pass `undefined`: `celebrateModule` already drops the trailing sentence.
 
 **Step 3: Mount `<SrAnnouncer client:idle />` in the layout template** (one location, anywhere inside the body).
 
@@ -678,7 +678,7 @@ git commit -m "$(cat <<'EOF'
 feat(lesson): route endgame through celebrate orchestrator + mount SrAnnouncer
 
 celebrateLesson handles spring fill, burst, XP tween, TinkerHop,
-chime, vibrate, sweep-green, announce — in that order, with one
+chime, vibrate, sweep-green, announce, in that order, with one
 reduced-motion branch. celebrateModule similar but bigger.
 
 Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>
@@ -688,7 +688,7 @@ EOF
 
 ---
 
-## Phase 5 — Hero ambient life
+## Phase 5: Hero ambient life
 
 ### Task 11: Create `FloatingMath.svelte`
 
@@ -700,7 +700,7 @@ EOF
 ```svelte
 <script lang="ts">
   /**
-   * FloatingMath — five drifting math symbols in the hero band.
+ * FloatingMath, five drifting math symbols in the hero band.
    * DESIGN.md §Decoration: max 5 per hero, teal/orange/pink only,
    * Fraunces italic, opacity 0.18–0.35, freeze under reduced-motion.
    */
@@ -823,7 +823,7 @@ EOF
 
 ---
 
-## Phase 6 — Tinker mascot upgrades
+## Phase 6: Tinker mascot upgrades
 
 ### Task 13: Migrate `Tinker.svelte` to `prefersReducedMotion` rune
 
@@ -872,7 +872,7 @@ git commit -m "$(cat <<'EOF'
 refactor(tinker): use prefersReducedMotion rune
 
 Single source of truth for reduced motion across the app.
-Reactive — flips live on OS toggle without reload. Removes
+Reactive, flips live on OS toggle without reload. Removes
 the local matchMedia + onMount block.
 
 Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>
@@ -928,7 +928,7 @@ In style block:
 .tinker--reduced .tinker-sparkles .sp { animation: none; opacity: 0.6; }
 ```
 
-The exact `translate()` offsets need visual tuning against the deployed apple — punt to the deploy task.
+The exact `translate()` offsets need visual tuning against the deployed apple, punt to the deploy task.
 
 **Step 2: Verify.**
 
@@ -1121,7 +1121,7 @@ For inline SVG (option A) example for sunglasses:
 
 {#each Array.from({ length: Math.min(completedCourses, 5) }) as _, i}
   <svg class="acc acc-grad" style="--i: {i}" viewBox="0 0 432 477" aria-hidden="true">
-    <!-- Tiny grad cap tassel — i drives x offset along the apple bottom -->
+ <!-- Tiny grad cap tassel, i drives x offset along the apple bottom -->
     <g transform="translate({90 + i * 50}, 380)">
       <rect x="0"  y="6"  width="34" height="6"  fill="#1a1a1a" />
       <polygon points="-4,6 38,6 17,-4" fill="#1a1a1a" />
@@ -1170,7 +1170,7 @@ EOF
 
 ---
 
-## Phase 7 — Easter eggs + stuck hint
+## Phase 7: Easter eggs + stuck hint
 
 ### Task 18: Create `lib/easterEggs.svelte.ts`
 
@@ -1181,7 +1181,7 @@ EOF
 
 ```ts
 /**
- * easterEggs — global keyboard listener + state for mascot easter eggs.
+ * easterEggs, global keyboard listener + state for mascot easter eggs.
  * DESIGN.md §Mascot easter eggs.
  */
 
@@ -1278,7 +1278,7 @@ $effect(() => {
 });
 ```
 
-The `$effect` reactively re-runs whenever `eggs.bouncePulse` changes. The `burst` call may or may not accept a `palette` option — if not, drop it (it's a polish, not load-bearing).
+The `$effect` reactively re-runs whenever `eggs.bouncePulse` changes. The `burst` call may or may not accept a `palette` option, if not, drop it (it's a polish, not load-bearing).
 
 **Step 2: Pass `sunglasses` derived as the prop.**
 
@@ -1471,7 +1471,7 @@ EOF
 
 ---
 
-## Phase 8 — Audits + deploy
+## Phase 8: Audits + deploy
 
 ### Task 22: Reduced-motion audit pass
 
@@ -1542,7 +1542,7 @@ EOF
 
 **Goal:** Ship to learntinker.com and verify the full alive-layer pass against the live site.
 
-**Files:** none — this is the deploy step.
+**Files:** none, this is the deploy step.
 
 **Step 1: Confirm clean tree on the worktree branch.**
 
@@ -1564,7 +1564,7 @@ Expected: succeeds.
 
 **Step 3: Decide merge path with user.**
 
-Two paths — confirm with user before pushing:
+Two paths, confirm with user before pushing:
 - **Squash-merge to main** then deploy main.
 - **Direct deploy from `feature/alive-layer`** for staging-style verification, then merge if it looks good.
 
@@ -1581,11 +1581,11 @@ pnpm dlx wrangler@latest deploy
 **Step 5: Visual verification on `learntinker.com`.** Per user's standing memory: do NOT use `astro dev`.
 
 Walk through each of the five surfaces:
-1. **Hero/landing** — FloatingMath drifts, Tinker bobs + cursor-tilts, sparkle pulse fires, click bounces with math-symbol burst, click 10x triggers milestone burst, idle 60s+ produces sleepy "z".
-2. **Mid-lesson** — On a sample StepCheck: correct → ding + halo + math-burst + XP fly + announce; wrong → shake + coral border + announce.
-3. **Lesson complete** — End of a sample lesson: progress bar overshoot + chime + math-burst + TinkerHop + sweep + XP tween + announce.
-4. **Module complete** — Same surface, bigger.
-5. **XP/Streak nav chip** — XP smoothly ticks; +N floater drifts up + fades; streak flame flickers on bump (if seeded > 0).
+1. **Hero/landing**. FloatingMath drifts, Tinker bobs + cursor-tilts, sparkle pulse fires, click bounces with math-symbol burst, click 10x triggers milestone burst, idle 60s+ produces sleepy "z".
+2. **Mid-lesson**. On a sample StepCheck: correct → ding + halo + math-burst + XP fly + announce; wrong → shake + coral border + announce.
+3. **Lesson complete**. End of a sample lesson: progress bar overshoot + chime + math-burst + TinkerHop + sweep + XP tween + announce.
+4. **Module complete**. Same surface, bigger.
+5. **XP/Streak nav chip**. XP smoothly ticks; +N floater drifts up + fades; streak flame flickers on bump (if seeded > 0).
 
 **Step 6: Validate easter eggs.**
 - Konami on landing: `↑↑↓↓←→←→ba` → sunglasses for 10s.
@@ -1603,6 +1603,6 @@ The most likely tuning needs: sparkle SVG offsets in Tinker (Task 14 noted these
 
 ## Done
 
-When the remaining 23 tasks land cleanly (Task 1 was dropped — see top of plan) and the visual verification passes, the alive-layer pass is shipped. The five surfaces feel coordinated, the brand decisions are intact (math-symbol confetti, sine palette, no purple, no Tinker inside lessons), and the new primitives (`Spring`/`Tween`/`prefersReducedMotion` rune, hand-rolled `@keyframes`) are doing the work the inline CSS used to fake.
+When the remaining 23 tasks land cleanly (Task 1 was dropped, see top of plan) and the visual verification passes, the alive-layer pass is shipped. The five surfaces feel coordinated, the brand decisions are intact (math-symbol confetti, sine palette, no purple, no Tinker inside lessons), and the new primitives (`Spring`/`Tween`/`prefersReducedMotion` rune, hand-rolled `@keyframes`) are doing the work the inline CSS used to fake.
 
-Future passes — port mascot to Rive (when lip-sync matters), add audio sprites (past 20 sounds), Motion / GSAP (when celebrations grow past five overlapping tweens) — remain in the back pocket per the design's upgrade triggers.
+Future passes, port mascot to Rive (when lip-sync matters), add audio sprites (past 20 sounds), Motion / GSAP (when celebrations grow past five overlapping tweens), remain in the back pocket per the design's upgrade triggers.

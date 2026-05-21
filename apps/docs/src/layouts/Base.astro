@@ -54,9 +54,11 @@ const titleWithSuffix = title === 'Tinker' ? title : `${title} · Tinker`;
     <script is:inline>
       (function () {
         try {
+          // Default to light mode. Only an explicit saved choice from the
+          // theme toggle overrides it; OS prefers-color-scheme is ignored.
           var saved = localStorage.getItem('theme');
-          var sys = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-          document.documentElement.dataset.theme = saved || sys;
+          document.documentElement.dataset.theme =
+            saved === 'dark' || saved === 'light' ? saved : 'light';
         } catch (_) {
           document.documentElement.dataset.theme = 'light';
         }
@@ -71,7 +73,7 @@ const titleWithSuffix = title === 'Tinker' ? title : `${title} · Tinker`;
     </main>
     <footer class="site-footer">
       <div class="shell">
-        <p class="copy">© 2026 Tinker — Online learning for everyone. <em>Play. Learn. Grow.</em></p>
+        <p class="copy">© 2026 Tinker · Online learning for everyone. <em>Play. Learn. Grow.</em></p>
       </div>
     </footer>
   </body>

@@ -1,6 +1,6 @@
 <script module lang="ts">
   // Monotonic counter for unique arrowhead marker IDs. Shared across all
-  // <Vector> instances in the page — first render gets -1, next -2, etc.
+  // <Vector> instances in the page; first render gets -1, next -2, etc.
   // Not cryptographically unique, just collision-free within a process.
   let counter = 0;
   const nextId = () => `svelte-mafs-arrow-${++counter}`;

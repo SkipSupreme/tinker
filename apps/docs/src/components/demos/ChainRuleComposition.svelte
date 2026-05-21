@@ -2,10 +2,10 @@
   import { Mafs, Coordinates, Plot, Point, Line } from 'svelte-mafs';
 
   /**
-   * f(g(x)) = (sin(x))² — picked because:
+   * f(g(x)) = (sin(x))², picked because:
    *   - both g and f have familiar, recognizable shapes,
    *   - g'(x) = cos(x) is clearly non-constant (so the two slopes actually
-   *     DO multiply — not a degenerate 1× case),
+   *     DO multiply, not a degenerate 1× case),
    *   - the product simplifies to the identity sin(2x), so a learner can
    *     sanity-check by plotting sin(2x) and seeing it match the product.
    */
@@ -39,7 +39,7 @@
 <div class="widget">
   <header class="header">
     <p class="title"><em>f</em>(<em>g</em>(<em>x</em>)) = (sin <em>x</em>)²</p>
-    <p class="hint">drag the slider — watch the two slopes multiply</p>
+    <p class="hint">drag the slider; watch the two slopes multiply</p>
   </header>
 
   <!-- Inner function: y = g(x) = sin(x) -->
@@ -106,7 +106,7 @@
     <div class="row sum">
       <dt>(<em>f</em>∘<em>g</em>)′(<em>x</em>)</dt>
       <dd class="val big">{fmt(product)}</dd>
-      <dt class="sub">total rate — they multiplied</dt>
+      <dt class="sub">total rate (they multiplied)</dt>
     </div>
   </dl>
 </div>

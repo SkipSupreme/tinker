@@ -2,7 +2,7 @@
   import { Mafs, Coordinates, Plot, Point, Line } from 'svelte-mafs';
 
   /**
-   * PartialSlicer — freeze one variable, plot the resulting 1D slice, and
+   * PartialSlicer: freeze one variable, plot the resulting 1D slice, and
    * read off its slope at the freeze point. That slope IS the partial
    * derivative.
    *
@@ -77,7 +77,7 @@
   </div>
 
   <p class="note">
-    The coral line is the <strong>tangent</strong> to each slice. Its slope is the partial. As you drag, both partials update independently — the function has two answers, one per direction.
+    The coral line is the <strong>tangent</strong> to each slice. Its slope is the partial. As you drag, both partials update independently; the function has two answers, one per direction.
   </p>
 </div>
 

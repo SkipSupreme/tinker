@@ -26,7 +26,7 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
   try {
     await auth.api.signOut({ headers: request.headers });
   } catch {
-    // ignore — failure here just means the cookie won't be cleared
+    // ignore; failure here just means the cookie won't be cleared
     // server-side; client redirect to "/" with a fresh page load is fine.
   }
 

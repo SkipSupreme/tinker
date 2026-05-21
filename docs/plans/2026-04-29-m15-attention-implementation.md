@@ -1,7 +1,7 @@
-# M15 — Attention: Implementation Plan
+# M15: Attention: Implementation Plan
 
 Source of truth: `docs/research/m15-attention.md` (Deep Research, 2026-04-29).
-Module manifest stub: `apps/docs/src/content/modules/m15-attention.md` (status: planned — needs rewrite, see §6).
+Module manifest stub: `apps/docs/src/content/modules/m15-attention.md` (status: planned, needs rewrite, see §6).
 
 ## 0. Status of the research output
 
@@ -12,10 +12,10 @@ The 5-lesson decomposition (15.1 → 15.5) is sound. We adopt it as the default 
 ## 1. Open pedagogical decisions (need user sign-off before MDX work starts)
 
 1. **Lesson 15.5 is overloaded.** As proposed it covers multi-head + complexity + KV-cache + the endgame line, with 12 steps and 2 widgets. That's the densest lesson in the module by ~30%. Recommendation: **split into 15.5 ("Multi-head as parallel subspaces") and 15.6 ("The cost and the cache")**. Keeps each lesson at the M14 average of ~10 steps / 1 widget. Total module length doesn't change.
-2. **Position lesson order: textbook-first or RoPE-first?** Research recommends RoPE for new builds, sinusoidal as "the textbook formula." Course pattern elsewhere is *historical-first → modern fix* (n-gram → MLP → RNN → attention). Recommendation: **keep the research's order — sinusoidal → learned absolute → RoPE — because RoPE is genuinely easier to motivate once the reader has seen sinusoidal's "linear-in-offset" property.** No change.
+2. **Position lesson order: textbook-first or RoPE-first?** Research recommends RoPE for new builds, sinusoidal as "the textbook formula." Course pattern elsewhere is *historical-first → modern fix* (n-gram → MLP → RNN → attention). Recommendation: **keep the research's order, sinusoidal → learned absolute → RoPE, because RoPE is genuinely easier to motivate once the reader has seen sinusoidal's "linear-in-offset" property.** No change.
 3. **Cross-attention.** Research includes it as one step in 15.3. Adult ML learners do not need cross-attention to understand a decoder-only transformer (our endgame). Recommendation: **keep the one step but mark it as an aside**, no widget, no StepCheck. Costs 90 seconds, immunizes against the "self vs. cross are different mechanisms" misconception.
 4. **"Attention is not Explanation" detour.** Research wants this as Lesson 15.3 step 8. It's a great idea but breaks the flow from "build the formula" → "see permutation-equivariance bug." Recommendation: **demote to a short blockquote at the end of 15.3 plus Problem 19 in the bank**, not a step.
-5. **Endgame callback.** Recommended option #1 from the research, lightly tightened: *"Attention is the operation. Residuals, layer norm, the MLP that follows — plumbing around one core idea: every position broadcasts a query, every position offers a key, the softmax-weighted match decides whose values you pull back. You are now one layer of glue away from the real thing."*
+5. **Endgame callback.** Recommended option #1 from the research, lightly tightened: *"Attention is the operation. Residuals, layer norm, the MLP that follows, plumbing around one core idea: every position broadcasts a query, every position offers a key, the softmax-weighted match decides whose values you pull back. You are now one layer of glue away from the real thing."*
 
 ## 2. Lesson roster (final, pending §1 sign-off)
 
@@ -32,7 +32,7 @@ Total: ~77 minutes. M14 was ~85 actual; this lands at "Arc 3 keystone" weight, s
 
 Each lesson follows the established pattern: `<Step>` for prose-with-widget, `<StepCheck>` for numeric gates, single `<EndgameCallback>` at the bottom. StepCheck targets follow the research's per-lesson list, ≥ 1 per lesson.
 
-## 3. Widget roster — reuse vs. new
+## 3. Widget roster: reuse vs. new
 
 | Widget | Status | Reuse leverage |
 |---|---|---|
@@ -50,23 +50,23 @@ Widget files land in `apps/docs/src/components/demos/` matching existing convent
 
 Vertical slice per lesson (widget → lesson MDX → deploy → check on learntinker.com), in this order:
 
-1. **15.1** — `qkVectorPlayground` (extend) → lesson MDX. Lowest risk, builds on M11 prior art.
-2. **15.2** — `softmaxSatExplorer` → lesson MDX. Single new widget, sharp pedagogical payoff.
-3. **15.3** — `attentionMatrixHeatmap` + `permutationEquivarianceLab` → lesson MDX. The keystone lesson; two widgets but second one is small.
-4. **15.4** — `ropeRotationDial` → lesson MDX. New geometry but self-contained.
-5. **15.5** — `multiHeadSplitter` → lesson MDX. Reuses heatmap from 15.3.
-6. **15.6** — `kvCacheTimeline` → lesson MDX. Endgame callback ships here.
+1. **15.1**, `qkVectorPlayground` (extend) → lesson MDX. Lowest risk, builds on M11 prior art.
+2. **15.2**, `softmaxSatExplorer` → lesson MDX. Single new widget, sharp pedagogical payoff.
+3. **15.3**, `attentionMatrixHeatmap` + `permutationEquivarianceLab` → lesson MDX. The keystone lesson; two widgets but second one is small.
+4. **15.4**, `ropeRotationDial` → lesson MDX. New geometry but self-contained.
+5. **15.5**, `multiHeadSplitter` → lesson MDX. Reuses heatmap from 15.3.
+6. **15.6**, `kvCacheTimeline` → lesson MDX. Endgame callback ships here.
 
 Each slice is one build / deploy / push cycle on `main` (per `feedback_always_deploy_pipeline`). No feature branches; the failure mode is half-finished modules sitting in working tree.
 
 ## 5. Concepts not in `m15-attention.md` frontmatter that we need
 
-The current stub has `[attention, query-key-value, softmax-attention, causal-mask, multi-head]` — too thin. Replace with the full list from §1 of the research (25 concept ids), filtered to the ones lessons actually cover. Specifically add: `soft-dictionary-lookup`, `dot-product-as-similarity`, `softmax-saturation-problem`, `1-over-sqrt-dk-scale`, `attention-weights-row`, `learned-projections-WqWkWv`, `self-attention`, `attention-formula-matrix-form`, `shape-calculus-attention`, `permutation-equivariance`, `positional-encoding-need`, `sinusoidal-pe`, `learned-absolute-pe`, `rope-rotary-pe`, `multi-head-split`, `attention-quadratic-complexity`, `kv-cache`, `attention-not-explanation`.
+The current stub has `[attention, query-key-value, softmax-attention, causal-mask, multi-head]`: too thin. Replace with the full list from §1 of the research (25 concept ids), filtered to the ones lessons actually cover. Specifically add: `soft-dictionary-lookup`, `dot-product-as-similarity`, `softmax-saturation-problem`, `1-over-sqrt-dk-scale`, `attention-weights-row`, `learned-projections-WqWkWv`, `self-attention`, `attention-formula-matrix-form`, `shape-calculus-attention`, `permutation-equivariance`, `positional-encoding-need`, `sinusoidal-pe`, `learned-absolute-pe`, `rope-rotary-pe`, `multi-head-split`, `attention-quadratic-complexity`, `kv-cache`, `attention-not-explanation`.
 
 ## 6. Module manifest rewrite
 
 `apps/docs/src/content/modules/m15-attention.md` needs:
-- `summary` rewritten — current line undersells PE, complexity, KV-cache.
+- `summary` rewritten, current line undersells PE, complexity, KV-cache.
 - `estimatedMinutes`: 150 → 77.
 - `conceptsCovered` expanded per §5.
 - `endgameConnection` replaced with the endgame callback from §1.5.
@@ -77,7 +77,7 @@ The current stub has `[attention, query-key-value, softmax-attention, causal-mas
 The research's step counts are good. Two voice cuts to make at MDX time:
 
 - **Cut "Hook" framings.** Research's 15.1 step 1 starts "How would you 'look up' a value …". M14 lessons open with the problem-statement directly. Match that.
-- **Cut "Aside" labels.** Research uses "Aside:" tags on cross-attention and Karpathy bridge steps. We don't label asides as asides — we just write them. Asides feel like padding when called out.
+- **Cut "Aside" labels.** Research uses "Aside:" tags on cross-attention and Karpathy bridge steps. We don't label asides as asides, we just write them. Asides feel like padding when called out.
 
 ## 8. What this plan does NOT do
 

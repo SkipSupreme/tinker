@@ -1,8 +1,8 @@
 <script lang="ts">
   // Tiny "model" with N=4 pre-LN blocks, T=5 tokens, d=16. All activations are
   // scripted deterministically so the same shape of stream is shown to every
-  // learner. The pedagogical claim — "every block writes a delta into the
-  // stream, the stream is the noun" — survives the absence of a real model.
+  // learner. The pedagogical claim ("every block writes a delta into the
+  // stream, the stream is the noun") survives the absence of a real model.
 
   const T = 5;
   const D = 16;
@@ -170,7 +170,7 @@
 
 <div class="widget">
   <div class="legend-row">
-    <span class="title">residual stream — click any cell</span>
+    <span class="title">residual stream: click any cell</span>
     <span class="hint">rows: states inside the stack · columns: token positions</span>
   </div>
 

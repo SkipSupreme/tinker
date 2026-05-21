@@ -60,7 +60,7 @@
     return out;
   });
 
-  // Output logits at each timestep — a softmax over V from a small Wy.
+  // Output logits at each timestep: a softmax over V from a small Wy.
   const r2 = fixedRand(99);
   const Wy: number[][] = Array.from({ length: d }, () =>
     Array.from({ length: V }, () => 0.4 * r2()),
@@ -172,7 +172,7 @@
                 <div class="tok">{display(VOCAB[tokens[t]])}</div>
                 <div class="tok-label">x<sub>{t + 1}</sub></div>
               {:else}
-                <div class="tok tok-empty">—</div>
+                <div class="tok tok-empty">?</div>
               {/if}
             </div>
             <!-- The cell itself -->
@@ -265,10 +265,10 @@
 
   <p class="caption">
     Same <em>W<sub>x</sub></em>, <em>W<sub>h</sub></em>, <em>b</em> at every
-    timestep — that is <strong>weight sharing</strong>. h<sub>t</sub> is just
+    timestep: that is <strong>weight sharing</strong>. h<sub>t</sub> is just
     a vector ({d} numbers, drawn as {d} bars). It gets overwritten each step.
     Toggle <em>backward pass</em> to see how gradients flow from the cursor
-    timestep all the way back to the input — that's BPTT, and it's just
+    timestep all the way back to the input; that's BPTT, and it's just
     backprop on the unrolled graph.
   </p>
 </div>

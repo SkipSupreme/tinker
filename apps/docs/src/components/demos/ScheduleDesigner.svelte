@@ -2,7 +2,7 @@
   import { Mafs, Coordinates, Plot, Line, Point } from 'svelte-mafs';
 
   /**
-   * ScheduleDesigner — visualize a learning-rate schedule. Pick a kind
+   * ScheduleDesigner: visualize a learning-rate schedule. Pick a kind
    * (cosine / linear / step), drag the warmup endpoint and the decay
    * endpoint, watch the η curve update.
    */
@@ -20,7 +20,7 @@
   function clampTw(t: number) { return Math.max(0, Math.min(T - 1, t)); }
   function clampEta(e: number) { return Math.max(0, Math.min(1, e)); }
 
-  // η(t) — schedule function.
+  // η(t): schedule function.
   function eta(t: number): number {
     if (t <= Tw) {
       // linear warmup from 0 to etaMax
@@ -84,7 +84,7 @@
   </div>
 
   <p class="note">
-    <strong>cosine</strong> is the modern default — most of the budget at high η for exploration, smooth tail to fine-tune.
+    <strong>cosine</strong> is the modern default: most of the budget at high η for exploration, smooth tail to fine-tune.
     Step decay is older, hand-tuned. Linear is a sanity baseline.
   </p>
 </div>

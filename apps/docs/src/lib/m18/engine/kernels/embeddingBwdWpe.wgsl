@@ -1,9 +1,9 @@
-// Embedding backward — wpe branch.
+// Embedding backward: wpe branch.
 //   Inputs : dEmb [N, d] (N = B·T)
 //   Output : dWpe [T, d]
 //
 // One workgroup per position p ∈ [0, T). Thread k sums dEmb[i, k] over all i
-// with (i mod T) == p — equivalently i ∈ {p, p+T, p+2T, …, p+(B−1)T}.
+// with (i mod T) == p, equivalently i ∈ {p, p+T, p+2T, …, p+(B-1)T}.
 // Each WG owns a unique output row → no cross-WG races, no atomics needed.
 
 const WG: u32 = 64u;

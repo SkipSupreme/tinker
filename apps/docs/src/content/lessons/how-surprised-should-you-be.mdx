@@ -1,0 +1,139 @@
+---
+title: How surprised should you be?
+module: m9-information-theory
+summary: Rare events carry more information than common ones. Turn that intuition into a single number, and then average that number over a distribution to get entropy, the loss every language model in this course minimizes.
+estimatedMinutes: 12
+order: 1
+prereqs:
+  - drawing-samples
+conceptsCovered:
+  - surprise-as-rarity
+  - information-content
+  - log-base-and-units
+  - entropy-as-expected-surprise
+  - entropy-of-canonical-pmfs
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import PmfSurpriseLab from '../../components/demos/PmfSurpriseLab.svelte';
+import UnitConvertor from '../../components/demos/UnitConvertor.svelte';
+
+<Step title="Which coin flip tells you more?">
+Two coins are flipped. The first is fair ($P(H) = 0.5$). The second is a trick coin that always lands heads ($P(H) = 1.0$).
+
+The fair coin lands heads. Mildly interesting; you expected this half the time. The trick coin lands heads. Completely unsurprising; you knew this with certainty before it happened.
+
+Information content is the name for *how much news* an outcome carries. The trick coin coming up heads has zero news in it. The fair coin coming up heads has one bit of news. Module 9 is about putting numbers on that intuition, and then averaging them into the single number every loss curve in this course will be measuring.
+</Step>
+
+<Step title="Information content: I(x) = −log P(x)">
+The formal definition has exactly the properties you want:
+
+$$
+I(x) \;=\; -\log P(x).
+$$
+
+Common outcomes (large $P$) carry little information ($-\log$ of something near 1 is near 0). Rare outcomes carry a lot ($-\log$ of something tiny is huge). And for independent events $A$ and $B$, information *adds*: $I(A \cap B) = -\log\bigl(P(A) P(B)\bigr) = I(A) + I(B)$. Two independent surprises are twice as surprising as one. The formula respects every intuition you had in the last step.
+
+(Convention: $-0 \log 0 \,{:}{=}\, 0$, because $\lim_{p \to 0^+} p \log p = 0$. We need this so impossible events don't blow up the average. It's a limit, not a definition added for convenience.)
+</Step>
+
+<StepCheck
+  title="A 1-in-8 outcome"
+  prompt="I(x) = "
+  answer={3}
+  tolerance={0.01}
+  hint="I(x) = −log₂(1/8) = log₂(8) = 3 bits."
+>
+An outcome has probability $P(x) = 1/8$.
+
+**What is $I(x)$ in bits?**
+</StepCheck>
+
+<Step title="Bits, nats, bans: same number, three units">
+You may have noticed I didn't say what base the logarithm uses. That's because *the answer changes with the base, but it's the same quantity*. Three conventions:
+
+- $\log_2 \to$ **bits**. Most natural for communication and storage.
+- $\ln \to$ **nats**. Most natural for calculus, because $d(\ln x)/dx = 1/x$.
+- $\log_{10} \to$ **bans** (or "hartleys"). Used by Turing's group at Bletchley Park; almost extinct otherwise.
+
+Modern ML defaults to nats, because `torch.log` and `numpy.log` are natural logs and the gradients of common losses are cleaner. The choice of base is a unit choice, like Celsius vs Fahrenheit. The widget below converts among them; play with it for a moment.
+
+<UnitConvertor client:visible initialValue={3} initialUnit="bits" />
+</Step>
+
+<StepCheck
+  title="3 bits in nats"
+  prompt="≈ "
+  answer={2.079}
+  tolerance={0.05}
+  hint="1 bit = ln 2 ≈ 0.693 nats. So 3 bits = 3 ln 2 ≈ 2.079 nats."
+>
+**Convert 3 bits to nats.** (Two decimals is fine.)
+</StepCheck>
+
+<Step title="Entropy is expected surprise">
+Information content is a property of a single *outcome*. **Entropy** is a property of a whole *distribution*. The move is exactly the one from module 8: take an expectation.
+
+$$
+H(P) \;=\; \mathbb{E}_{x \sim P}\!\bigl[I(x)\bigr] \;=\; -\sum_{x} P(x) \log P(x).
+$$
+
+In words: the average information content of a draw from $P$. The widget below shows three panels for the same pmf. The left panel is $P(x_i)$. The middle panel is the per-outcome surprise $-\log_2 P(x_i)$. The right panel is the *product* $P(x_i) \cdot (-\log_2 P(x_i))$, stacked into a single bar whose total height is exactly $H(P)$ in bits.
+
+<PmfSurpriseLab client:visible />
+
+Drag any bar on the left; everything else updates in the same frame. The middle bars get *taller* as you shrink an outcome (rare means more surprising). But the right-panel stack (the entropy) depends on the *product*, so rarer-but-more-surprising contributions don't simply increase $H$. The two factors fight each other.
+</Step>
+
+<StepCheck
+  title="Maximum certainty"
+  prompt="H(one-hot) = "
+  answer={0}
+  tolerance={0.01}
+  hint="Click 'One-hot (H = 0)' on the widget. All probability mass on one outcome means zero surprise on every draw."
+>
+Click the **One-hot (H = 0)** preset. The pmf is now concentrated entirely on one outcome.
+
+**What is $H(P)$ in bits?**
+</StepCheck>
+
+<Step title="A slightly biased coin is still nearly maximum-entropy">
+Now switch the widget to two outcomes (you'll need to imagine collapsing the panels in your head, or just note the binary entropy curve in the formula). The fair coin $P = (0.5, 0.5)$ has $H = 1$ bit. A coin with $P = (0.6, 0.4)$ has
+
+$$
+H_2(0.6) \;=\; -0.6 \log_2 0.6 - 0.4 \log_2 0.4 \;\approx\; 0.971 \text{ bits.}
+$$
+
+Tilt the coin a full 60/40 and you barely move the entropy. Entropy is a *concave* function of the pmf; small perturbations from uniformity have second-order effect on $H$. This is why models can have qualitatively wrong predictions and still post a respectable cross-entropy.
+</Step>
+
+<Step title="Why ML defaults to nats (and why it doesn't matter)">
+You will see the same loss reported in three units by three different papers. PyTorch reports loss in nats by default (because `log` is natural). The compression community reports in bits per byte or bits per character. Information-theoretic textbooks switch freely. Two facts hold:
+
+1. The numerical *value* of the loss differs by a constant factor between units: $1 \text{ bit} = \ln 2 \approx 0.693 \text{ nats}$.
+2. The *perplexity* (which we'll meet in lesson 9.4) is *base-invariant*. $2^{\text{bits}} = e^{\text{nats}}$. So when you compare models by perplexity, you don't have to care.
+
+In practice for the rest of this course: nats is the default; bits/character is reported for language-modeling benchmarks; the widget above will let you flip between them anytime.
+</Step>
+
+<StepCheck
+  title="Uniform on 32"
+  prompt="H = "
+  answer={5}
+  tolerance={0.01}
+  hint="For a uniform distribution on K outcomes, H = log₂ K. log₂(32) = 5 bits."
+>
+A uniform distribution assigns probability $1/32$ to each of $32$ outcomes.
+
+**What is its entropy in bits?**
+</StepCheck>
+
+<Step title="Where this lands: entropy is the floor of the loss curve">
+The training loss your transformer minimizes is *literally* $\mathbb{E}[-\log Q(x)]$, the average surprise per token under your model $Q$. That's the next lesson's punchline: when the true distribution is $P$ and your model is $Q$, the average surprise you suffer is *cross-entropy* $H(P, Q)$, which is bounded below by $H(P)$, the entropy of the data itself.
+
+So entropy isn't an abstraction. It's the asymptote of every loss curve in this course. The Shannon estimate of English entropy (≈ 1.0–1.3 bits per character) is the floor a language model can never break. The m18 capstone's training run is a race toward that floor.
+
+Next lesson: when two distributions meet (the truth $P$ and the model $Q$), what numbers describe their disagreement?
+</Step>

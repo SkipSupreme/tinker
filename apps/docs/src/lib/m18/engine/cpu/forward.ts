@@ -1,4 +1,4 @@
-// CPU reference forward — composes the per-op twins into a full transformer
+// CPU reference forward; composes the per-op twins into a full transformer
 // forward pass. Used by the /dev/m18-forward/ smoke widget to compare against
 // the WGSL forward at ~1e-4 tolerance.
 

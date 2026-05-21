@@ -83,7 +83,7 @@ try {
     text-decoration: none;
   }
   .brand-mark {
-    /* `/logo-mark.png` is the apple, cropped from the full lockup —
+    /* `/logo-mark.png` is the apple, cropped from the full lockup:
        no wordmark, no subtitle, no padding. So the nav can render it
        as a plain image with object-fit:contain and the whole apple is
        visible at any size. Aspect: 432, 477 ≈ 0.89:1 (slight portrait). */
@@ -208,7 +208,7 @@ try {
    * We fetch the session and flip the slot if there's a user. Skipped when
    * the server already rendered "user" (dynamic pages got it right).
    *
-   * XP + streak listeners moved to components/nav/{XpCounter,StreakFlame}.svelte —
+   * XP + streak listeners moved to components/nav/{XpCounter,StreakFlame}.svelte;
    * those own live updates via tinker:xp / tinker:streak. Server-side initial
    * values default to 0 since Astro.locals doesn't carry session XP/streak yet;
    * server hydration of those values lands when the auth schema grows xp + streak

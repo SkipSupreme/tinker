@@ -1,6 +1,6 @@
 /**
  * Map ?error= URL params from Better Auth callbacks into user-facing copy.
- * Never echo the raw server message — it can leak Better Auth / Resend
+ * Never echo the raw server message; it can leak Better Auth / Resend
  * internals.
  */
 const TOKEN_ERRORS = new Set(['INVALID_TOKEN', 'EXPIRED_TOKEN']);

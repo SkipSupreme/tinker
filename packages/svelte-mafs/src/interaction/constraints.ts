@@ -3,7 +3,7 @@ import type { Vec2 } from "../vec.js";
 /**
  * A Constraint takes an unconstrained user position and returns the allowed
  * position. `<MovablePoint constrain={...}>` pipes every drag/keyboard
- * update through this function — snap-to-grid, stick-to-line, bound-to-box
+ * update through this function: snap-to-grid, stick-to-line, bound-to-box
  * are all just different Constraint factories.
  *
  * Constraints are pure functions (no context, no state) so they compose
@@ -34,7 +34,7 @@ export const snapToLine = (a: Vec2, b: Vec2): Constraint => {
   const dy = b[1] - a[1];
   const lenSq = dx * dx + dy * dy;
   if (lenSq === 0) {
-    // Degenerate line — nothing to project onto. Collapse to the anchor so
+    // Degenerate line: nothing to project onto. Collapse to the anchor so
     // the constrained point is at least well-defined.
     return () => [a[0], a[1]];
   }
@@ -49,7 +49,7 @@ export const snapToLine = (a: Vec2, b: Vec2): Constraint => {
  *
  * Samples the curve at `samples + 1` evenly-spaced `t` values and returns
  * the sample nearest to the input point. Accuracy is bounded by sample
- * density — consumers who need sub-sample precision should do a local
+ * density; consumers who need sub-sample precision should do a local
  * refinement pass after this, or raise `samples`.
  */
 export const snapToCurve = (
@@ -75,7 +75,7 @@ export const snapToCurve = (
 };
 
 /**
- * Clamp a point to an axis-aligned box. Axes are independent — omit `x` or
+ * Clamp a point to an axis-aligned box. Axes are independent; omit `x` or
  * `y` to leave that axis untouched. This is the constraint-factory clamp,
  * distinct from the scalar `math.clamp(value, min, max)` that lives in
  * math.ts.

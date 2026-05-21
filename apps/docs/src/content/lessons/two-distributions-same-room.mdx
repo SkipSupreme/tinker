@@ -1,0 +1,128 @@
+---
+title: Two distributions in the same room
+module: m9-information-theory
+summary: When the truth is P but your model is Q, the average surprise you suffer is cross-entropy. The excess over H(P) is KL divergence, which is non-negative, asymmetric, and the thing label smoothing exists to fix.
+estimatedMinutes: 15
+order: 2
+prereqs:
+  - how-surprised-should-you-be
+conceptsCovered:
+  - cross-entropy
+  - gibbs-inequality
+  - kl-divergence
+  - kl-properties
+  - forward-vs-reverse-kl
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import CrossEntropyDuel from '../../components/demos/CrossEntropyDuel.svelte';
+import KlAsymmetryCanvas from '../../components/demos/KlAsymmetryCanvas.svelte';
+
+<Step title="A friend with the wrong dictionary">
+You are sending coded telegrams to a friend. The truth is that you write the letter `e` half the time and `t` the other half. So you'd want a code optimized for those frequencies: short codeword for `e`, short codeword for `t`.
+
+But your friend has the *wrong* model of your letter habits. They assume you write `e` 90% of the time and `t` only 10%. They tune their code accordingly: a very short codeword for `e`, a punitively long one for `t`.
+
+Every telegram you send costs more than it should. The *extra* cost, per letter, has a name: KL divergence. That's the whole lesson.
+</Step>
+
+<Step title="Cross-entropy is the cost of believing Q when the truth is P">
+The formal definition mirrors entropy exactly. Replace the inner $\log P(x)$ with $\log Q(x)$:
+
+$$
+H(P, Q) \;=\; -\sum_{x} P(x)\,\log Q(x) \;=\; \mathbb{E}_{x \sim P}\!\bigl[-\log Q(x)\bigr].
+$$
+
+In words: the average surprise *you actually suffer* when the outcomes come from $P$ but you score them under $Q$. Note the asymmetry baked into the formula: $P$ provides the weights, $Q$ provides the log. Swap them and you get a different number.
+
+The widget below has two pmfs side by side. The red bars are $P$ (the truth). The blue bars are $Q$ (your model). The right panel renders $H(P)$ and $H(P, Q)$ as nested bars; the orange band is the gap, which is exactly $D_{\mathrm{KL}}(P \,\|\, Q)$. Drag any bar.
+
+<CrossEntropyDuel client:visible />
+</Step>
+
+<Step title="Gibbs' inequality, visible as a barrier">
+Lock $P$ on the widget (the checkbox), then drag $Q$ around. Try to make the orange $H(P, Q)$ bar shorter than the red $H(P)$ bar. *You can't.* As $Q$ approaches $P$, the gap closes; as $Q = P$, the two bars touch and the KL band disappears. But $H(P, Q)$ never drops below $H(P)$.
+
+This is **Gibbs' inequality**:
+
+$$
+H(P, Q) \;\ge\; H(P), \qquad \text{equality iff } P = Q.
+$$
+
+The cleanest mental model: $H(P)$ is the entropy of the truth, the irreducible average surprise you'd suffer with a *perfect* model. Any imperfect $Q$ costs you extra. That extra cost is the KL.
+</Step>
+
+<StepCheck
+  title="Truth-matches-model"
+  prompt="H(P, Q) = "
+  answer={1}
+  tolerance={0.01}
+  hint="When P = Q, cross-entropy equals entropy. H(P) for a fair coin is 1 bit. So H(P, Q) = 1."
+>
+$P = (0.5, 0.5)$ and $Q = (0.5, 0.5)$, a fair coin matched perfectly by a fair-coin model.
+
+**What is $H(P, Q)$ in bits?**
+</StepCheck>
+
+<StepCheck
+  title="Model thinks the coin is biased"
+  prompt="H(P, Q) ≈ "
+  answer={1.737}
+  tolerance={0.01}
+  hint="H(P, Q) = −0.5 log₂(0.9) − 0.5 log₂(0.1) ≈ 0.076 + 1.661 ≈ 1.737. The model is paying a huge penalty on the rare-under-its-belief outcomes that the truth makes common."
+>
+$P = (0.5, 0.5)$, a fair coin. $Q = (0.9, 0.1)$, a model that thinks heads is overwhelmingly likely.
+
+**What is $H(P, Q)$ in bits?** (Three decimals.)
+</StepCheck>
+
+<Step title="KL divergence: the cost of being wrong">
+The amount by which cross-entropy exceeds entropy has its own name:
+
+$$
+D_{\mathrm{KL}}(P \,\|\, Q) \;=\; H(P, Q) - H(P) \;=\; \sum_x P(x) \log \frac{P(x)}{Q(x)}.
+$$
+
+Three properties to internalize:
+
+1. **Non-negative.** $D_{\mathrm{KL}}(P \,\|\, Q) \ge 0$, with equality iff $P = Q$. This is Gibbs' inequality restated.
+2. **Asymmetric.** $D_{\mathrm{KL}}(P \,\|\, Q) \ne D_{\mathrm{KL}}(Q \,\|\, P)$ in general. Click the **Swap P ↔ Q** button and the numbers change.
+3. **Infinite when Q has a zero where P doesn't.** If $P(x) > 0$ but $Q(x) = 0$, the model said "this is impossible" and reality went and did it. The cost is unbounded. This is *why* label smoothing exists in classification: you never want your model to assign exact zero to any class.
+</Step>
+
+<StepCheck
+  title="Compute the KL"
+  prompt="D_KL(P ‖ Q) ≈ "
+  answer={0.737}
+  tolerance={0.01}
+  hint="KL = H(P, Q) − H(P) = 1.737 − 1 = 0.737 bits."
+>
+Using the values from the previous problems ($H(P, Q) \approx 1.737$ bits and $H(P) = 1$ bit), **what is $D_{\mathrm{KL}}(P \,\|\, Q)$?**
+</StepCheck>
+
+<Step title="Asymmetry is not a bug, it's a different question">
+KL is not a distance. The word "divergence" exists precisely to warn you off that intuition. Cross-entropy is not a distance either; $H(P, P) = H(P)$, not zero.
+
+Why does $D_{\mathrm{KL}}(P \,\|\, Q)$ differ from $D_{\mathrm{KL}}(Q \,\|\, P)$? Because they are asking different things. $D_{\mathrm{KL}}(P \,\|\, Q)$ asks "if the truth is $P$, how badly does the model $Q$ describe it?" (weights are over $P$). $D_{\mathrm{KL}}(Q \,\|\, P)$ asks "if reality is $Q$ and we tried to use $P$ as a code, how much extra would it cost?" (weights are over $Q$). Two questions, two answers, two numbers.
+
+The continuous version makes this picture geometric. Below, $P$ (red) is a *bimodal* truth with two bumps. $Q$ (blue) is a single Gaussian, draggable. Both KL directions are computed by numerical integration.
+
+<KlAsymmetryCanvas client:visible />
+
+Try the two "Best Q" buttons. They snap to the optima for the two KL directions. Notice: the forward-KL ("mass-covering") optimum is a *wide* Gaussian centered between the two bumps; it has to put mass everywhere $P$ does. The reverse-KL ("mode-seeking") optimum is a *narrow* Gaussian parked entirely on one bump; it's allowed to ignore mass it isn't responsible for.
+</Step>
+
+<Step title="Why supervised ML uses forward KL (and not reverse)">
+You'll see "forward KL" everywhere in this course. Here's why: when you minimize $H(\hat P_{\text{data}}, Q_\theta)$ over your model's parameters $\theta$ (which is what we do on every loss step) the empirical $\hat P_{\text{data}}$ stays fixed and only $Q_\theta$ moves. Subtract $H(\hat P_{\text{data}})$ (a constant in $\theta$) and you get $D_{\mathrm{KL}}(\hat P_{\text{data}} \,\|\, Q_\theta)$, or *forward KL*. So the gradient descent step is mass-covering by construction.
+
+Reverse KL ($D_{\mathrm{KL}}(Q_\theta \,\|\, P)$) shows up in variational inference and in some RL formulations; those are mode-seeking, sometimes intentionally. For our purposes (training generative LMs), forward KL is the right tool and it falls out of MLE automatically.
+
+You don't need to derive any of this in m9. Just know that "cross-entropy loss" and "forward KL up to an additive constant" are the same gradient.
+</Step>
+
+<Step title="Where this lands: every loss curve is a cross-entropy">
+The number your transformer's training loop prints at every iteration is $H(\hat P_{\text{batch}}, Q_\theta)$, the average cross-entropy of the model on the current batch. Subtract the (constant) data entropy and you have KL. Both interpretations are correct; pick the one that's useful at the moment.
+
+You now know enough about distributions-on-distributions to read 90% of the ML literature. The remaining piece is the specific case of classification: when $P$ is a one-hot label, what does this whole apparatus simplify to? That's the next lesson, where softmax stops being a magic incantation.
+</Step>

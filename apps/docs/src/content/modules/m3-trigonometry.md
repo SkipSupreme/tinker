@@ -2,7 +2,7 @@
 course: ml-math
 arc: arc-1-prereq-math
 order: 3
-title: Trigonometry — compact
+title: 'Trigonometry: compact'
 summary: Unit circle, sine and cosine, angle addition, rotations in 2D, Pythagoras, polar coordinates. Only what we'll actually use.
 status: planned
 estimatedMinutes: 90

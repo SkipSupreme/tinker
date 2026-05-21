@@ -40,7 +40,7 @@ const rows = await guard.db
           <tr>
             <td>{r.email}</td>
             <td>{r.role}</td>
-            <td>{r.optIn ? '✓' : '—'}</td>
+            <td>{r.optIn ? '✓' : '-'}</td>
             <td>{r.createdAt.toLocaleString()}</td>
           </tr>
         ))}

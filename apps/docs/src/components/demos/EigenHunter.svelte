@@ -2,11 +2,11 @@
   import { Mafs, Coordinates, Vector, MovablePoint, Line } from 'svelte-mafs';
 
   /**
-   * EigenHunter — drag a probe vector v. The widget computes Av and shows it
+   * EigenHunter: drag a probe vector v. The widget computes Av and shows it
    * as a ghost arrow. When v and Av point along the same line (within a
    * small tolerance), the widget cheers and reports λ = (Av · v̂) / |v|.
    *
-   * Fixed matrix A = [[2, 1], [0, 3]] — eigenvalues 2 (along [1, 0]) and
+   * Fixed matrix A = [[2, 1], [0, 3]]: eigenvalues 2 (along [1, 0]) and
    * 3 (along [1, 1]). Two findable lines, neither obvious by guessing.
    */
 
@@ -24,14 +24,14 @@
   const magV = $derived(Math.hypot(vx, vy));
   const magAv = $derived(Math.hypot(Avx, Avy));
 
-  // Cosine of angle between v and Av — for "are they collinear?"
+  // Cosine of angle between v and Av, for "are they collinear?"
   const cosAngle = $derived(
     magV > 0 && magAv > 0
       ? (vx * Avx + vy * Avy) / (magV * magAv)
       : 0,
   );
 
-  // Collinear within tolerance — same OR opposite direction.
+  // Collinear within tolerance, same OR opposite direction.
   const isEigen = $derived(Math.abs(Math.abs(cosAngle) - 1) < 0.005);
 
   // Signed eigenvalue ratio = projection of Av onto v / |v|² × |v| = (Av·v) / |v|².

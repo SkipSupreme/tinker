@@ -2,7 +2,7 @@
   import { onDestroy } from 'svelte';
 
   interface Props {
-    /** Words to count bigrams from. Closed corpus — not editable here. */
+    /** Words to count bigrams from. Closed corpus; not editable here. */
     corpus?: string[];
     /** Add-k smoothing strength on the count panel. */
     initialSmoothing?: number;
@@ -40,7 +40,7 @@
   );
   const display = (c: string) => (c === '.' ? '·' : c);
 
-  // Counts (frozen for the corpus prop) — recomputed if corpus changes.
+  // Counts (frozen for the corpus prop); recomputed if corpus changes.
   const counts: number[][] = $derived.by(() => {
     const N: number[][] = Array.from({ length: V }, () => Array(V).fill(0));
     for (const w of corpus) {
@@ -111,7 +111,7 @@
     }),
   );
 
-  // Mean absolute deviation between the two panels — convergence readout.
+  // Mean absolute deviation between the two panels: convergence readout.
   const mad: number = $derived.by(() => {
     let s = 0;
     for (let i = 0; i < V; i++) {
@@ -198,7 +198,7 @@
     if (Number.isNaN(lastLoss)) lastLoss = computeLoss();
   });
 
-  // Color helpers — both panels share the same scale so visual comparison is honest.
+  // Color helpers: both panels share the same scale so visual comparison is honest.
   const maxProb: number = $derived.by(() => {
     let m = 0;
     for (let i = 0; i < V; i++) {
@@ -240,7 +240,7 @@
   }
 
   const fmt = (x: number, d = 3) =>
-    Number.isNaN(x) ? '—' : x.toFixed(d);
+    Number.isNaN(x) ? 'n/a' : x.toFixed(d);
   const fmtSmall = (x: number) =>
     x === 0 ? '0' : x < 0.001 ? x.toExponential(1) : x.toFixed(3);
 </script>
@@ -378,7 +378,7 @@
     Both panels are the same model after training, expressed two ways. The left
     panel computes probabilities from raw counts (with add-<em>s</em> smoothing).
     The right panel maintains weights <em>W</em> trained by gradient descent on
-    NLL. Crank smoothing and L2 in tandem and watch them stay aligned —
+    NLL. Crank smoothing and L2 in tandem and watch them stay aligned;
     smoothing on the count side <em>is</em> L2 regularization on the SGD side.
   </p>
 </div>

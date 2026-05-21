@@ -26,7 +26,7 @@
   const maxBar = $derived.by(() => {
     let m = 0;
     for (const v of evalValues) if (v > m) m = v;
-    // include scaled values too — at low survival, individual samples spike high
+    // include scaled values too; at low survival, individual samples spike high
     const samplePeak = Math.max(...evalValues) * scale;
     return Math.max(m, samplePeak * 0.6);
   });
@@ -77,7 +77,7 @@
   }
   onDestroy(() => stopAuto());
 
-  // Reset running stats whenever p changes — old samples were drawn from a
+  // Reset running stats whenever p changes; old samples were drawn from a
   // different distribution and no longer make sense to average.
   let lastP = initialP;
   $effect(() => {
@@ -176,7 +176,7 @@
     Each step: a binary mask drops each unit with probability <em>p</em>; surviving
     units multiply by 1/(1−<em>p</em>). The expectation lands on the gray bars by
     construction. With <em>p</em> = 0, scaling does nothing and samples equal
-    eval. As <em>p</em> grows, individual samples get noisier — but their
+    eval. As <em>p</em> grows, individual samples get noisier; but their
     average still locks onto the eval-mode value within a few dozen draws.
   </p>
 </div>

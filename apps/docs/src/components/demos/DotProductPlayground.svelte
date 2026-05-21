@@ -20,7 +20,7 @@
   const cosTheta = $derived(
     magU > 0 && magV > 0 ? dot / (magU * magV) : 0,
   );
-  // clamp before acos — float error can push cos slightly past ±1.
+  // clamp before acos; float error can push cos slightly past ±1.
   const thetaDeg = $derived(
     magU > 0 && magV > 0
       ? (Math.acos(Math.max(-1, Math.min(1, cosTheta))) * 180) / Math.PI
@@ -79,7 +79,7 @@
       </dl>
     {/if}
 
-    <p class="hint">drag either arrow's dot — watch the number</p>
+    <p class="hint">drag either arrow's dot; watch the number</p>
   </div>
 </div>
 
@@ -121,7 +121,7 @@
     color: var(--site-fg);
   }
 
-  /* Hero readout — the "alignment number" the lesson is teaching. */
+  /* Hero readout: the "alignment number" the lesson is teaching. */
   .hero {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -169,7 +169,7 @@
   .hero-neg .hero-value { color: var(--ink-coral); }
   .hero-zero .hero-value { color: var(--site-fg-muted); }
 
-  /* Decomposition table — only when showDecomposition is on. */
+  /* Decomposition table: only when showDecomposition is on. */
   .decomp {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

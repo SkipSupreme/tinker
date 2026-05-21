@@ -159,7 +159,7 @@ describe("drag action", () => {
     expect(onDrag).toHaveBeenCalledWith([3, 6]);
   });
 
-  it("destroy() removes all listeners — no callbacks fire afterwards", () => {
+  it("destroy() removes all listeners: no callbacks fire afterwards", () => {
     const onDragStart = vi.fn();
     const onDrag = vi.fn();
     const onDragEnd = vi.fn();

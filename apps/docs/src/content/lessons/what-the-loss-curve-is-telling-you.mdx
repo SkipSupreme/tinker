@@ -19,10 +19,10 @@ import LossCurveDoctor from '../../components/demos/LossCurveDoctor.svelte';
 <Step title="The expected curve">
 Run a small character-level transformer on tiny-shakespeare. The training loss does the same thing every time:
 
-- **Iter 0:** ~$\ln 65 \approx 4.17$ — the uniform-output ceiling.
+- **Iter 0:** ~$\ln 65 \approx 4.17$ (the uniform-output ceiling).
 - **Iter 100:** still near 4.17. The first hundred iterations are warmup; the model is barely learning yet because the LR is climbing from 0.
 - **Iter 500:** ~1.7. Most of the heavy lifting is done. The model has learned which characters are common, which can't follow which, the basic shape of the corpus.
-- **Iter 2,000:** ~1.4. The slow part. The model is learning longer-range structure — what comes after `the`, that capital letters mostly follow newlines, that `Shakespeare` ends in `e`.
+- **Iter 2,000:** ~1.4. The slow part. The model is learning longer-range structure: what comes after `the`, that capital letters mostly follow newlines, that `Shakespeare` ends in `e`.
 - **Iter 5,000 (best val):** ~1.47–1.5. Plateau.
 
 That last number is the one to memorize. **Validation loss around 1.5 nats** on tiny-shakespeare-char with a small model. Smaller is harder to reach, larger means something's wrong.
@@ -43,13 +43,13 @@ There is no such thing as a useful single-curve loss plot. Always plot train *an
 
 A small, stable gap is healthy. The train curve is a few percent below the val curve and they decay together. Nothing to do.
 
-A growing gap — train keeps falling, val flattens, then val turns up — is the signature of overfitting. The model has started to memorize specific examples in the training stream, which lowers train loss but doesn't help on held-out tokens. Ship the checkpoint from before the val turn, not the latest one.
+A growing gap (train keeps falling, val flattens, then val turns up) is the signature of overfitting. The model has started to memorize specific examples in the training stream, which lowers train loss but doesn't help on held-out tokens. Ship the checkpoint from before the val turn, not the latest one.
 
-A flat gap that never closes from above — both curves stuck high — is undertraining or under-parameterization. The model is too small, the LR is too low, or the optimizer is wedged. More iterations won't help.
+A flat gap that never closes from above (both curves stuck high) is undertraining or under-parameterization. The model is too small, the LR is too low, or the optimizer is wedged. More iterations won't help.
 </Step>
 
 <Step title="Pathology recognition">
-Five shapes you will see, repeatedly, across every training run you ever do. The widget below shows them randomized — pick the diagnosis for each curve.
+Five shapes you will see, repeatedly, across every training run you ever do. The widget below shows them randomized; pick the diagnosis for each curve.
 
 <LossCurveDoctor client:visible />
 
@@ -69,13 +69,13 @@ Each has a different fix. Misidentifying the pathology is how training runs wast
   prompt="ship? (1=yes, 0=no): "
   answer={0}
   tolerance={0.5}
-  hint="Train at 0.4, val at 2.1 is a 5× gap. Severe overfitting. Don't ship the latest checkpoint — ship the earliest one before val turned up."
+  hint="Train at 0.4, val at 2.1 is a 5× gap. Severe overfitting. Don't ship the latest checkpoint; ship the earliest one before val turned up."
 >
 A run reports train loss = 0.4, val loss = 2.1 at the latest checkpoint. **Should you ship this checkpoint?** (1 = yes, 0 = no)
 </StepCheck>
 
 <Step title="Save on val, not on iters">
-Most beginner training scripts save a checkpoint every $N$ iterations and ship the last one. This is the wrong rule on tiny corpora. The last checkpoint is, almost by definition, after the model has started to overfit — that's the point at which val is highest while training is still running.
+Most beginner training scripts save a checkpoint every $N$ iterations and ship the last one. This is the wrong rule on tiny corpora. The last checkpoint is, almost by definition, after the model has started to overfit; that's the point at which val is highest while training is still running.
 
 nanoGPT's idiom is the right one:
 

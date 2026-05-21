@@ -10,7 +10,7 @@
   const run = $derived(bx - ax);
   const slope = $derived(run === 0 ? NaN : rise / run);
 
-  const fmt = (n: number) => (Number.isFinite(n) ? (n >= 0 ? '+' : '') + n.toFixed(2) : '—');
+  const fmt = (n: number) => (Number.isFinite(n) ? (n >= 0 ? '+' : '') + n.toFixed(2) : 'n/a');
 </script>
 
 <div class="widget">

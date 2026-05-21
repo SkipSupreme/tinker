@@ -16,7 +16,7 @@ const mountWithProbe = (props: Omit<MafsProps, "children">): CoordContext => {
     },
   });
   if (!captured) {
-    throw new Error("probe child never ran — context was not published");
+    throw new Error("probe child never ran: context was not published");
   }
   return captured;
 };
@@ -101,7 +101,7 @@ describe("<Mafs>", () => {
       expect(svg.getAttribute("viewBox")).toBe("-5 -5 10 10");
     });
 
-    it("uses -yMax (not yMin) for asymmetric y ranges — catches a sign bug", () => {
+    it("uses -yMax (not yMin) for asymmetric y ranges (catches a sign bug)", () => {
       const svg = getSvg({
         width: 400,
         height: 300,

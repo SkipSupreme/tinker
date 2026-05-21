@@ -109,7 +109,7 @@
     <div class="meta">
       <span class="meta-key">survived?</span>
       <span class="meta-val" class:bad={sim.diverges} class:good={!sim.diverges}>
-        {sim.diverges ? 'no — diverged' : 'yes'}
+        {sim.diverges ? 'no (diverged)' : 'yes'}
       </span>
     </div>
   </header>
@@ -188,8 +188,8 @@
 
   <p class="caption">
     Linear warmup ramps the learning rate from 0 to its peak over the first
-    <em>T</em><sub>w</sub> steps. Post-LN's early instability — Adam's
-    second-moment estimator hasn't stabilized yet — is what diverges when
+    <em>T</em><sub>w</sub> steps. Post-LN's early instability (Adam's
+    second-moment estimator hasn't stabilized yet) is what diverges when
     the first step is too aggressive. Warmup buys time. Pre-LN doesn't
     need any: the residual stream stays bounded by construction.
   </p>

@@ -107,7 +107,7 @@
       <span class="oval">({fmt(ox)}, {fmt(oy)})</span>
     </div>
 
-    <p class="hint">drag <span class="dot red"></span>q, <span class="dot sea"></span>k<sub>1</sub>, or <span class="dot coral"></span>k<sub>2</sub> — the <span class="dot sun"></span>output is α-weighted. for now, values are the keys themselves.</p>
+    <p class="hint">drag <span class="dot red"></span>q, <span class="dot sea"></span>k<sub>1</sub>, or <span class="dot coral"></span>k<sub>2</sub>; the <span class="dot sun"></span>output is α-weighted. for now, values are the keys themselves.</p>
   </div>
 </div>
 

@@ -4,9 +4,9 @@
   interface Props {
     initialMu?: number;
     initialSigma?: number;
-    /** Lock μ — used when only σ-driven shape changes are pedagogically interesting. */
+    /** Lock μ; used when only σ-driven shape changes are pedagogically interesting. */
     lockMu?: boolean;
-    /** Hide the "Standardize → N(0,1)" affordance — for lessons before standardization is named. */
+    /** Hide the "Standardize → N(0,1)" affordance; for lessons before standardization is named. */
     hideStandardize?: boolean;
   }
 
@@ -292,8 +292,8 @@
       <div class="param"><span class="k">μ</span><span class="v mu">{mu.toFixed(2)}</span></div>
       <div class="param"><span class="k">σ</span><span class="v sigma">{sigma.toFixed(2)}</span></div>
       <div class="sep" aria-hidden="true">·</div>
-      <div class="param"><span class="k">x̄</span><span class="v">{total > 0 ? emp_mean.toFixed(3) : '—'}</span></div>
-      <div class="param"><span class="k">s</span><span class="v">{total > 1 ? emp_std.toFixed(3) : '—'}</span></div>
+      <div class="param"><span class="k">x̄</span><span class="v">{total > 0 ? emp_mean.toFixed(3) : 'n/a'}</span></div>
+      <div class="param"><span class="k">s</span><span class="v">{total > 1 ? emp_std.toFixed(3) : 'n/a'}</span></div>
       <div class="sep" aria-hidden="true">·</div>
       <div class="param peak-readout"><span class="k">peak</span><span class="v">{peakDensity.toFixed(3)}</span></div>
     </div>

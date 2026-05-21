@@ -43,7 +43,7 @@
   const samples = $derived(
     sample(x, {
       domain: effectiveDomain,
-      // Tolerance is in output units — here that's x. Use the x-span.
+      // Tolerance is in output units; here that's x. Use the x-span.
       tolerance: defaultTolerance(vb.xMax - vb.xMin),
       minDepth: minSamplingDepth,
       maxDepth: maxSamplingDepth,

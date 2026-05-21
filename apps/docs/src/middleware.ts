@@ -9,9 +9,10 @@ import { defineMiddleware } from 'astro:middleware';
  * - X-Frame-Options + frame-ancestors: deny embedding (clickjacking).
  * - Permissions-Policy: shut off APIs we don't use.
  * - CSP: locked to 'self' for scripts/styles, plus the small set of CDNs we
- *   actually use (Google Fonts, Resend tracking pixel for email metadata).
+ *   actually use (Google Fonts, Cloudflare Web Analytics, Resend tracking
+ *   pixel for email metadata).
  *   `unsafe-inline` for style is still required by Astro's island runtime
- *   and Shiki's per-token style spans — accepted, can tighten later with a
+ *   and Shiki's per-token style spans: accepted, can tighten later with a
  *   nonce-based config once Astro's CSP integration stabilizes.
  */
 const HSTS = 'max-age=31536000; includeSubDomains; preload';
@@ -28,8 +29,8 @@ const CSP = [
   // 'unsafe-inline' on script-src is needed for Astro's hydration shims and
   // inline initialization scripts. 'unsafe-eval' is needed by KaTeX in some
   // edge cases. We can drop both with strict-dynamic + nonces later.
-  "script-src 'self' 'unsafe-inline'",
-  "connect-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
+  "connect-src 'self' https://cloudflareinsights.com",
   "manifest-src 'self'",
 ].join('; ');
 
@@ -49,7 +50,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const response = await next();
 
   // Don't clobber asset caching/etag responses, but everything else gets the
-  // headers. Safe to set on all paths — they're response headers, not redirects.
+  // headers. Safe to set on all paths: they're response headers, not redirects.
   const headers = response.headers;
   if (!headers.has('strict-transport-security')) headers.set('strict-transport-security', HSTS);
   if (!headers.has('x-content-type-options')) headers.set('x-content-type-options', 'nosniff');
@@ -57,7 +58,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (!headers.has('x-frame-options')) headers.set('x-frame-options', 'DENY');
   if (!headers.has('permissions-policy')) headers.set('permissions-policy', PERMISSIONS);
 
-  // Only attach CSP to HTML responses — the API endpoints return JSON and
+  // Only attach CSP to HTML responses: the API endpoints return JSON and
   // don't need it, and JSON CSPs sometimes confuse browser dev tools.
   const contentType = headers.get('content-type') ?? '';
   if (contentType.includes('text/html') && !headers.has('content-security-policy')) {

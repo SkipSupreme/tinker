@@ -5,7 +5,7 @@
  * children. We also accept the `[data-mafs-root]` attribute Stream 2's
  * <Mafs> root element already emits, so consumers get the theme for free
  * without wiring an extra class. Dark mode toggles via a
- * `[data-theme="dark"]` ancestor — the same convention apps/docs uses for
+ * `[data-theme="dark"]` ancestor, the same convention apps/docs uses for
  * its global theme switch, so a single user toggle themes the whole page
  * including the <Mafs> canvas.
  *
@@ -21,7 +21,7 @@
   --mafs-line-color: #1f2937;
   --mafs-grid-color: #e5e7eb;
 
-  /* Palette — matches Mafs.dev's signature hues so docs examples feel
+  /* Palette: matches Mafs.dev's signature hues so docs examples feel
    * familiar. Saturated but not neon; readable on white and near-black. */
   --mafs-blue: #3b82f6;
   --mafs-red: #ef4444;

@@ -6,8 +6,8 @@ import { test, expect } from "@playwright/test";
  * `__screenshots__/`; regenerate with `--update-snapshots` after an
  * intentional visual change.
  *
- * Screenshots target the `[data-fixture]` wrapper, not the full viewport —
- * keeps tests immune to changes in layout / scrollbars / nav outside the
+ * Screenshots target the `[data-fixture]` wrapper, not the full viewport,
+ * keeping tests immune to changes in layout / scrollbars / nav outside the
  * fixture body.
  */
 

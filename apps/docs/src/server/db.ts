@@ -11,7 +11,7 @@ export type DB = BaseSQLiteDatabase<'async' | 'sync', unknown, typeof schema>;
 
 export function getDb(binding: D1Database): DB {
   if (!binding) {
-    throw new Error('D1 binding missing — check wrangler.jsonc');
+    throw new Error('D1 binding missing: check wrangler.jsonc');
   }
   return drizzle(binding, { schema }) as unknown as DB;
 }

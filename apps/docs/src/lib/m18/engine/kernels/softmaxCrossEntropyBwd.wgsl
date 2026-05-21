@@ -21,7 +21,7 @@ var<workgroup> sumScratch: array<f32, WG>;
 var<workgroup> logSum: f32;
 var<workgroup> rowMax: f32;
 
-// 'target' is a reserved word in WGSL (texture sampling target etc.) — use
+// 'target' is a reserved word in WGSL (texture sampling target etc.); use
 // 'tgt' here to avoid the parser rejecting the line.
 
 fn wgMax(local: u32, val: f32) -> f32 {

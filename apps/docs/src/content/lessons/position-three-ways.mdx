@@ -18,7 +18,7 @@ import StepCheck from '../../components/lesson/StepCheck.astro';
 import RopeRotationDial from '../../components/demos/RopeRotationDial.svelte';
 
 <Step title="Patching the bug we already saw">
-Last lesson ended with a working attention layer that *cannot tell `dog bites man` from `man bites dog`*. The operation is permutation-equivariant — a rearrangement of the input rows produces a corresponding rearrangement of the output rows, and nothing else.
+Last lesson ended with a working attention layer that *cannot tell `dog bites man` from `man bites dog`*. The operation is permutation-equivariant: a rearrangement of the input rows produces a corresponding rearrangement of the output rows, and nothing else.
 
 We need to inject *position* into the operation so that two tokens at different positions produce different attention behavior, even when they are the same token. There are three approaches in widespread use, each with a different geometry. We'll cover all three at the level of "what does it actually *do* to the math," not derivation.
 </Step>
@@ -47,7 +47,7 @@ $$
 R(\omega_i k)\,\begin{bmatrix}\sin(\omega_i\,\mathrm{pos})\\ \cos(\omega_i\,\mathrm{pos})\end{bmatrix}
 $$
 
-That means $\mathrm{PE}_{\mathrm{pos}+k}$ is a *fixed linear function* of $\mathrm{PE}_{\mathrm{pos}}$ for any offset $k$. The attention layer can — in principle — learn that linear function and use it to read off relative positions. Sinusoidal encodings give the model a smooth, position-invariant way to think about offsets.
+That means $\mathrm{PE}_{\mathrm{pos}+k}$ is a *fixed linear function* of $\mathrm{PE}_{\mathrm{pos}}$ for any offset $k$. The attention layer can, in principle, learn that linear function and use it to read off relative positions. Sinusoidal encodings give the model a smooth, position-invariant way to think about offsets.
 </Step>
 
 <StepCheck
@@ -57,11 +57,11 @@ That means $\mathrm{PE}_{\mathrm{pos}+k}$ is a *fixed linear function* of $\math
   tolerance={50}
   hint="Wavelength = 2π/ω = 2π · 10000^(2i/d). For i = 255 of d = 512, the exponent (2i/d) ≈ 1, so wavelength ≈ 2π · 10000."
 >
-For dimension index $i = 0$ at $d = 512$, the wavelength of the sinusoid is $2\pi$ — one revolution per position step. For the *last* pair ($i = 255$), **what is the wavelength** in positions, to the nearest integer?
+For dimension index $i = 0$ at $d = 512$, the wavelength of the sinusoid is $2\pi$ (one revolution per position step). For the *last* pair ($i = 255$), **what is the wavelength** in positions, to the nearest integer?
 </StepCheck>
 
 <Step title="Learned absolute: skip the math, buy the table">
-GPT-2 and GPT-3 swap sinusoidal for a learned table. Maintain a parameter matrix $\mathrm{PE} \in \mathbb{R}^{T_{\max} \times d}$ — one row per position, $T_{\max}$ rows total. At every position, look up the corresponding row and add it to the token embedding.
+GPT-2 and GPT-3 swap sinusoidal for a learned table. Maintain a parameter matrix $\mathrm{PE} \in \mathbb{R}^{T_{\max} \times d}$, one row per position, $T_{\max}$ rows total. At every position, look up the corresponding row and add it to the token embedding.
 
 Trade-offs:
 
@@ -91,11 +91,11 @@ $$
 \;=\; q^\top R(\theta(n - m))\,k.
 $$
 
-That's it. The position information makes it through the rotation but the dot product reads off only the *relative* offset — exactly what an attention head wants in order to model "this token is three back" without caring about its absolute index.
+That's it. The position information makes it through the rotation but the dot product reads off only the *relative* offset, exactly what an attention head wants in order to model "this token is three back" without caring about its absolute index.
 
 <RopeRotationDial client:visible />
 
-Watch what happens. Set $m = 1$ and $n = 3$ — offset is 2. Read the rotated dot product. Now press **+1** twice. $m = 3$, $n = 5$, offset still 2. The rotated dot product is the same number to the last decimal. Press **−1** until $m$ and $n$ slide back. Same number. The yellow reference row computes the same dot product at the canonical $m = 0, n = 2$ to confirm that what you're seeing is the geometry, not numerical luck.
+Watch what happens. Set $m = 1$ and $n = 3$: offset is 2. Read the rotated dot product. Now press **+1** twice. $m = 3$, $n = 5$, offset still 2. The rotated dot product is the same number to the last decimal. Press **−1** until $m$ and $n$ slide back. Same number. The yellow reference row computes the same dot product at the canonical $m = 0, n = 2$ to confirm that what you're seeing is the geometry, not numerical luck.
 
 In a real transformer, $\theta$ is small (frequencies $\theta_i = 1 / 10000^{2i/d_k}$ as before) and the rotation is per-pair, not for the whole vector. The widget exaggerates the rotation to $\pi/4$ per step so the geometry is visible.
 </Step>

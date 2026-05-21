@@ -3,7 +3,7 @@
  *
  * Originally named `Transform.svelte.ts` per the plan's namespace
  * convention, but TypeScript's "Bundler" resolver prefers a same-basename
- * `.ts` over Svelte's `*.svelte` wildcard shim — which makes
+ * `.ts` over Svelte's `*.svelte` wildcard shim, which makes
  * `import X from "./Transform.svelte"` resolve here instead of to the
  * component. The rename sidesteps that ambiguity; the module is still
  * co-located with Transform.svelte.
@@ -46,7 +46,7 @@ export const rotate = (theta: number): Mat3 => {
 
 /**
  * Compose matrices left-to-right in application order. `compose(A, B)`
- * produces A then B — equivalently, the SVG transform `<g transform="A B">`
+ * produces A then B, equivalently the SVG transform `<g transform="A B">`
  * (read left-to-right: outermost first, innermost last).
  *
  * Concretely: for a point p, `compose(A, B)(p) = B(A(p))`.
@@ -61,7 +61,7 @@ const multiply = (m: Mat3, n: Mat3): Mat3 => {
   const [A, B, C, D, E, F] = n;
   // Compose so that (m then n) is equivalent to n ∘ m (apply m first, then n).
   // SVG's nested <g transform="m"><g transform="n"> would apply m outermost
-  // (first) — our `compose(m, n)` mirrors that reading order.
+  // (first), so our `compose(m, n)` mirrors that reading order.
   return [
     A * a + C * b,
     B * a + D * b,
@@ -75,7 +75,7 @@ const multiply = (m: Mat3, n: Mat3): Mat3 => {
 /**
  * Format a matrix as SVG's `matrix(a, b, c, d, e, f)`. Near-zero values
  * collapse to `0` so `rotate(π/2)` produces a clean `matrix(0, 1, -1, 0, 0,
- * 0)` instead of `matrix(6.12e-17, 1, -1, 6.12e-17, 0, 0)` — the former
+ * 0)` instead of `matrix(6.12e-17, 1, -1, 6.12e-17, 0, 0)`; the former
  * snapshots cleanly and renders identically.
  */
 export const toMatrixString = (m: Mat3): string => {

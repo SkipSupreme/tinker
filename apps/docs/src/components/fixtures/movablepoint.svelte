@@ -4,7 +4,7 @@
   let x = $state(1);
   let y = $state(2);
 
-  // Hydration marker — tests wait for this before interacting so they
+  // Hydration marker: tests wait for this before interacting so they
   // don't race the Svelte $effect that attaches `use:drag` to the slider.
   $effect(() => {
     (window as unknown as { __fixtureHydrated: boolean }).__fixtureHydrated = true;

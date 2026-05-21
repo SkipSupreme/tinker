@@ -48,7 +48,7 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
         <h1>Learn by playing with the math.</h1>
         <p class="lede">
           Drag a letter. Watch the constellation react. That's not a
-          decoration — it's the core idea behind embeddings, the foundation
+          decoration. It's the core idea behind embeddings, the foundation
           of every modern AI model. Tinker teaches the math underneath
           machine learning by letting you touch it.
         </p>
@@ -56,20 +56,20 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
           <EmbeddingPluck client:load hero={true} />
         </div>
         <div class="cta-row">
-          <a class="btn primary" href="/signup">Sign up — it's free</a>
-          <a class="btn secondary" href="/courses/ml-math">Explore the course</a>
+          <a class="btn primary" href="/signup">Sign up, it's free</a>
+          <a class="btn secondary" href="/lessons">Explore the course</a>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Three concrete proof-cards: real things you build in the course.
-       Not generic feature pills — actual module callbacks with the
+       Not generic feature pills, but actual module callbacks with the
        widget, the moment, the payoff. -->
   <section class="band band-white proof-band">
     <div class="shell">
       <p class="kicker kicker-red">What you'll actually build</p>
-      <h2 class="display proof-headline">
+      <h2 class="proof-headline">
         Three moments. <em>Pick the one you want first.</em>
       </h2>
 
@@ -82,7 +82,7 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
             backward through a tanh, see how <code>loss.backward()</code>
             actually works. The keystone module of the course.
           </p>
-          <a class="proof-link" href="/courses/ml-math#m12">
+          <a class="proof-link" href="/lessons">
             Module 12 · Backpropagation →
           </a>
         </li>
@@ -91,11 +91,11 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
           <div class="proof-num"><span>15</span></div>
           <h3 class="proof-title">Attention, as a soft dictionary</h3>
           <p class="proof-desc">
-            The thing you played with up top is an embedding — the
+            The thing you played with up top is an embedding, the
             foundation of attention. Drag a query vector, watch it pivot
             toward the right keys. Build the math behind the T in GPT.
           </p>
-          <a class="proof-link" href="/courses/ml-math#m15">
+          <a class="proof-link" href="/lessons#m15">
             Module 15 · Attention →
           </a>
         </li>
@@ -108,7 +108,7 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
             minutes on WebGPU. Generates text that sounds like Shakespeare
             if Shakespeare had a head injury. Yours to keep.
           </p>
-          <a class="proof-link" href="/courses/ml-math#m18">
+          <a class="proof-link" href="/lessons">
             Module 18 · Capstone →
           </a>
         </li>
@@ -121,7 +121,7 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
   <section class="band band-cream curriculum-band">
     <div class="shell">
       <p class="kicker kicker-red">The whole course</p>
-      <h2 class="display curriculum-headline">
+      <h2 class="curriculum-headline">
         Eighteen modules. <em>Four arcs.</em>
       </h2>
       <p class="curriculum-lede">
@@ -184,7 +184,7 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
       </ol>
 
       <div class="curriculum-cta">
-        <a class="btn primary" href="/courses/ml-math">Open the course →</a>
+        <a class="btn primary" href="/lessons">Open the course →</a>
       </div>
     </div>
   </section>
@@ -201,8 +201,8 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
         and free.
       </p>
       <div class="cta-row closing-cta-row">
-        <a class="btn primary" href="/signup">Sign up — it's free</a>
-        <a class="btn secondary" href="/courses/ml-math">Explore the course</a>
+        <a class="btn primary" href="/signup">Sign up, it's free</a>
+        <a class="btn secondary" href="/lessons">Explore the course</a>
       </div>
     </div>
   </section>
@@ -250,7 +250,7 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
     gap: clamp(2rem, 5vw, 5rem);
     align-items: start;
   }
-  /* Eyebrow chip above the headline — uppercase kicker per DESIGN.md
+  /* Eyebrow chip above the headline: uppercase kicker per DESIGN.md
      (0.75rem, 0.14em letter-spacing). Without these styles it was
      rendering as plain 16px Inter body text. */
   .eyebrow {
@@ -268,7 +268,7 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
       gap: 1.25rem;
     }
     /* Mascot is first in source order, so it naturally stacks above copy
-       on mobile — no `order` override needed. */
+       on mobile, so no `order` override is needed. */
   }
   /* On phones the mascot column was eating the whole above-fold viewport
      before the headline showed. Cap the mascot at a comfortable thumbnail
@@ -345,28 +345,28 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
     cursor: pointer;
     transition: transform 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
   }
-  .btn-primary {
+  .btn.primary {
     background: var(--cta);
     color: var(--cta-fg);
     border-color: var(--cta);
     box-shadow: 0 10px 22px -8px color-mix(in srgb, var(--cta) 70%, transparent);
   }
-  .btn-primary:hover {
+  .btn.primary:hover {
     background: var(--cta-hover);
     border-color: var(--cta-hover);
     transform: translateY(-1px);
     box-shadow: 0 14px 26px -8px color-mix(in srgb, var(--cta) 80%, transparent);
   }
-  .btn-primary:active { transform: translateY(0); }
-  .btn-ghost {
+  .btn.primary:active { transform: translateY(0); }
+  .btn.secondary {
     /* Mixes against the current band-dark-fg so the ghost CTA reads
-       correctly on either theme — dark border on light hero, light border
+       correctly on either theme: dark border on light hero, light border
        on dark hero. */
     background: transparent;
     color: var(--band-dark-fg);
     border-color: color-mix(in srgb, var(--band-dark-fg) 30%, transparent);
   }
-  .btn-ghost:hover {
+  .btn.secondary:hover {
     background: color-mix(in srgb, var(--band-dark-fg) 6%, transparent);
     border-color: color-mix(in srgb, var(--band-dark-fg) 55%, transparent);
   }
@@ -396,6 +396,10 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
     align-items: center;
     justify-content: center;
     min-height: 280px;
+    /* Center the mascot against the full copy column instead of pinning it
+       to the top. With align-items:start on the grid the apple floated up by
+       the eyebrow with a large void beneath it; centering balances the row. */
+    align-self: center;
   }
 
   /* === Hero widget container ===
@@ -412,7 +416,7 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
     .hero-widget { margin: 0.6rem auto 1rem; max-width: 100%; }
   }
 
-  /* Floating math symbols above the apple — Tinker is math-as-play, so the
+  /* Floating math symbols above the apple. Tinker is math-as-play, so the
      ambient decoration is the alphabet of math itself. Confetti palette
      (teal/pink/orange) per DESIGN.md. */
   .confetti {
@@ -565,7 +569,7 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
     max-width: 36ch;
   }
 
-  /* === Proof band — three things you'll actually build. === */
+  /* === Proof band: three things you'll actually build. === */
   .proof-band { padding: clamp(3rem, 6vw, 5rem) 1.25rem; }
   .proof-headline {
     font-family: var(--font-display);
@@ -574,6 +578,10 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
     letter-spacing: -0.02em;
     line-height: 1.1;
     margin: 0 0 2rem;
+    /* Constrain so the headline wraps to two balanced lines instead of
+       running edge-to-edge across the full band on wide viewports. */
+    max-width: 20ch;
+    text-wrap: balance;
   }
   .proof-headline em { font-style: italic; color: var(--ink-coral); font-weight: 700; }
   .proof-grid {
@@ -646,7 +654,7 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
   }
   .proof-link:hover { color: var(--ink-coral); }
 
-  /* === Curriculum band — arc-by-arc course map. === */
+  /* === Curriculum band: arc-by-arc course map. === */
   .curriculum-band { padding: clamp(3rem, 6vw, 5rem) 1.25rem; }
   .curriculum-headline {
     font-family: var(--font-display);
@@ -655,6 +663,8 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
     letter-spacing: -0.02em;
     line-height: 1.1;
     margin: 0 0 0.75rem;
+    max-width: 20ch;
+    text-wrap: balance;
   }
   .curriculum-headline em { font-style: italic; color: var(--ink-red); font-weight: 700; }
   .curriculum-lede {
@@ -717,7 +727,7 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
     justify-content: center;
   }
 
-  /* === Closing CTA band — premium dark, the work is the pitch. === */
+  /* === Closing CTA band: premium dark, the work is the pitch. === */
   .closing-band {
     padding: clamp(4rem, 8vw, 7rem) 1.25rem;
   }
@@ -884,28 +894,44 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
     margin: 0 0 0.85rem;
   }
   .btn {
-    display: inline-block;
-    padding: 0.75rem 1.25rem;
-    border-radius: var(--radius-md);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.95rem 1.6rem;
+    border-radius: var(--radius-pill);
     font: inherit;
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 1.02rem;
     text-decoration: none;
+    line-height: 1;
+    border: 1.5px solid transparent;
     cursor: pointer;
     transition: transform 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
-    white-space: nowrap;
-    box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--cta) 60%, transparent);
+    text-align: center;
+    white-space: normal;
   }
   .btn.primary {
-    background: var(--site-accent);
-    color: var(--site-accent-fg);
-    border: 1px solid var(--site-accent);
+    background: var(--cta);
+    color: var(--cta-fg);
+    border-color: var(--cta);
+    box-shadow: 0 10px 22px -8px color-mix(in srgb, var(--cta) 70%, transparent);
   }
   .btn.secondary {
-    background: var(--site-surface);
-    color: var(--site-fg);
-    border: 1px solid var(--site-border);
+    background: transparent;
+    color: var(--band-dark-fg);
+    border-color: color-mix(in srgb, var(--band-dark-fg) 30%, transparent);
   }
-  .btn:hover { transform: translateY(-1px); }
+  .btn.primary:hover {
+    background: var(--cta-hover);
+    border-color: var(--cta-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 14px 26px -8px color-mix(in srgb, var(--cta) 80%, transparent);
+  }
+  .btn.secondary:hover {
+    background: color-mix(in srgb, var(--band-dark-fg) 6%, transparent);
+    border-color: color-mix(in srgb, var(--band-dark-fg) 55%, transparent);
+    transform: translateY(-1px);
+  }
   .form-note {
     font-size: 0.92rem;
     color: var(--site-fg-muted);
@@ -959,4 +985,3 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
     border: 0;
   }
 </style>
-

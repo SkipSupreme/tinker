@@ -30,7 +30,7 @@
   const r = $derived.by(() => {
     const xSpan = ctx.viewBox.xMax - ctx.viewBox.xMin;
     const ySpan = ctx.viewBox.yMax - ctx.viewBox.yMin;
-    // `min` matches `preserveAspectRatio: xMidYMid meet` — whichever axis
+    // `min` matches `preserveAspectRatio: xMidYMid meet`: whichever axis
     // is tighter sets the effective scale.
     const scale = Math.min(ctx.widthPx / xSpan, ctx.heightPx / ySpan);
     return scale > 0 ? RADIUS_PX / scale : 0;

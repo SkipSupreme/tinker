@@ -26,7 +26,7 @@ describe("<Plot.OfY>", () => {
       expect(d.endsWith("L 5 5")).toBe(true);
     });
 
-    it("x(y)=2 is a vertical line — every point has x=2, y walks [yMin..yMax]", () => {
+    it("x(y)=2 is a vertical line: every point has x=2, y walks [yMin..yMax]", () => {
       const path = mount({ x: () => 2 });
       const d = path.getAttribute("d")!;
       expect(d.startsWith("M 2 -5")).toBe(true);

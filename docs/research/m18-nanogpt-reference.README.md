@@ -15,7 +15,7 @@ gate Slice 3 must match: the WGSL training loop is "right" iff it stays within
 - **Eval:** every 100 iters, mean over 20 batches of held-out val data
 - **Source script:** `scripts/m18/nanogpt_reference.py`
 - **Corpus:** tiny-shakespeare-char (1,115,394 chars, 90/10 train/val split,
-  vocab 65) — `scripts/m18/tinyshakespeare.txt`
+ vocab 65), `scripts/m18/tinyshakespeare.txt`
 
 To regenerate (CPU, ~minutes):
 
@@ -29,5 +29,5 @@ checkpoint. They diverge by ~0.05 nat throughout; that's normal.
 
 CPU reproducibility: PyTorch float32 is bit-identical across runs of this
 script with the same seed on the same machine. Cross-platform reproducibility
-is not a goal of this oracle — Slice 3's gate is the trajectory shape and the
+is not a goal of this oracle. Slice 3's gate is the trajectory shape and the
 ±0.1 nat envelope, not a bit-equality match.

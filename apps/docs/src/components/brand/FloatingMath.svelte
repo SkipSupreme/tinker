@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * FloatingMath — five drifting math symbols in the hero band.
+   * FloatingMath: five drifting math symbols in the hero band.
    * DESIGN.md §Decoration: max 5 per hero, teal/orange/pink only,
    * Fraunces italic, opacity 0.18–0.35, freeze under reduced-motion.
    */

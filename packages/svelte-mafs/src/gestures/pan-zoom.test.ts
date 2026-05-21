@@ -60,7 +60,7 @@ function mount(options: PanZoomOptions) {
   return { node, lifecycle };
 }
 
-describe("panZoom action — wheel zoom", () => {
+describe("panZoom action: wheel zoom", () => {
   beforeEach(() => {
     document.body.replaceChildren();
   });
@@ -145,7 +145,7 @@ describe("panZoom action — wheel zoom", () => {
   });
 });
 
-describe("panZoom action — pan via pointer drag", () => {
+describe("panZoom action: pan via pointer drag", () => {
   beforeEach(() => {
     document.body.replaceChildren();
   });
@@ -197,7 +197,7 @@ describe("panZoom action — pan via pointer drag", () => {
     expect(onPan).not.toHaveBeenCalled();
   });
 
-  it("second pointer stops pan — onPan no longer fires", () => {
+  it("second pointer stops pan: onPan no longer fires", () => {
     const onPan = vi.fn();
     const { node } = mount({ pxToUser: affine, onPan });
     node.dispatchEvent(pe("pointerdown", { pointerId: 1, clientX: 100, clientY: 100 }));
@@ -235,7 +235,7 @@ describe("panZoom action — pan via pointer drag", () => {
   });
 });
 
-describe("panZoom action — lifecycle", () => {
+describe("panZoom action: lifecycle", () => {
   beforeEach(() => {
     document.body.replaceChildren();
   });
@@ -261,7 +261,7 @@ describe("panZoom action — lifecycle", () => {
     node.dispatchEvent(pe("pointerdown", { pointerId: 1, clientX: 100, clientY: 100 }));
     node.dispatchEvent(pe("pointermove", { pointerId: 1, clientX: 110, clientY: 100 }));
     expect(onPan).not.toHaveBeenCalled();
-    // Lift pointer 1 before re-enabling — otherwise a new pointerdown would
+    // Lift pointer 1 before re-enabling; otherwise a new pointerdown would
     // promote to pinch mode (pointer 1 is still tracked for that purpose,
     // even though pan is disabled).
     node.dispatchEvent(pe("pointerup", { pointerId: 1, clientX: 110, clientY: 100 }));
@@ -333,7 +333,7 @@ describe("panZoom action — lifecycle", () => {
   });
 });
 
-describe("panZoom action — pinch zoom", () => {
+describe("panZoom action: pinch zoom", () => {
   beforeEach(() => {
     document.body.replaceChildren();
   });
@@ -453,7 +453,7 @@ describe("panZoom action — pinch zoom", () => {
     node.dispatchEvent(pe("pointerdown", { pointerId: 2, clientX: 200, clientY: 0 }));
     node.dispatchEvent(pe("pointercancel", { pointerId: 2 }));
     onZoom.mockClear();
-    // Pointer 1 still down — no further zoom signals.
+    // Pointer 1 still down; no further zoom signals.
     node.dispatchEvent(pe("pointermove", { pointerId: 1, clientX: 50, clientY: 0 }));
     expect(onZoom).not.toHaveBeenCalled();
   });
@@ -463,7 +463,7 @@ describe("panZoom action — pinch zoom", () => {
     const { node } = mount({ pxToUser: identity, onZoom });
     node.dispatchEvent(pe("pointerdown", { pointerId: 1, clientX: 100, clientY: 0 }));
     node.dispatchEvent(pe("pointerdown", { pointerId: 2, clientX: 200, clientY: 0 }));
-    // Third pointer joins far away — first two still drive the math.
+    // Third pointer joins far away; first two still drive the math.
     node.dispatchEvent(pe("pointerdown", { pointerId: 3, clientX: 500, clientY: 500 }));
     node.dispatchEvent(pe("pointermove", { pointerId: 2, clientX: 300, clientY: 0 }));
     // Distance went 100 → 200 → factor 2.

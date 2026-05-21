@@ -1,7 +1,7 @@
 ---
 title: Expressions are trees
 module: m1-pre-algebra
-summary: Operator precedence isn't a slogan to memorize — it's a parser. Every expression has exactly one tree, and evaluating it is a climb up that tree.
+summary: Operator precedence isn't a slogan to memorize; it's a parser. Every expression has exactly one tree, and evaluating it is a climb up that tree.
 estimatedMinutes: 20
 order: 4
 conceptsCovered:
@@ -15,7 +15,7 @@ import StepCheck from '../../components/lesson/StepCheck.astro';
 import ExpressionTreeBuilder from '../../components/demos/ExpressionTreeBuilder.svelte';
 
 <Step title="A string with exactly one meaning">
-Type `3 + 4 * 2 ** 2` into a Python prompt and into a JavaScript console. Both say `19`. Not `196`, not `49` — `19`, every time, on every machine.
+Type `3 + 4 * 2 ** 2` into a Python prompt and into a JavaScript console. Both say `19`. Not `196`, not `49`, but `19`, every time, on every machine.
 
 That agreement is not luck. It's a **grammar**. And the grammar you half-remember as "PEMDAS" is the exact same thing a programming language uses to read your code.
 </Step>
@@ -27,17 +27,17 @@ Exponents bind tighter than $\times$ and $\div$; those bind tighter than $+$ and
 </Step>
 
 <Step title="The shape behind the string">
-That grouping has a shape — a **tree**. Operators are the branch points; numbers are the leaves. The expression $3 + 4 \times 2^2$ parses to a tree with $+$ at the root, $3$ on one side, and the whole subtree $4 \times 2^2$ on the other.
+That grouping has a shape, a **tree**. Operators are the branch points; numbers are the leaves. The expression $3 + 4 \times 2^2$ parses to a tree with $+$ at the root, $3$ on one side, and the whole subtree $4 \times 2^2$ on the other.
 
 <ExpressionTreeBuilder client:visible />
 
-Type an expression. The widget parses it into its tree — the *same* parse a JavaScript engine performs. Move the parentheses and watch the tree re-shape. The string is just the tree, flattened onto one line so it fits on a page.
+Type an expression. The widget parses it into its tree, the *same* parse a JavaScript engine performs. Move the parentheses and watch the tree re-shape. The string is just the tree, flattened onto one line so it fits on a page.
 </Step>
 
 <Step title="Evaluating is climbing the tree">
 To get the value, you climb from the leaves upward. A branch can't compute until both its children are known.
 
-$2^2$ resolves to $4$. Now $4 \times 4$ resolves to $16$. Now $3 + 16$ resolves to $19$. Children before parents — computer scientists call that a **post-order traversal**. Press Step in the widget and watch it happen, one node at a time.
+$2^2$ resolves to $4$. Now $4 \times 4$ resolves to $16$. Now $3 + 16$ resolves to $19$. Children before parents; computer scientists call that a **post-order traversal**. Press Step in the widget and watch it happen, one node at a time.
 </Step>
 
 <StepCheck
@@ -46,15 +46,15 @@ $2^2$ resolves to $4$. Now $4 \times 4$ resolves to $16$. Now $3 + 16$ resolves 
   answer={19}
   hint="Deepest branch first: 2² = 4. Then 4 × 4 = 16. Then 3 + 16."
 >
-Evaluate the tree for $3 + 4 \times 2^2$ — deepest branch first.
+Evaluate the tree for $3 + 4 \times 2^2$, deepest branch first.
 
 **What is the value?**
 </StepCheck>
 
 <Step title="Exponents are repeated multiplication">
-One node type in that tree was an exponent. $a^n$, for a counting number $n$, is just $n$ copies of $a$ multiplied together — $2^4 = 2\times2\times2\times2 = 16$. Nothing deeper than that.
+One node type in that tree was an exponent. $a^n$, for a counting number $n$, is just $n$ copies of $a$ multiplied together: $2^4 = 2\times2\times2\times2 = 16$. Nothing deeper than that.
 
-And $a^0 = 1$. Not zero — *one*. Walk the pattern downward: $2^3 = 8$, $2^2 = 4$, $2^1 = 2$. Each step divides by $2$. One more step lands on $2^0 = 1$. The pattern forces it. (The full rulebook for exponents is module 2's job; today you only need this much.)
+And $a^0 = 1$. Not zero, *one*. Walk the pattern downward: $2^3 = 8$, $2^2 = 4$, $2^1 = 2$. Each step divides by $2$. One more step lands on $2^0 = 1$. The pattern forces it. (The full rulebook for exponents is module 2's job; today you only need this much.)
 </Step>
 
 <StepCheck
@@ -72,14 +72,14 @@ $$
 **What is the value?**
 </StepCheck>
 
-<Step title="One expression, one value — why it matters">
+<Step title="One expression, one value: why it matters">
 The whole reason precedence rules exist is that guarantee from earlier: one expression, one value, no ambiguity.
 
-That determinism is not a school nicety. It is the property that lets a *computation* be trusted at all — feed the same inputs to the same expression and you get the same output, every single run.
+That determinism is not a school nicety. It is the property that lets a *computation* be trusted at all: feed the same inputs to the same expression and you get the same output, every single run.
 </Step>
 
 <Step title="Where this goes">
-A neural network is an arithmetic expression. A very wide one — billions of leaves and branch points instead of four — but the same kind of object: numbers at the bottom, operations stacked above.
+A neural network is an arithmetic expression. A very wide one, with billions of leaves and branch points instead of four, but the same kind of object: numbers at the bottom, operations stacked above.
 
 Running the network to get a prediction is exactly what you just did to that little tree: climb from the leaves up, children before parents. That climb has a name you will hear constantly from module 16 onward. It's called the **forward pass**. You just ran one.
 </Step>

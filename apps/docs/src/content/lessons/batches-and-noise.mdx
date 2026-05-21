@@ -1,7 +1,7 @@
 ---
 title: Batches, Stochastic, and the Noise Ball
 module: m10-optimization
-summary: Real datasets are too big to gradient-check every step. Use a sample. You introduce noise — which turns out to help, not hurt, in ways that matter.
+summary: Real datasets are too big to gradient-check every step. Use a sample. You introduce noise, which turns out to help, not hurt, in ways that matter.
 estimatedMinutes: 16
 order: 2
 prereqs:
@@ -65,9 +65,9 @@ A mini-batch of $|B| = 4$ examples has per-example gradients along the $x$-axis 
 <Step title="Three regimes: batch, mini-batch, pure SGD">
 Three sizes of batch, three tradeoffs:
 
-- **Full batch** ($|B| = N$) — the entire dataset. Zero variance per estimate. Infeasibly slow.
-- **Pure SGD** ($|B| = 1$) — one example at a time. Maximum noise, each step as cheap as possible.
-- **Mini-batch** ($|B| \sim 32$–$2048$) — somewhere in between. Hardware-friendly (GPUs vectorize well), variance tamed by $1/|B|$.
+- **Full batch** ($|B| = N$): the entire dataset. Zero variance per estimate. Infeasibly slow.
+- **Pure SGD** ($|B| = 1$): one example at a time. Maximum noise, each step as cheap as possible.
+- **Mini-batch** ($|B| \sim 32$–$2048$): somewhere in between. Hardware-friendly (GPUs vectorize well), variance tamed by $1/|B|$.
 
 Mini-batch is what everyone actually uses. It's the sweet spot. Pure SGD is too noisy; full batch is too slow. Typical: 64–512 for language models.
 </Step>
@@ -83,7 +83,7 @@ If pure SGD ($|B| = 1$) has estimator variance $1.0$, what's the estimator varia
 </StepCheck>
 
 <Step title="The noise ball">
-Here's the consequence that surprises people. With a fixed learning rate $\eta$ and stochastic gradients, **SGD does not converge to a point**. It converges to a *ball* around the minimum — a region within which it keeps bouncing, because every step has residual noise.
+Here's the consequence that surprises people. With a fixed learning rate $\eta$ and stochastic gradients, **SGD does not converge to a point**. It converges to a *ball* around the minimum, a region within which it keeps bouncing, because every step has residual noise.
 
 Below: 120 SGD runs from the same starting point on the same quadratic, plotted as a scatter of endpoints. The blue circle is the theoretical noise-ball radius, $\eta \sigma_g / \sqrt{|B|}$. Adjust the controls and watch the cloud breathe.
 
@@ -95,7 +95,7 @@ Three ways to shrink the ball:
 - Bigger batch $|B|$ → less noisy estimates.
 - Or: start with a large ball for exploration, shrink the ball (by shrinking $\eta$) when close to the minimum. That's what a learning-rate schedule does (Lesson 10.5).
 
-Important consequence: **you cannot use "the gradient is zero" as a stopping criterion** in practice — the stochastic gradient is never exactly zero even at the minimum.
+Important consequence: **you cannot use "the gradient is zero" as a stopping criterion** in practice; the stochastic gradient is never exactly zero even at the minimum.
 </Step>
 
 <StepCheck
@@ -113,7 +113,7 @@ Counterintuitively: **the noise in SGD is helpful**, not just a cost you pay for
 
 First, it helps escape saddle points. At a saddle, the exact gradient is zero and full-batch GD stalls forever. A noisy gradient estimate almost never points exactly at zero, so SGD gets nudged off the saddle and keeps moving.
 
-Second, it acts as an implicit regularizer. SGD tends to converge to **flat minima** — wide, shallow basins where the loss is low over a large region. Those generalize better than sharp, narrow minima, which full-batch GD is happy to fall into. There's a whole subfield of "SGD generalization" devoted to explaining this empirical fact.
+Second, it acts as an implicit regularizer. SGD tends to converge to **flat minima** (wide, shallow basins where the loss is low over a large region). Those generalize better than sharp, narrow minima, which full-batch GD is happy to fall into. There's a whole subfield of "SGD generalization" devoted to explaining this empirical fact.
 
 This is why "just use full-batch if you can afford it" turns out to be wrong advice for deep learning. You want some noise. You just don't want the noise from a mini-batch of 1.
 </Step>
@@ -121,9 +121,9 @@ This is why "just use full-batch if you can afford it" turns out to be wrong adv
 <Step title="Stopping criteria in the stochastic world">
 Because the gradient never exactly zeros out, you need practical stopping criteria:
 
-- **Loss plateau** — track a moving average of training loss. When it stops decreasing for $N$ evaluations, stop.
-- **Validation metric plateau** — check a held-out set periodically; stop when it stops improving (this is **early stopping**, the most important criterion for generalization).
-- **Fixed budget** — run for $N$ steps or $T$ hours, then stop. Works when you've tuned the run before.
+- **Loss plateau:** track a moving average of training loss. When it stops decreasing for $N$ evaluations, stop.
+- **Validation metric plateau:** check a held-out set periodically; stop when it stops improving (this is **early stopping**, the most important criterion for generalization).
+- **Fixed budget:** run for $N$ steps or $T$ hours, then stop. Works when you've tuned the run before.
 
 In a real training loop, you use some combination of all three. nanoGPT uses "fixed step budget with a cosine schedule." You'll see why in Lesson 10.5.
 </Step>

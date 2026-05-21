@@ -63,7 +63,7 @@ describe("<Line.ThroughPoints>", () => {
   });
 
   it("clips a steep line to the top/bottom edges (not left/right)", () => {
-    // Line through (0,0) with slope 10. Over x:[-5,5], y would span [-50,50] —
+    // Line through (0,0) with slope 10. Over x:[-5,5], y would span [-50,50],
     // but y is clipped to [-5,5]. So the line should hit y=-5 at x=-0.5 and
     // y=5 at x=0.5.
     const line = readLine({

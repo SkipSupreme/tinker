@@ -21,7 +21,7 @@
 
   const ctx = getCoordContext();
 
-  // KaTeX outputs static HTML — no DOM needed, so this is safe in SSR and
+  // KaTeX outputs static HTML; no DOM needed, so this is safe in SSR and
   // tests. throwOnError: false turns parse failures into visible red markup
   // instead of crashing the mount.
   const html = $derived(
@@ -29,7 +29,7 @@
   );
 
   // HTML inside <foreignObject> lives in the SVG's user-unit coordinate
-  // system, so a raw `font-size: 14px` becomes 14 *user units* — huge when
+  // system, so a raw `font-size: 14px` becomes 14 *user units*, huge when
   // the viewBox spans a few units. Convert pixel intent back into user
   // units using the current px-per-user ratio.
   const pxPerUnit = $derived(

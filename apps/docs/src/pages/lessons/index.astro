@@ -35,7 +35,7 @@ const sortedGroups = Array.from(grouped.entries()).sort(([a], [b]) => {
       <p class="eyebrow">course · ml-math</p>
       <h1>Lessons</h1>
       <p class="lede">
-        Interactive lessons from "Machine Learning, Backpropagation, and AI — The Math."
+        Interactive lessons from "Machine Learning, Backpropagation, and AI: The Math."
         Pick any module to start; each lesson is one read-in-one-sitting page with
         gated steps and a widget for every key idea.
       </p>
@@ -45,11 +45,14 @@ const sortedGroups = Array.from(grouped.entries()).sort(([a], [b]) => {
       {
         sortedGroups.map(([moduleId, entries]) => {
           const m = moduleMap.get(moduleId);
+          // Short anchor (m12, m15, ...) so homepage links like
+          // /lessons#m12 resolve to the right module section.
+          const anchor = moduleId.split('-')[0];
           return (
-            <li class="module">
+            <li class="module" id={anchor}>
               <header class="module-head">
                 <p class="module-eyebrow">
-                  Module {m?.order ?? '—'}
+                  Module {m?.order ?? '?'}
                   {m?.status && <span class={`status status-${m.status}`}>{m.status}</span>}
                 </p>
                 <h2>{m?.title ?? moduleId}</h2>
@@ -122,6 +125,8 @@ const sortedGroups = Array.from(grouped.entries()).sort(([a], [b]) => {
   .module {
     border-top: 1px solid color-mix(in srgb, var(--site-fg) 14%, transparent);
     padding-top: 1.5rem;
+    /* Offset for the sticky nav so #m12 anchors land below it. */
+    scroll-margin-top: 5rem;
   }
   .module-head {
     margin-bottom: 1rem;

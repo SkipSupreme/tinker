@@ -18,5 +18,5 @@ conceptsCovered:
   - micrograd
   - gradient-checking
   - vectorized-autograd
-endgameConnection: 'You now have every computational piece of micrograd. Next — use it to train a tiny net.'
+endgameConnection: 'You now have every computational piece of micrograd. Next: use it to train a tiny net.'
 ---

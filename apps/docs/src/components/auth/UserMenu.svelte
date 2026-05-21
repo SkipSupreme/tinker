@@ -82,7 +82,7 @@
       </ul>
     {/if}
   {/if}
-  <!-- Anon state is rendered by Nav.astro's auth-slot (.auth-links) — that's
+  <!-- Anon state is rendered by Nav.astro's auth-slot (.auth-links): that's
        the SSR-fast version visible before JS hydrates. UserMenu.svelte only
        takes over once it knows there's a logged-in user. -->
 

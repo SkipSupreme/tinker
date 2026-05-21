@@ -1,5 +1,5 @@
 <script lang="ts">
-  // BpeMergeStepper — step through BPE on the canonical Hugging Face / Sennrich
+  // BpeMergeStepper: step through BPE on the canonical Hugging Face / Sennrich
   // toy corpus (E1 in the M17 research brief). Expose the pair-frequency histogram
   // as the mathematical object the algorithm consults; let the learner advance one
   // merge at a time and rewind.
@@ -66,7 +66,7 @@
   }
 
   // Tokenize a fresh word against the current merge list. Used for the
-  // "encode 'hugs'" check at the bottom — answers Step 5 of Lesson 17.2.
+  // "encode 'hugs'" check at the bottom; answers Step 5 of Lesson 17.2.
   let probe: string = $state('hugs');
   const probeTokens: string[] = $derived.by(() => {
     let toks: string[] = [...probe];
@@ -106,7 +106,7 @@
         {#if winning}
           <code>({winning[0]}, {winning[1]})</code> = {winning[2]}
         {:else}
-          —
+          none
         {/if}
       </span>
     </div>

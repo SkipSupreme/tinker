@@ -1,7 +1,7 @@
 // Causal scaled-dot-product attention backward.
 //   Inputs : qkv  [B*T, 3*d] (forward inputs, read)
 //            dout [B*T, d]   (upstream gradient, read)
-//   Output : dqkv [B*T, 3*d] (write — dQ, dK, dV interleaved as in forward)
+//   Output : dqkv [B*T, 3*d] (write: dQ, dK, dV interleaved as in forward)
 //
 // One workgroup per (b, head). Loops over tq sequentially inside the
 // workgroup so all dK[tk] and dV[tk] writes for a given (b, head) are
@@ -13,7 +13,7 @@
 // activation cache. Cost: one extra QKᵀ pass per backward step.
 
 const WG: u32 = 64u;
-// Same softmax-mask trick as the forward kernel — see causalSdpa.wgsl.
+// Same softmax-mask trick as the forward kernel; see causalSdpa.wgsl.
 const NEG_INF: f32 = -1e30;
 
 @group(0) @binding(0) var<storage, read>          qkv:  array<f32>;

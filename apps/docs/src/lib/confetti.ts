@@ -26,7 +26,7 @@ const COLORS = [
   'var(--ink-red)',
 ];
 
-// Math symbols + stars/sparkles. Stars get drawn via Fraunces too — they
+// Math symbols + stars/sparkles. Stars get drawn via Fraunces too; they
 // render fine as Unicode geometric glyphs in any serif fallback.
 const SYMBOLS = [
   // Calculus & analysis
@@ -42,7 +42,7 @@ const SYMBOLS = [
 ];
 
 // Render some symbols a notch bigger to break the visual rhythm. These
-// are "headline" symbols — they read at a glance.
+// are "headline" symbols, they read at a glance.
 const HEADLINE = new Set(['π', '∫', '∞', '∑', 'Δ', '★', '✦', '✺', '❋']);
 
 const LAYER_ID = 'tinker-confetti-layer';
@@ -104,7 +104,7 @@ export function burst(target: BurstTarget, options: BurstOptions = {}): void {
     const sym = document.createElement('span');
     const color = pick(COLORS, i);
     const symbol = pick(SYMBOLS, i);
-    // Headline symbols render beefier — 28-42px. Regular symbols 18-30px.
+    // Headline symbols render beefier (28-42px). Regular symbols 18-30px.
     // The result is a deliberate size mix instead of uniform-stripe boring.
     const isHeadline = HEADLINE.has(symbol);
     const fontSize = isHeadline ? 28 + Math.random() * 14 : 18 + Math.random() * 12;
@@ -116,7 +116,7 @@ export function burst(target: BurstTarget, options: BurstOptions = {}): void {
       `font-style: italic; font-weight: ${fontWeight};` +
       `font-size: ${fontSize}px; line-height: 1;` +
       `color: ${color};` +
-      // Stronger glow than dots had — feels alive, not flat.
+      // Stronger glow than dots had; feels alive, not flat.
       `text-shadow: 0 0 12px color-mix(in srgb, ${color} 55%, transparent),` +
       ` 0 2px 4px color-mix(in srgb, ${color} 35%, transparent);` +
       `pointer-events:none; will-change: transform, opacity;` +
@@ -148,21 +148,21 @@ export function burst(target: BurstTarget, options: BurstOptions = {}): void {
           opacity: 1,
           easing: 'cubic-bezier(0.18, 0.7, 0.3, 1)',
         },
-        // Peak — outward and up. Burst is mostly done by 30%.
+        // Peak: outward and up. Burst is mostly done by 30%.
         {
           offset: 0.3,
           transform: `translate(calc(-50% + ${peakX}px), calc(-50% + ${peakY}px)) scale(1.1) rotate(${rotPeak}deg)`,
           opacity: 1,
           easing: 'cubic-bezier(0.5, 0, 0.7, 0.45)',
         },
-        // Hang for a beat — symbol mostly stationary, slight drift.
+        // Hang for a beat; symbol mostly stationary, slight drift.
         {
           offset: 0.45,
           transform: `translate(calc(-50% + ${peakX * 1.03}px), calc(-50% + ${peakY * 0.92}px)) scale(1) rotate(${rotPeak * 1.15}deg)`,
           opacity: 1,
           easing: 'cubic-bezier(0.55, 0, 1, 0.5)',
         },
-        // Fall — gravity accelerates it down and slightly off-screen.
+        // Fall: gravity accelerates it down and slightly off-screen.
         {
           offset: 1,
           transform: `translate(calc(-50% + ${fallX}px), calc(-50% + ${fallY}px)) scale(0.85) rotate(${rot}deg)`,

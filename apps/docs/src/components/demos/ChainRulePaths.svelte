@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * ChainRulePaths — a small DAG of partials. The graph is:
+   * ChainRulePaths: a small DAG of partials. The graph is:
    *
    *      x       y
    *      ├──g₁──┤
@@ -13,7 +13,7 @@
    * Click an edge to highlight its partial; click "show ∂z/∂x" to highlight
    * both paths from x to z and assemble the chain-rule sum.
    *
-   * Pure SVG — no Mafs needed because the geometry is positional, not
+   * Pure SVG: no Mafs needed because the geometry is positional, not
    * coordinate-system-y.
    */
 

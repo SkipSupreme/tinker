@@ -1,5 +1,5 @@
 <script lang="ts">
-  // NucleusCutoff — top-p (nucleus) sampling, where the math actually lives.
+  // NucleusCutoff: top-p (nucleus) sampling, where the math actually lives.
   //
   // Shows a sorted-descending categorical distribution as bars with their
   // cumulative-mass curve drawn behind. A draggable horizontal "p" line cuts
@@ -106,7 +106,7 @@
   function pToY(prob: number): number {
     return padT + plotH - (prob / yMax) * plotH;
   }
-  // Cumulative path coordinates — drawn against the same y-axis (treating
+  // Cumulative path coordinates, drawn against the same y-axis (treating
   // cumulative mass like a probability that goes from 0 to 1).
   function cumPathD(): string {
     let d = '';
@@ -256,11 +256,11 @@
 
   <p class="caption">
     Bars are the sorted descending probabilities. The dashed teal line is
-    cumulative mass — it climbs from the first bar's probability to 1 by the
+    cumulative mass: it climbs from the first bar's probability to 1 by the
     last. Drag the gold p-line vertically: every bar whose <em>cumulative</em>
     mass is at or below it stays; the rest are masked. Coral ticks show the
     <em>renormalized</em> distribution over the kept (nucleus) tokens.
-    The nucleus shrinks when the model is confident and grows when it isn't —
+    The nucleus shrinks when the model is confident and grows when it isn't;
     that's what "top-p" means.
   </p>
 </div>

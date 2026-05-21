@@ -23,7 +23,7 @@ export function drag(
 
   // Pointer events carry page-absolute clientX/Y, but consumers (e.g.
   // Mafs's coord context) provide a pxToUser that expects coords local to
-  // the drag's reference element — for an SVG descendant, the enclosing
+  // the drag's reference element: for an SVG descendant, the enclosing
   // <svg>; for a plain HTML node, the node itself. Without this
   // translation, MovablePoint dragging was off by the SVG's page offset
   // whenever Mafs wasn't rendered at (0, 0); jsdom masked the bug because

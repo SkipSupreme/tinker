@@ -1,7 +1,7 @@
 <script lang="ts">
   // The "blocks as additive corrections to a bigram floor" demo. Scripted on
   // a tiny char vocab (V=8) at d=4 with N=4 blocks. The user drags k from 0
-  // to N. At k=0 the prediction is exactly softmax(W_E[t] · W_E^T) — the
+  // to N. At k=0 the prediction is exactly softmax(W_E[t] · W_E^T): the
   // bigram model. Each subsequent block adds a delta that pushes the
   // residual stream toward the right next-token direction.
 
@@ -10,7 +10,7 @@
   const D = 4;
   const N = 4;
   const INPUT_IDX = 2; // 'h'
-  const TARGET_IDX = 1; // 'e' — the right next-token after 'h' for "hello"
+  const TARGET_IDX = 1; // 'e': the right next-token after 'h' for "hello"
 
   function mulberry32(a: number) {
     return () => {
@@ -108,7 +108,7 @@
 
   <div class="status">
     {#if k === 0}
-      <strong>k = 0:</strong> identity-only — every block replaced with the identity map. The output is exactly the bigram floor: softmax(W<sub>E</sub>[<em>{VOCAB[INPUT_IDX]}</em>] · W<sub>E</sub><sup>⊤</sup>).
+      <strong>k = 0:</strong> identity-only; every block replaced with the identity map. The output is exactly the bigram floor: softmax(W<sub>E</sub>[<em>{VOCAB[INPUT_IDX]}</em>] · W<sub>E</sub><sup>⊤</sup>).
     {:else}
       <strong>k = {k}:</strong> first {k} block{k > 1 ? 's' : ''} active. Each one has added a delta to the residual stream.
     {/if}

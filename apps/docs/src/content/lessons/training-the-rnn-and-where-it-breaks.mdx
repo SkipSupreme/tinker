@@ -1,7 +1,7 @@
 ---
 title: Training the RNN, and where it breaks
 module: m14-sequence-models
-summary: BPTT is just backprop on the unrolled graph, with the shared weight's gradient summed across timesteps. Vanishing and exploding gradients are properties of repeated linear contraction — and the bottleneck is the failure mode attention is built to fix.
+summary: BPTT is just backprop on the unrolled graph, with the shared weight's gradient summed across timesteps. Vanishing and exploding gradients are properties of repeated linear contraction, and the bottleneck is the failure mode attention is built to fix.
 estimatedMinutes: 16
 order: 6
 prereqs:
@@ -26,7 +26,7 @@ $$
 \qquad \mathcal{L}_t \;=\; -\log P_\theta(x_{t+1} \mid x_{1:t}).
 $$
 
-This is the same loss we've used for every other model in this module. Nothing new on the loss side. What's new is *how* gradients flow through the recurrence — and that's the entire trick of training an RNN.
+This is the same loss we've used for every other model in this module. Nothing new on the loss side. What's new is *how* gradients flow through the recurrence, and that's the entire trick of training an RNN.
 </Step>
 
 <Step title="BPTT: backprop on the unrolled graph">
@@ -34,7 +34,7 @@ There is no special algorithm called "Backpropagation Through Time" that you hav
 
 You unroll the recurrence. You now have a deep, narrow feedforward graph: a chain of $T$ identical cells with arrows running between them. Backprop on a feedforward graph is the chain rule (m12). Apply it.
 
-The only thing that requires bookkeeping is **the shared weight**. $W_h$ appears once in the model definition but $T$ times in the unrolled graph — once per cell. The gradient of the loss with respect to $W_h$ is the **sum** of the gradients from each of those $T$ appearances:
+The only thing that requires bookkeeping is **the shared weight**. $W_h$ appears once in the model definition but $T$ times in the unrolled graph, once per cell. The gradient of the loss with respect to $W_h$ is the **sum** of the gradients from each of those $T$ appearances:
 
 $$
 \frac{\partial \mathcal{L}}{\partial W_h} \;=\; \sum_{t=1}^{T} \frac{\partial \mathcal{L}_t}{\partial W_h}.
@@ -74,7 +74,7 @@ A long product of matrices is the kind of thing that goes spectacularly wrong. I
 
 <GradientDecay client:visible />
 
-Drag the spectral radius slider. At ρ = 0.7, the gradient at $t = 0$ from a loss at $t = 29$ is about $0.7^{29} \approx 5 \times 10^{-5}$ — already past the memory horizon (the boxes go faded). At ρ = 0.5 the model has effectively zero memory beyond about 15 steps. At ρ = 1.15 the gradient explodes to numbers that will diverge any optimizer.
+Drag the spectral radius slider. At ρ = 0.7, the gradient at $t = 0$ from a loss at $t = 29$ is about $0.7^{29} \approx 5 \times 10^{-5}$, already past the memory horizon (the boxes go faded). At ρ = 0.5 the model has effectively zero memory beyond about 15 steps. At ρ = 1.15 the gradient explodes to numbers that will diverge any optimizer.
 </Step>
 
 <StepCheck
@@ -94,7 +94,7 @@ $$
 \mathbf{g} \;\leftarrow\; \mathbf{g} \cdot \min\!\left(1,\; \frac{\tau}{\lVert \mathbf{g} \rVert_2}\right).
 $$
 
-This is a seatbelt — it doesn't fix the underlying instability, but it stops a single bad batch from killing the whole run.
+This is a seatbelt; it doesn't fix the underlying instability, but it stops a single bad batch from killing the whole run.
 
 Vanishing gradients have no such fix. You can't "un-vanish" a number that's already underflowed to $10^{-30}$. The gradient signal from the loss has to cross 50 layers of saturating tanh and contracting matrix multiplies, and once it gets to the early layers, it's noise.
 
@@ -106,21 +106,21 @@ There's a deeper failure mode than vanishing gradients, and you can see it witho
 
 Whatever the RNN remembers about $t = 1$ by the time it reaches $t = 50$ has to fit in $\mathbf{h}_{50}$, which is one vector of dimension $d$. The same vector also has to encode everything the model knows about $t = 2, t = 3, \ldots, t = 49$. There is no growing memory. There is one $d$-dimensional vector, and at every timestep it is rewritten.
 
-Even if vanishing gradients didn't exist — even if the model could be perfectly trained on long sequences — it would still face this informational bottleneck. A 128-dimensional float32 vector holds at most $128 \times 32 = 4096$ bits. To preserve detailed information about every one of 1000 previous tokens, you'd need each to fit in roughly 4 bits — already below the $\log_2(27) \approx 4.75$ bits per character of our toy vocabulary, and absurdly below what real language requires.
+Even if vanishing gradients didn't exist (even if the model could be perfectly trained on long sequences) it would still face this informational bottleneck. A 128-dimensional float32 vector holds at most $128 \times 32 = 4096$ bits. To preserve detailed information about every one of 1000 previous tokens, you'd need each to fit in roughly 4 bits, already below the $\log_2(27) \approx 4.75$ bits per character of our toy vocabulary, and absurdly below what real language requires.
 
 This is the **sequential bottleneck**. It is not a software bug. It is not a training problem. It is a property of the architecture: choosing to summarize the past as a single bounded-size vector caps how much of the past the model can possibly use, regardless of compute or data.
 
-The next module's architecture refuses to make that summary. Attention keeps every previous token's representation around and lets each prediction look back at any of them on demand. We trade fixed memory for $O(T)$ memory in exchange for $O(T^2)$ compute — and the resulting models are *qualitatively* better at long-range dependencies, not by a small constant factor but by orders of magnitude.
+The next module's architecture refuses to make that summary. Attention keeps every previous token's representation around and lets each prediction look back at any of them on demand. We trade fixed memory for $O(T)$ memory in exchange for $O(T^2)$ compute, and the resulting models are *qualitatively* better at long-range dependencies, not by a small constant factor but by orders of magnitude.
 </Step>
 
 <Step title="What about LSTMs?">
-Anyone who has read about RNNs has probably seen "LSTM" or "GRU" — gated variants that addressed vanishing gradients by adding learnable forget/input/output gates that let the model decide what to keep and what to overwrite at each step.
+Anyone who has read about RNNs has probably seen "LSTM" or "GRU": gated variants that addressed vanishing gradients by adding learnable forget/input/output gates that let the model decide what to keep and what to overwrite at each step.
 
 These work, in the sense that they enable training on sequences that vanilla RNNs cannot handle. They were the workhorse architecture for sequence modeling from roughly 2014 to 2017.
 
-We are deliberately not teaching them in this course. The reason: the gating mechanism is a patch over a particular failure of the vanilla RNN, and the next module — attention — solves the same problem more directly and more powerfully. Spending a lesson on LSTM gate equations and another lesson learning attention from scratch would teach two architectures where the second supersedes the first. Most modern language work goes straight from "vanilla RNN, here's what fails" to "attention, here's what fixes it."
+We are deliberately not teaching them in this course. The reason: the gating mechanism is a patch over a particular failure of the vanilla RNN, and the next module (attention) solves the same problem more directly and more powerfully. Spending a lesson on LSTM gate equations and another lesson learning attention from scratch would teach two architectures where the second supersedes the first. Most modern language work goes straight from "vanilla RNN, here's what fails" to "attention, here's what fixes it."
 
-If you ever need to read or maintain LSTM code, it's a few hours of study from any standard reference. The intuition you already have from this module — hidden state as overwritten vector, BPTT as backprop on an unrolled graph, vanishing gradients as repeated contraction — is most of what you need to read it productively.
+If you ever need to read or maintain LSTM code, it's a few hours of study from any standard reference. The intuition you already have from this module (hidden state as overwritten vector, BPTT as backprop on an unrolled graph, vanishing gradients as repeated contraction) is most of what you need to read it productively.
 </Step>
 
 <Step title="Where this module ends">
@@ -128,5 +128,5 @@ We started at a 27 × 27 count matrix that knew one character of context. We exp
 
 In practice that vector carries about ten characters before fading. Long-range information overwhelms the bottleneck. The vanishing-gradient problem ensures that even what could fit isn't reliably trained. The RNN was a good idea that hit a hard ceiling.
 
-The next module is the workhorse architecture of every modern language model. **Attention** stops trying to compress the past into a single vector and instead keeps every prior token's representation accessible — letting each prediction look back at exactly the part of history it needs. The mental moves you've made through this module — distribution over the next token, NLL loss, weight sharing across positions, gradients through a long graph — all carry forward. The architecture between them is what changes.
+The next module is the workhorse architecture of every modern language model. **Attention** stops trying to compress the past into a single vector and instead keeps every prior token's representation accessible, letting each prediction look back at exactly the part of history it needs. The mental moves you've made through this module (distribution over the next token, NLL loss, weight sharing across positions, gradients through a long graph) all carry forward. The architecture between them is what changes.
 </Step>

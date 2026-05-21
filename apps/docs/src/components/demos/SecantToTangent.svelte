@@ -6,7 +6,7 @@
   import { TINKER_EVENT } from '../../lib/events';
 
   interface Props {
-    /** Hide the slope readout — used for the opening "you can't do this yet" hook. */
+    /** Hide the slope readout; used for the opening "you can't do this yet" hook. */
     hideReadouts?: boolean;
     /** Lower the slider floor (e.g. 0) so the user can drive h all the way to the wall. */
     enforceH?: number;
@@ -40,7 +40,7 @@
   const y2 = $derived(f(x2));
 
   // Secant slope between (X0, Y0) and (X0+h, f(X0+h)).
-  // When h is exactly 0 the slope is 0/0 — we surface that as NaN and refuse
+  // When h is exactly 0 the slope is 0/0; we surface that as NaN and refuse
   // to draw the secant line, which is the whole pedagogical point.
   const slope = $derived(h === 0 ? Number.NaN : (y2 - Y0) / h);
   const showSecant = $derived(Number.isFinite(slope));
@@ -57,7 +57,7 @@
   const sliderMax = $derived(fn === 'cubic' ? 1 : 2);
 
   const fmt = (n: number) =>
-    Number.isFinite(n) ? (n >= 0 ? '+' : '') + n.toFixed(3) : '—';
+    Number.isFinite(n) ? (n >= 0 ? '+' : '') + n.toFixed(3) : 'n/a';
 
   // Discovery celebration: the first time the user drags h all the way to 0.
   let stage: HTMLDivElement;

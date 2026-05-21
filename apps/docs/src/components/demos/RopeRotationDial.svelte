@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Mafs, Coordinates, Vector, Circle, Text } from 'svelte-mafs';
 
-  // Fixed query and key (un-rotated). Visual values — far enough from the
+  // Fixed query and key (un-rotated). Visual values: far enough from the
   // origin that rotation traces a clear arc, not symmetric so direction
   // matters.
   const q0 = [1.4, 0.3] as const;

@@ -9,7 +9,7 @@
  *   - tinker:celebrate → { level: 'step' | 'lesson' | 'module' }
  *   - tinker:stuck     → { hint: string }          (layouts/Lesson.astro)
  *
- * Hero-region events (homepage-only, scoped to the hero region's parent —
+ * Hero-region events (homepage-only, scoped to the hero region's parent,
  * NOT window-level). Used by the reactive apple to watch what the visitor
  * does to the hero widget. See HeroFocusDetail / HeroDragDetail /
  * HeroThresholdDetail below.
@@ -27,7 +27,7 @@ export type TinkerEventName = (typeof TINKER_EVENT)[keyof typeof TINKER_EVENT];
 /**
  * Hero-region event names. Scoped DOM events bubbled on the hero region's
  * parent. Tinker.svelte attaches a listener (with a small replay buffer for
- * events that fire before hydration completes — Astro islands hydrate
+ * events that fire before hydration completes; Astro islands hydrate
  * independently).
  *
  * Coordinates in HeroFocusDetail / HeroDragDetail are normalized to the
@@ -44,7 +44,7 @@ export const TINKER_HERO_EVENT = {
 
 export type TinkerHeroEventName = (typeof TINKER_HERO_EVENT)[keyof typeof TINKER_HERO_EVENT];
 
-/** `tinker:hero:focus` — visitor's pointer / drag handle position changed. */
+/** `tinker:hero:focus`: visitor's pointer / drag handle position changed. */
 export interface HeroFocusDetail {
   /** Normalized x in [0, 1] relative to hero region bounds. */
   x: number;
@@ -54,7 +54,7 @@ export interface HeroFocusDetail {
   region?: string;
 }
 
-/** `tinker:hero:drag` — visitor is actively dragging an object in the widget. */
+/** `tinker:hero:drag`: visitor is actively dragging an object in the widget. */
 export interface HeroDragDetail {
   /** Normalized x in [0, 1] relative to hero region bounds. */
   x: number;
@@ -66,7 +66,7 @@ export interface HeroDragDetail {
   phase: 'start' | 'move' | 'end';
 }
 
-/** `tinker:hero:threshold` — meaningful state change worth a face shift. */
+/** `tinker:hero:threshold`: meaningful state change worth a face shift. */
 export interface HeroThresholdDetail {
   /** Short string identifying which threshold crossed (e.g. 'cluster-entered'). */
   kind: string;
@@ -74,7 +74,7 @@ export interface HeroThresholdDetail {
   label?: string;
 }
 
-/** `tinker:hero:success` — visitor reached a milestone worth celebrating. */
+/** `tinker:hero:success`: visitor reached a milestone worth celebrating. */
 export interface HeroSuccessDetail {
   /** What was achieved (e.g. 'first-drag', 'all-vowels-clustered'). */
   milestone: string;

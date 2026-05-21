@@ -187,7 +187,7 @@
   <p class="caption">
     The batch sits on the number line (small dots). <span class="lg-batch">μ_B</span>
     moves with each resample; <span class="lg-run">μ_run</span> moves only when
-    you press <em>training step</em>. The active panel — train or eval — is
+    you press <em>training step</em>. The active panel (train or eval) is
     what BatchNorm uses depending on which mode the framework is in. Drop the
     batch size to 1 in train mode and the output collapses to zero. Switch to
     eval and the running stats save you.

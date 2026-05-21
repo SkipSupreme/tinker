@@ -1,9 +1,9 @@
 <script lang="ts">
   /**
-   * AdamInternalsInspector — scrub a step counter and watch the four Adam
+   * AdamInternalsInspector: scrub a step counter and watch the four Adam
    * statistics update. Synthetic gradient sequence g_t = 1 (constant), so:
    *   m_t  = 1 - β₁^t      (biased, slow warmup)
-   *   v_t  = 1 - β₂^t      (more biased — β₂ is bigger)
+   *   v_t  = 1 - β₂^t      (more biased; β₂ is bigger)
    *   m̂_t  = m_t / (1 - β₁^t) = 1   (the bias correction's whole job)
    *   v̂_t  = 1
    * The teaching moment: corrected estimates are unit-scale from step 1;

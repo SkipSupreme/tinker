@@ -2,11 +2,11 @@
   import { Mafs, Coordinates, Ellipse, Vector, Point, Plot, MovablePoint, Line } from 'svelte-mafs';
 
   /**
-   * GradientCompass — the keystone widget for Module 6 (multivariable calculus).
+   * GradientCompass: the keystone widget for Module 6 (multivariable calculus).
    *
    * Function: f(x, y) = x² + 2y²  (an elliptical bowl centered at origin).
    * Gradient: ∇f = (2x, 4y).
-   * Level curves: x² + 2y² = c — ellipses with semi-axes (√c, √(c/2)).
+   * Level curves: x² + 2y² = c, ellipses with semi-axes (√c, √(c/2)).
    *
    * Pedagogical flow (per research brief §4.2):
    *   • Drag p anywhere on the contour plot.
@@ -34,11 +34,11 @@
   const gradMag = $derived(Math.hypot(grad[0], grad[1]));
   const gradAngle = $derived(Math.atan2(grad[1], grad[0])); // the θ where D_u f peaks
 
-  // Unit direction u (length 1 in user units — drawn as a visibly-sized arrow).
+  // Unit direction u (length 1 in user units, drawn as a visibly-sized arrow).
   const ux = $derived(Math.cos(theta));
   const uy = $derived(Math.sin(theta));
 
-  // Directional derivative — the number the lesson is about.
+  // Directional derivative: the number the lesson is about.
   const duf = $derived(grad[0] * ux + grad[1] * uy);
 
   // For the cosine-curve side plot: D_u f as a function of θ.
@@ -141,7 +141,7 @@
       <p class="side-note">
         <span class="dot sea"></span>peak at
         <code>θ = {fmtAngle(gradAngle)}</code>
-        — the angle of ∇<em>f</em>.
+        (the angle of ∇<em>f</em>).
         Max value: <strong>{gradMag.toFixed(2)}</strong> = |∇<em>f</em>|.
       </p>
     </div>

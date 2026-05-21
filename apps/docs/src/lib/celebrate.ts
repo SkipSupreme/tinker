@@ -1,5 +1,5 @@
 /**
- * lib/celebrate.ts — orchestrator for earned-state celebrations.
+ * lib/celebrate.ts: orchestrator for earned-state celebrations.
  *
  * One async function per moment. Tuning the feel of any celebration
  * is a one-line edit here, not a sweep across StepCheck.astro,
@@ -24,7 +24,7 @@ export function announce(message: string) {
   );
 }
 
-// Module-scoped Spring/Tween instances — one per surface so multiple
+// Module-scoped Spring/Tween instances, one per surface so multiple
 // concurrent celebrations don't fight each other.
 export const progressSpring = new Spring(0, { stiffness: 0.12, damping: 0.4 });
 export const scoreTween = new Tween(0, { duration: 900, easing: cubicOut });

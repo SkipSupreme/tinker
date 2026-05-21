@@ -148,7 +148,7 @@
 <div class="widget">
   <!-- Dataset -->
   <div class="data-row">
-    <div class="data-label">Data ({n1} H / {n0} T) — click any flip to toggle</div>
+    <div class="data-label">Data ({n1} H / {n0} T): click any flip to toggle</div>
     <div class="flips">
       {#each data as face, i (i)}
         <button

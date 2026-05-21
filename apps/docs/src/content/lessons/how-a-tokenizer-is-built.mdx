@@ -1,7 +1,7 @@
 ---
 title: How a tokenizer is built
 module: m17-tokenization-sampling
-summary: Byte-pair encoding is a deterministic, frequency-greedy merge loop. Train once, ship the merge table, replay it at inference. Byte-level BPE makes the tokenizer total — every string is representable, no UNK token. The "strawberry" failure is a downstream consequence, not a bug.
+summary: Byte-pair encoding is a deterministic, frequency-greedy merge loop. Train once, ship the merge table, replay it at inference. Byte-level BPE makes the tokenizer total, meaning every string is representable with no UNK token. The "strawberry" failure is a downstream consequence, not a bug.
 estimatedMinutes: 18
 order: 2
 prereqs:
@@ -49,7 +49,7 @@ At step 0, before any merges, every word is just a sequence of characters. Count
 The pair counts change. Recompute against the *new* token sequences:
 
 - `(p, ug)`: 5 (in the merged `pug`) = **5**
-- `(u, n)`: still 16 — `pun` and `bun` were not touched.
+- `(u, n)`: still 16; `pun` and `bun` were not touched.
 
 Watch the widget bar move.
 </Step>
@@ -76,7 +76,7 @@ The output of training isn't a model. It's a list:
 
 To tokenize a *new* word at inference time, replay the merges in order. Start with single characters. Apply merge 1 wherever it matches. Apply merge 2. Apply merge 3. Stop when you reach the end of the list.
 
-The widget exposes this. After two merges — `(u, g)` then `(u, n)` — type new words into the bottom box and watch them tokenize against the current merge table.
+The widget exposes this. After two merges (`(u, g)` then `(u, n)`) type new words into the bottom box and watch them tokenize against the current merge table.
 </Step>
 
 <StepCheck
@@ -100,12 +100,12 @@ You will see this hard rule a lot in practice: when a model card says "tokenizer
 </Step>
 
 <Step title="Bytes, not codepoints">
-GPT-2 made one important variation. Instead of starting from "the set of distinct Unicode characters in the corpus," it started from the 256 raw UTF-8 bytes. Every input string — Cyrillic, emoji, whitespace, control characters — turns into bytes the same way, and BPE runs over the byte stream.
+GPT-2 made one important variation. Instead of starting from "the set of distinct Unicode characters in the corpus," it started from the 256 raw UTF-8 bytes. Every input string (Cyrillic, emoji, whitespace, control characters) turns into bytes the same way, and BPE runs over the byte stream.
 
 Why does that matter?
 
 - **The tokenizer is total.** Every possible input is representable, because every input is bytes. No `<UNK>` token, no failures at inference.
-- **Cross-language behavior.** Languages whose alphabet is not in the training corpus still work — they just tokenize into more pieces. Korean, Arabic, emoji.
+- **Cross-language behavior.** Languages whose alphabet is not in the training corpus still work; they just tokenize into more pieces. Korean, Arabic, emoji.
 - **The base vocabulary size is fixed at 256.** All learned merges go on top of that.
 
 GPT-2 trained 50,001 merges on top of those 256 bytes (vocab = 50,257 once you add a handful of special tokens). GPT-4 trained more, with `cl100k_base` ≈ 100,000.
@@ -122,7 +122,7 @@ GPT-2 trained 50,001 merges on top of those 256 bytes (vocab = 50,257 once you a
 </StepCheck>
 
 <Step title="The strawberry failure, in full">
-Now `strawberry` is fully explained. The byte-level BPE tokenizer that GPT-4 was trained with happens to have learned merges for `st`, `raw`, and `berry` — three common subword pieces — but never learned a single token for `strawberry`. So at inference, the word decomposes into three ids: `[496, 675, 15717]` for `cl100k_base`.
+Now `strawberry` is fully explained. The byte-level BPE tokenizer that GPT-4 was trained with happens to have learned merges for `st`, `raw`, and `berry` (three common subword pieces) but never learned a single token for `strawberry`. So at inference, the word decomposes into three ids: `[496, 675, 15717]` for `cl100k_base`.
 
 Run the inspector below, leave it on BPE mode, and try `strawberry`. Try `unbelievable`. Try a date. Try a code snippet.
 
@@ -130,7 +130,7 @@ Run the inspector below, leave it on BPE mode, and try `strawberry`. Try `unbeli
 
 The tokenizer in the widget is a small one, trained on a paragraph of Shakespeare. The exact tokens differ from GPT-4's. The shape of the failure is identical: single, opaque, multi-character chunks where the model has no operation that introspects the letters inside them.
 
-When the model is asked "how many R's in strawberry," it sees `[496, 675, 15717]` — three integers — and is asked to perform a counting operation on the *characters of those tokens*, an operation the embedding layer does not expose. Letter-counting tasks are off-distribution. So is reversing strings. So is ASCII-art. So is multi-digit arithmetic, partly because BPE merges multi-digit numbers into chunks unevenly (`123` might be one token, `1234` might be two — `12` and `34`).
+When the model is asked "how many R's in strawberry," it sees `[496, 675, 15717]` (three integers) and is asked to perform a counting operation on the *characters of those tokens*, an operation the embedding layer does not expose. Letter-counting tasks are off-distribution. So is reversing strings. So is ASCII-art. So is multi-digit arithmetic, partly because BPE merges multi-digit numbers into chunks unevenly (`123` might be one token, `1234` might be two: `12` and `34`).
 
 This is the price of subword tokenization. It is not the model being dumb. It is the model being given different inputs than the inputs the question demands. Next lesson: how the model uses these inputs to learn.
 </Step>

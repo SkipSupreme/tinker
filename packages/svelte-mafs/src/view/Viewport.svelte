@@ -19,7 +19,7 @@
   // place to read their local viewBox from. Children render inline.
   //
   // setPaneContext can only run once during init, so we publish an object
-  // whose viewBox is a getter over a $derived — prop changes flow through
+  // whose viewBox is a getter over a $derived; prop changes flow through
   // without needing to re-publish.
   let paneViewBox = $derived(normalizeViewBox(propViewBox));
   setPaneContext({

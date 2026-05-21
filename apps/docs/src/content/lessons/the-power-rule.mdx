@@ -52,7 +52,7 @@ $$
 \frac{d}{dx}\big(7x^5 - 3x^2 + 4x - 11\big) \;=\; 35x^4 - 6x + 4.
 $$
 
-The constant $-11$ dies (its derivative is zero — it doesn't change with $x$). The linear term $4x$ becomes $4$. Every other term loses one exponent and picks up a coefficient.
+The constant $-11$ dies (its derivative is zero; it doesn't change with $x$). The linear term $4x$ becomes $4$. Every other term loses one exponent and picks up a coefficient.
 
 Negative and fractional exponents work too. $x^{-1} = 1/x$, so $d/dx\,(1/x) = -x^{-2} = -1/x^2$. And $\sqrt{x} = x^{1/2}$, so $d/dx\,\sqrt{x} = \tfrac{1}{2} x^{-1/2} = 1/(2\sqrt{x})$.
 </Step>
@@ -62,7 +62,7 @@ We derived $d/dx\,x^2 = 2x$ by the long road in the first lesson: secant line, l
 
 Expand $(x + h)^n$ using the binomial theorem, subtract $x^n$, divide by $h$, let $h \to 0$. The first two terms of the binomial expansion are $x^n$ and $n\,x^{n-1}\,h$; everything after has at least $h^2$ and dies in the limit. What's left is $n\,x^{n-1}$.
 
-You don't need to internalize that proof — just know the rule isn't magic. It's the same shrink-the-secant story from the first lesson, done once in general and then applied a trillion times.
+You don't need to internalize that proof; just know the rule isn't magic. It's the same shrink-the-secant story from the first lesson, done once in general and then applied a trillion times.
 </Step>
 
 <StepCheck
@@ -78,5 +78,5 @@ Compute $\dfrac{d}{dx}\,x^7$ at $x = 2$.
 <Step title="Where it shows up">
 Every neural network layer contains matrix multiplications and nonlinearities, and many of those nonlinearities are simple powers: $\mathrm{ReLU}(x) = \max(0, x)$ is a piecewise power, squared-error loss uses $x^2$, regularization penalties often use $x^2$ or $|x|$. When backpropagation computes the gradient through these, the power rule is what's running.
 
-You now have three tools: the definition of the derivative, the chain rule, and the power rule. Together they cover about 80% of the derivatives you'll take for the rest of this course. The other 20% — trig, exponentials, logs — is the next module.
+You now have three tools: the definition of the derivative, the chain rule, and the power rule. Together they cover about 80% of the derivatives you'll take for the rest of this course. The other 20% (trig, exponentials, logs) is the next module.
 </Step>

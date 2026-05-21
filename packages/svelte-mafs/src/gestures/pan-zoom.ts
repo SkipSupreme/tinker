@@ -6,7 +6,7 @@ export interface PanZoomOptions {
   onPan?: (deltaUser: Vec2) => void;
   onZoom?: (factor: number, centerPx: Vec2) => void;
   enabled?: { pan?: boolean; zoom?: boolean };
-  /** e^(-deltaY * sensitivity) — default 0.002 gives ~1.22× per 100px scroll. */
+  /** e^(-deltaY * sensitivity); default 0.002 gives ~1.22× per 100px scroll. */
   wheelSensitivity?: number;
 }
 
@@ -72,7 +72,7 @@ export function panZoom(
     pointers.set(e.pointerId, pos);
 
     // Second pointer arrives → enter pinch mode. Any in-flight pan is abandoned
-    // (there's no "pan end" signal by design — onPan just stops firing until
+    // (there's no "pan end" signal by design: onPan just stops firing until
     // all fingers lift). Capture this pointer so slides outside the node still
     // deliver moves.
     if (pointers.size === 2 && zoomEnabled()) {
@@ -139,7 +139,7 @@ export function panZoom(
     }
 
     // Dropping below 2 pointers exits pinch. We intentionally do NOT auto-
-    // resume pan with the remaining finger — mid-gesture mode switches are
+    // resume pan with the remaining finger; mid-gesture mode switches are
     // surprising. User lifts and re-presses to pan again.
     if (pointers.size < 2) {
       lastPinchDistance = null;

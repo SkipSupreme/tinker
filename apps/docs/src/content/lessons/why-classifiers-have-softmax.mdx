@@ -1,0 +1,130 @@
+---
+title: Why classifiers have a softmax head
+module: m9-information-theory
+summary: For one-hot targets, cross-entropy collapses to negative log-likelihood of the true class. Softmax exists because that loss needs a valid Q, and softmax-plus-NLL produces the cleanest gradient in all of supervised learning.
+estimatedMinutes: 12
+order: 3
+prereqs:
+  - two-distributions-same-room
+conceptsCovered:
+  - one-hot-collapse
+  - softmax-plus-nll
+  - xent-equals-mle
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import OneHotCollapse from '../../components/demos/OneHotCollapse.svelte';
+
+<Step title="Labels are not distributions">
+In every supervised classification problem, the target is a *single* class, not a probability distribution over classes. For an MNIST digit, the label is `3`. For an email, it's `spam` or `not-spam`. For a token prediction, it's "the literal next token in the corpus." One outcome, full mass.
+
+So when we plug that into the cross-entropy formula $H(P, Q) = -\sum_x P(x) \log Q(x)$, what happens? Let's see, and then watch the structural simplification that follows.
+</Step>
+
+<Step title="The one-hot collapse">
+Let $P$ be one-hot on class $y$: $P(y) = 1$, $P(x) = 0$ for all $x \ne y$. Substitute:
+
+$$
+H(P, Q) \;=\; -\sum_{x} P(x) \log Q(x) \;=\; -\log Q(y).
+$$
+
+Every term in the sum *except one* vanishes, because $P(x) = 0$ for every $x \ne y$. The single surviving term is the negative log probability your model gave to the right answer.
+
+That's **negative log-likelihood** under another name. We saw this in module 8 as the form of MLE for a categorical distribution. Here it shows up because the data distribution is degenerate (one-hot), and cross-entropy against a degenerate $P$ collapses to NLL of the true class. Three names (cross-entropy, NLL, log-loss) and one piece of math.
+</Step>
+
+<Step title="Watch 9 of 10 terms vanish, live">
+The widget below shows a 10-way classifier. The top half is the logit vector $z$ (drag any bar up or down). The middle is the softmax probability vector $q = \mathrm{softmax}(z)$. The bottom row is the class index; click any of them to set the one-hot target.
+
+<OneHotCollapse client:visible />
+
+Look at the lower-left readout: the *full* cross-entropy sum has 10 terms, but 9 of them are greyed out; their $P(x_i)$ coefficient is zero. Only the red term (the target class) contributes. The collapsed form on the lower-right shows the *same number*, computed as a single $-\log q_{\text{target}}$. Two formulas, one value.
+
+Click any other class index to change the target. Watch which term survives. This is the entire structural argument: cross-entropy for a classifier is the negative log probability of the right answer, period.
+</Step>
+
+<Step title="Cross-entropy = NLL = maximum likelihood">
+Pulling the threads from m8 and the previous lesson together. For a classifier with parameters $\theta$:
+
+$$
+\mathcal{L}(\theta) \;=\; H(\hat P_{\text{data}}, Q_\theta) \;=\; \frac{1}{N}\sum_{i=1}^{N} -\log Q_\theta(y_i)
+$$
+
+Three sentences from three different traditions:
+- Information theory: "average cross-entropy of the model on the data."
+- Statistics: "negative log-likelihood, divided by $N$."
+- ML: "the cross-entropy loss."
+
+All the same expression. Minimizing it is *exactly* maximum likelihood estimation, which is *exactly* minimizing forward KL up to an additive constant. Three vocabularies, one objective. Stop arguing about which name to use.
+</Step>
+
+<StepCheck
+  title="Compute loss for z = (2, 0, 1), target 0"
+  prompt="loss ≈ "
+  answer={0.408}
+  tolerance={0.02}
+  hint="Stable softmax: subtract max (= 2), get exps (1, 0.135, 0.368), sum 1.503, softmax ≈ (0.665, 0.090, 0.245). Target is class 0, so loss = −log(0.665) ≈ 0.408 nats."
+>
+Logits $z = (2, 0, 1)$ over three classes. True class is $0$.
+
+**Compute the loss in nats** (use the natural log; answer to three decimals).
+</StepCheck>
+
+<Step title="The softmax + NLL gradient is q − p">
+Here's the result that justifies why softmax-plus-NLL is the canonical pairing. Take the derivative of $\mathcal{L} = -\log q_{\text{target}}$ with respect to the logits $z$:
+
+$$
+\frac{\partial \mathcal{L}}{\partial z_i} \;=\; q_i - p_i.
+$$
+
+Where $p$ is the one-hot target vector. The gradient of the cross-entropy loss with respect to the *logits* is the predicted distribution minus the target distribution. Element-wise. Done.
+
+Watch the orange arrows on each logit bar in the widget. Their length and direction *is* this gradient. The arrow on the target class points down (the loss wants the target logit higher); arrows on non-target classes point up (the loss wants those logits lower). When you drag the target logit up enough that $q$ matches the one-hot label, the arrows shrink to zero; gradient descent has nothing left to do.
+
+The "$q - p$" form is the cleanest gradient in supervised learning. It scales linearly in confidence-of-error, vanishes at convergence, and never has the saturation problems that other loss-activation pairs suffer.
+</Step>
+
+<StepCheck
+  title="Gradient on the target logit"
+  prompt="∂L/∂z₀ ≈ "
+  answer={-0.335}
+  tolerance={0.02}
+  hint="Gradient is qᵢ − pᵢ. For class 0: q₀ ≈ 0.665, p₀ = 1, so q₀ − p₀ ≈ −0.335. (Negative, meaning the loss wants z₀ to go up.)"
+>
+Using the same softmax from before ($z = (2, 0, 1)$, target class 0, $q \approx (0.665, 0.090, 0.245)$), **what is $\partial \mathcal{L} / \partial z_0$?** (Three decimals; sign matters.)
+</StepCheck>
+
+<Step title="Why not softmax + MSE?">
+A reasonable question: why pair softmax with NLL specifically? Why not softmax outputs with mean-squared error against the one-hot label?
+
+The answer is gradient behavior. With softmax + MSE, the gradient through softmax-then-squared-error involves a *product* of softmax derivatives, and when the model is *confidently wrong* (e.g., $q_{\text{target}} \approx 0$), that gradient is *small*. The model fails to learn from its worst mistakes.
+
+Softmax + NLL doesn't have this pathology. The gradient $q - p$ is large precisely when the model is confidently wrong (because $q_{\text{target}}$ is far from 1). The worse the mistake, the bigger the correction signal. This is why every classification model on earth, from logistic regression to GPT-4's final layer, ends in softmax + cross-entropy.
+</Step>
+
+<Step title="PyTorch's nn.CrossEntropyLoss vs nn.NLLLoss: same loss, different APIs">
+Working ML engineers see two names in PyTorch and assume they're different objects:
+
+- `nn.CrossEntropyLoss(logits, target_idx)`: applies log-softmax internally, then NLL.
+- `nn.NLLLoss(log_probs, target_idx)`: assumes you've already computed log-softmax.
+
+The math is identical. The two-name split is a *numerical stability* choice: computing log-softmax in one fused pass (the "log-sum-exp trick") is more stable than computing softmax, then taking the log of small probabilities. In practice, pass raw logits to `CrossEntropyLoss` and let it handle the fused computation. That's the right default in 99% of cases.
+
+(There is one final source of confusion: `CrossEntropyLoss` in PyTorch takes a *class index*, not a one-hot vector. That's not a different formula; it's just an API exploiting the one-hot collapse to skip allocating a length-$K$ one-hot tensor. Pass an integer, get the loss.)
+</Step>
+
+<Step title="Where this lands: the entire final layer of GPT">
+A GPT-style transformer ends in two operations: a linear layer producing $V$-dimensional logits over the vocabulary, and a softmax-plus-cross-entropy loss against the next-token index. Forward, backward, repeat for every position.
+
+Every claim in this lesson maps directly:
+- The *softmax* is there to produce a valid $Q$ over the vocab.
+- The *target* is the integer index of the next token in the corpus (one-hot in disguise).
+- The *loss* is the negative log probability the model gave to the actual next token.
+- The *gradient* with respect to the logits is $q - p$, where $p$ is one-hot.
+- Average that gradient over the batch, backprop, take an Adam step.
+
+That's the whole loss function. The next module (m10 onwards) handles how to *minimize* it efficiently, but you now know exactly what it is.
+
+Lesson 9.4 closes the module by giving you a unit-free way to read training losses: perplexity. And it introduces the floor every language model can never break: the entropy of the language itself.
+</Step>

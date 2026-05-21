@@ -72,7 +72,7 @@
   tests + introspection, AND a real aria-valuenow (bound to x) plus a
   human aria-valuetext so actual screen readers get something meaningful.
   svelte-ignore suppresses the a11y lints for the non-standard per-axis
-  attrs — they're intentional, not typos.
+  attrs; they're intentional, not typos.
 -->
 <!-- svelte-ignore a11y_unknown_aria_attribute -->
 <circle
@@ -108,7 +108,7 @@
   .mafs-movable-point:focus-visible {
     /* CSS `outline` on an SVG <circle> renders in the element's user-space
        coordinate system after the viewBox scale, so a "2px" outline becomes
-       ~2 user units — huge blue rectangles around each MovablePoint. Use an
+       ~2 user units, causing huge blue rectangles around each MovablePoint. Use an
        SVG-native `stroke` with `vector-effect: non-scaling-stroke` so the
        focus ring stays one constant px regardless of viewBox zoom. */
     outline: none;

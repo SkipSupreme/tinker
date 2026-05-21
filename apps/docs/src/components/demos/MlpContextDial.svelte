@@ -22,7 +22,7 @@
   const MAX_K = 8;
 
   let k: number = $state(initialK);
-  // Initial context — last `k` chars of "olivia." (so the slots have meaningful starting state).
+  // Initial context: last `k` chars of "olivia." (so the slots have meaningful starting state).
   const seedContext: string[] = ['o', 'l', 'i', 'v', 'i', 'a', '·', 'e'];
   let context: string[] = $state(seedContext.slice(0, MAX_K));
   let editingSlot: number | null = $state(null);
@@ -191,7 +191,7 @@
     <div class="callout-val">
       A pure (k+1)-gram table would need <strong>{V}<sup>{k + 1}</sup></strong>
       cells = <strong>{ngramReadable}</strong> entries. The MLP gets the same
-      context window for far less storage — and generalizes.
+      context window for far less storage, and generalizes.
     </div>
   </div>
 

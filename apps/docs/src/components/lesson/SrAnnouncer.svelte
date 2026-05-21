@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * SrAnnouncer — single aria-live="polite" mirror for the alive layer.
+   * SrAnnouncer: single aria-live="polite" mirror for the alive layer.
    * Listens for `tinker:announce` window events. Dropped into Lesson.astro
    * once; every celebration calls announce(msg) from lib/celebrate.ts.
    */

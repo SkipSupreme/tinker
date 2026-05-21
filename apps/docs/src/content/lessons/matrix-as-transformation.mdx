@@ -19,7 +19,7 @@ import StepCheck from '../../components/lesson/StepCheck.astro';
 import MatrixDraggable from '../../components/demos/MatrixDraggable.svelte';
 
 <Step title="Drag the two arrows. Everything is here.">
-Two draggable arrows. The faint grid behind them is 2D space, transformed live. The filled shape is the **unit square** — the unit-corner box at the origin — under the same transformation.
+Two draggable arrows. The faint grid behind them is 2D space, transformed live. The filled shape is the **unit square** (the unit-corner box at the origin) under the same transformation.
 
 <MatrixDraggable client:visible />
 
@@ -29,13 +29,13 @@ Quests, in order:
 2. Press **rot 90°**. The whole space turns ninety degrees. Notice both arrows turned together.
 3. Press **shear**. The grid tilts. One arrow stayed put; the other slid sideways.
 4. Press **collapse**. The unit square flattens to a line. Space lost a dimension.
-5. Drag column 1 across the origin. The shape's fill flips — orientation reversed.
+5. Drag column 1 across the origin. The shape's fill flips: orientation reversed.
 
 You just wrote down five matrices without seeing a single number. That's the point of the lesson.
 </Step>
 
 <Step title="What you just discovered.">
-Every transformation you ran is fully described by **two arrows** — wherever the two columns ended up.
+Every transformation you ran is fully described by **two arrows**: wherever the two columns ended up.
 
 That pair of arrows *is* the matrix. The first column tells you where the arrow $[1, 0]$ landed (we'll call it $\hat{\imath}$, "i-hat"). The second column tells you where $[0, 1]$ landed ($\hat{\jmath}$, "j-hat").
 
@@ -59,11 +59,11 @@ Write it as a 2×2 matrix. **What's the entry at row 2, column 2?**
 </StepCheck>
 
 <Step title="Linearity, after the fact.">
-Two things you might have noticed while playing — both turn out to be the *definition* of what makes a transformation "linear."
+Two things you might have noticed while playing, both of which turn out to be the *definition* of what makes a transformation "linear."
 
 **The origin always stays put.** No preset moves the corner of the unit square that sits at $(0, 0)$. You can't translate space with a linear transformation; only the directions of the arrows change.
 
-**Grid lines stay straight, evenly spaced.** Rotate, shear, scale, collapse — the grid's *spacing* may change, but the lines themselves stay lines. Nothing bends.
+**Grid lines stay straight, evenly spaced.** Rotate, shear, scale, collapse: the grid's *spacing* may change, but the lines themselves stay lines. Nothing bends.
 
 Both rules together are the formal definition: a transformation $T$ is **linear** if, for all vectors $\mathbf{u}, \mathbf{v}$ and scalars $c$:
 
@@ -73,13 +73,13 @@ $$
 
 You were obeying both axioms with your fingers the whole time. The axioms are the bookkeeping; the widget is the thing.
 
-(Aside: the function $f(x) = mx + b$ from precalc is **not** linear in this sense when $b \ne 0$ — it shifts the origin. It's *affine* — linear plus a translation. Mathematicians are picky about this; ML people use "linear layer" to mean "affine layer" all the time, and we just live with it.)
+(Aside: the function $f(x) = mx + b$ from precalc is **not** linear in this sense when $b \ne 0$; it shifts the origin. It's *affine*, meaning linear plus a translation. Mathematicians are picky about this; ML people use "linear layer" to mean "affine layer" all the time, and we just live with it.)
 </Step>
 
-<Step title="Multiplying by a vector — the column picture.">
+<Step title="Multiplying by a vector: the column picture.">
 You know the matrix is two columns. Now: what does $A\mathbf{x}$ actually mean?
 
-If $\mathbf{x} = [x_1, x_2]$, then $\mathbf{x}$ is "$x_1$ steps along $\hat{\imath}$, then $x_2$ steps along $\hat{\jmath}$." After the transformation, $\hat{\imath}$ and $\hat{\jmath}$ have moved — they're now the columns of $A$. Linearity means the recipe survives: take the same $x_1$ steps along the *new* $\hat{\imath}$, then $x_2$ steps along the *new* $\hat{\jmath}$.
+If $\mathbf{x} = [x_1, x_2]$, then $\mathbf{x}$ is "$x_1$ steps along $\hat{\imath}$, then $x_2$ steps along $\hat{\jmath}$." After the transformation, $\hat{\imath}$ and $\hat{\jmath}$ have moved; they're now the columns of $A$. Linearity means the recipe survives: take the same $x_1$ steps along the *new* $\hat{\imath}$, then $x_2$ steps along the *new* $\hat{\jmath}$.
 
 $$
 A\mathbf{x} \;=\; x_1\, \mathbf{a}_1 \,+\, x_2\, \mathbf{a}_2
@@ -100,20 +100,20 @@ For $A = \begin{bmatrix}2 & 1 \\ 0 & 3\end{bmatrix}$ and $\mathbf{x} = [4, -1]$:
 Blend $4$ of column 1 with $-1$ of column 2. **What's the first component of the result?**
 </StepCheck>
 
-<Step title="The row picture — a faster way to compute the same thing.">
+<Step title="The row picture: a faster way to compute the same thing.">
 Same answer, different bookkeeping. If you only want the $i$-th output component, you can dot the $i$-th *row* of $A$ with $\mathbf{x}$:
 
 $$
 (A\mathbf{x})_i \;=\; \sum_j A_{ij}\, x_j.
 $$
 
-This is the formula every textbook leads with. It's faster to compute by hand and it gives the same answer. But it hides the geometry behind arithmetic — you wouldn't have learned anything new about matrices from staring at it.
+This is the formula every textbook leads with. It's faster to compute by hand and it gives the same answer. But it hides the geometry behind arithmetic; you wouldn't have learned anything new about matrices from staring at it.
 
 The move: **column picture for thinking, row picture for computing.** When you're trying to understand what a matrix does, blend the columns. When you're trying to compute the answer, dot the rows.
 </Step>
 
 <Step title="Name the matrices you already built.">
-Reopen the widget if you want. Each preset has a name and a formula. You don't memorize these — you draw the transformation, read off the columns, write them down.
+Reopen the widget if you want. Each preset has a name and a formula. You don't memorize these; you draw the transformation, read off the columns, write them down.
 
 - **Identity** ($I$): $\hat{\imath}$ stays at $[1, 0]$, $\hat{\jmath}$ stays at $[0, 1]$. Matrix: $\begin{bmatrix}1 & 0 \\ 0 & 1\end{bmatrix}$.
 - **Scale by $s$**: both arrows triple in length. Matrix: $\begin{bmatrix}s & 0 \\ 0 & s\end{bmatrix}$.
@@ -136,7 +136,7 @@ Without computing anything: the matrix that rotates every vector $90°$ counterc
 **What's the entry at row 1, column 2?**
 </StepCheck>
 
-<Step title="Collapse — what it looks like to lose a dimension.">
+<Step title="Collapse: what it looks like to lose a dimension.">
 Reopen the widget and press **collapse** again. The two columns end up parallel; the unit square is squashed flat into a line. Whatever was 2D before is now 1D.
 
 When the columns of a matrix span only a line (or a point), the matrix has **rank** less than 2. Specifically:
@@ -147,5 +147,5 @@ When the columns of a matrix span only a line (or a point), the matrix has **ran
 
 Rank measures how much space the transformation can reach. Losing rank is the geometric event behind every "this matrix is singular" / "this system has no unique solution" warning you'll meet for the rest of linear algebra.
 
-Drag the two columns until they're nearly aligned. Watch the **det** readout drop toward zero. Determinant is rank's continuous cousin — we'll meet it formally next lesson, but you've already seen it move.
+Drag the two columns until they're nearly aligned. Watch the **det** readout drop toward zero. Determinant is rank's continuous cousin; we'll meet it formally next lesson, but you've already seen it move.
 </Step>

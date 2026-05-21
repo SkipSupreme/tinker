@@ -1,7 +1,7 @@
 ---
 title: What does it mean to minimize a function?
 module: m10-optimization
-summary: Gradients point uphill. Walk against them and you go downhill. The only subtle part is how far to step — and it turns out that one dial has a lot of opinions.
+summary: Gradients point uphill. Walk against them and you go downhill. The only subtle part is how far to step, and it turns out that one dial has a lot of opinions.
 estimatedMinutes: 16
 order: 1
 prereqs: []
@@ -18,11 +18,11 @@ import StepCheck from '../../components/lesson/StepCheck.astro';
 import LossLandscapeNavigator from '../../components/demos/LossLandscapeNavigator.svelte';
 
 <Step title="Pick a starting point. Watch SGD struggle.">
-The navigator below has presets — start with the **narrow ravine**. Drag the start point off-axis, set $\eta$ around $0.04$, and run plain **SGD** (no momentum). Watch the trajectory zig-zag.
+The navigator below has presets; start with the **narrow ravine**. Drag the start point off-axis, set $\eta$ around $0.04$, and run plain **SGD** (no momentum). Watch the trajectory zig-zag.
 
 <LossLandscapeNavigator client:visible />
 
-Then crank $\eta$ higher. It gets *worse*, not better — the iterates start oscillating across the ravine. Try $\eta$ above the divergence threshold and the trajectory shoots off the edge.
+Then crank $\eta$ higher. It gets *worse*, not better: the iterates start oscillating across the ravine. Try $\eta$ above the divergence threshold and the trajectory shoots off the edge.
 
 This is the **ravine pathology**, the defining failure mode of vanilla gradient descent. The rest of the module is the toolkit for fixing it. But first, the basics.
 </Step>
@@ -48,7 +48,7 @@ For $L(w) = w^2 + 3$ with $w_0 = 2$ and $\eta = 0.25$, compute $w_1$.
 </StepCheck>
 
 <Step title="Why against the gradient, not along it">
-If you walk *along* the gradient, you're walking toward the direction of fastest increase — the worst direction. If you walk *against* it, you're walking toward the direction of fastest decrease. The sign in the update rule is load-bearing. Get it wrong and the loss explodes.
+If you walk *along* the gradient, you're walking toward the direction of fastest increase (the worst direction). If you walk *against* it, you're walking toward the direction of fastest decrease. The sign in the update rule is load-bearing. Get it wrong and the loss explodes.
 
 A common confusion: "gradient descent moves toward the minimum." It doesn't. It moves **against the gradient**, which in curved landscapes is almost never the same thing as "toward the minimum." In a narrow valley that direction is roughly perpendicular to the valley's axis. You end up zig-zagging, as you saw above. We'll fix that with momentum in Lesson 10.3.
 </Step>
@@ -56,10 +56,10 @@ A common confusion: "gradient descent moves toward the minimum." It doesn't. It 
 <Step title="The three regimes of step size">
 On the 1D parabola $f(x) = x^2$, GD is $x \leftarrow x - 2\eta x = (1 - 2\eta) x$. Three behaviors, depending on $\eta$:
 
-- **$\eta < 0.5$** — monotone decay. Small, steady steps. Slow but safe.
-- **$\eta = 0.5$** — one-shot convergence to zero. Best possible for this problem.
-- **$0.5 < \eta < 1$** — oscillation. The iterates bounce across the minimum but still shrink in magnitude.
-- **$\eta \ge 1$** — divergence. Iterates blow up.
+- **$\eta < 0.5$**: monotone decay. Small, steady steps. Slow but safe.
+- **$\eta = 0.5$**: one-shot convergence to zero. Best possible for this problem.
+- **$0.5 < \eta < 1$**: oscillation. The iterates bounce across the minimum but still shrink in magnitude.
+- **$\eta \ge 1$**: divergence. Iterates blow up.
 
 The general rule: **the biggest stable learning rate is $2/L$**, where $L$ is the largest eigenvalue of the Hessian (which, for our parabola, equals $2$). Above $2/L$, GD diverges. Below it but close, you oscillate. Well below, you crawl.
 </Step>
@@ -112,5 +112,5 @@ Gradient descent has two problems:
 1. **Vanilla GD is bad at anisotropic landscapes.** Fix: momentum (Lesson 10.3), adaptive per-parameter step sizes (Lesson 10.4).
 2. **You can't afford to compute the full gradient.** Fix: stochastic/mini-batch gradient estimation (Lesson 10.2).
 
-Everything else in this module — Adam, AdamW, cosine schedules, warmup, gradient clipping — is engineering on top of those two fixes. By the end you'll read nanoGPT's `configure_optimizers` and understand every line.
+Everything else in this module (Adam, AdamW, cosine schedules, warmup, gradient clipping) is engineering on top of those two fixes. By the end you'll read nanoGPT's `configure_optimizers` and understand every line.
 </Step>

@@ -1,7 +1,7 @@
 ---
 title: Wrapping the training loop around the transformer
 module: m17-tokenization-sampling
-summary: From a 1-D stream of token ids to a working data loader, batched NLL across all positions, and AdamW with warmup, cosine decay, and gradient clipping. The training loop is the outside of the transformer — the forward pass from M16 sits inside it, untouched.
+summary: From a 1-D stream of token ids to a working data loader, batched NLL across all positions, and AdamW with warmup, cosine decay, and gradient clipping. The training loop is the outside of the transformer; the forward pass from M16 sits inside it, untouched.
 estimatedMinutes: 18
 order: 3
 prereqs:
@@ -23,13 +23,13 @@ import ShiftByOneBatch from '../../components/demos/ShiftByOneBatch.svelte';
 <Step title="What this lesson is, and isn't">
 M16 ended with the full transformer forward pass. Tokens at the bottom, attention + FFN blocks in the middle, an unembedding at the top, a softmax over the vocabulary at the very end. That entire stack is *one function*, $f_\theta(\text{ids}) \to \text{logits}$.
 
-The training loop is what you wrap around that function to make $\theta$ get good. It does not change the forward pass. It does not change the architecture. It samples batches, computes a loss, runs backprop, and steps an optimizer — all of which you've seen separately in earlier modules. This lesson assembles them in the order they actually run.
+The training loop is what you wrap around that function to make $\theta$ get good. It does not change the forward pass. It does not change the architecture. It samples batches, computes a loss, runs backprop, and steps an optimizer, all of which you've seen separately in earlier modules. This lesson assembles them in the order they actually run.
 </Step>
 
 <Step title="The corpus is one tensor">
 Step zero: tokenize the entire training corpus, once, and concatenate the result into a single 1-D tensor of integer ids. For tiny-shakespeare-character that's 1,115,394 ids. The tokenizer is the boundary you crossed in the last two lessons; everything after it is integer math.
 
-Then split off a validation suffix. nanoGPT's convention for tiny corpora is a contiguous 90/10 split — the last 10% of the stream is held out and never touched during training:
+Then split off a validation suffix. nanoGPT's convention for tiny corpora is a contiguous 90/10 split; the last 10% of the stream is held out and never touched during training:
 
 ```python
 data = encode(text)            # one long 1-D tensor, length 1,115,394
@@ -38,7 +38,7 @@ train_data = data[:n]          # 1,003,854 tokens
 val_data   = data[n:]          # 111,540 tokens
 ```
 
-A contiguous split, not a shuffle. Why? Because the model is autoregressive — it reads sequences. Random per-token shuffling would leak validation tokens into training contexts and back. A clean tail is the honest version.
+A contiguous split, not a shuffle. Why? Because the model is autoregressive: it reads sequences. Random per-token shuffling would leak validation tokens into training contexts and back. A clean tail is the honest version.
 </Step>
 
 <StepCheck
@@ -46,7 +46,7 @@ A contiguous split, not a shuffle. Why? Because the model is autoregressive — 
   prompt="train_tokens = "
   answer={1003854}
   tolerance={2}
-  hint="0.9 × 1,115,394 = 1,003,854.6 — rounded down by `int()` to 1,003,854."
+  hint="0.9 × 1,115,394 = 1,003,854.6, rounded down by `int()` to 1,003,854."
 >
 Tiny-shakespeare-character has 1,115,394 tokens. With a 90/10 contiguous split, **how many train tokens?**
 </StepCheck>
@@ -71,7 +71,7 @@ Drag the sliders to feel the trade. Larger `T` means more next-token predictions
 </Step>
 
 <Step title="The shifted-by-one trick">
-Why shift by one? Because the transformer's causal mask (M15) ensures that at position $t$ in the forward pass, the model has only seen `x[:t+1]`. So predicting `y[t]` from that prefix is honest next-token supervision — no information leak.
+Why shift by one? Because the transformer's causal mask (M15) ensures that at position $t$ in the forward pass, the model has only seen `x[:t+1]`. So predicting `y[t]` from that prefix is honest next-token supervision, with no information leak.
 
 This means one row gives you $T$ training examples instead of one. Position 0 predicts position 1. Position 1 predicts position 2. Position 7 predicts position 8. All in the same forward pass, sharing all the same attention computation. The cross-entropy loss is averaged over every position in every row:
 
@@ -79,7 +79,7 @@ $$
 \mathcal{L} \;=\; -\frac{1}{B \, T} \sum_{b=1}^{B} \sum_{t=1}^{T} \log p_\theta\!\left(y_{b,t} \;\big|\; x_{b,1:t}\right)
 $$
 
-That averaging is the part that gets people. If you compute the loss only at the *last* position of each row, you're throwing away $T - 1$ of every $T$ gradient signals — and your training is roughly $T$ times slower than it should be. nanoGPT computes loss everywhere. So does GPT.
+That averaging is the part that gets people. If you compute the loss only at the *last* position of each row, you're throwing away $T - 1$ of every $T$ gradient signals, and your training is roughly $T$ times slower than it should be. nanoGPT computes loss everywhere. So does GPT.
 </Step>
 
 <StepCheck
@@ -119,7 +119,7 @@ The two pieces that haven't appeared elsewhere in the course:
 <Step title="Gradient clipping">
 Sometimes a single batch produces a gigantic gradient. Maybe the batch had a string of rare tokens. Maybe the loss spiked because the model got confidently wrong. Whatever the reason, applying that gradient at the current learning rate would step the parameters far enough to wreck the run.
 
-Gradient clipping is cheap insurance. Compute the global L2 norm of the gradient — flatten every parameter's gradient into one big vector and take its length. If that length is greater than a threshold $c$ (typically 1.0), rescale the entire gradient down so its length is exactly $c$:
+Gradient clipping is cheap insurance. Compute the global L2 norm of the gradient: flatten every parameter's gradient into one big vector and take its length. If that length is greater than a threshold $c$ (typically 1.0), rescale the entire gradient down so its length is exactly $c$:
 
 $$
 g \;\leftarrow\; g \cdot \min\!\left(1,\ \frac{c}{\|g\|_2}\right)
@@ -138,7 +138,7 @@ $$
 \eta_t \;=\; \eta_{\min} + \tfrac{1}{2}(\eta_{\max} - \eta_{\min})\!\left[1 + \cos\!\left(\pi \cdot \tfrac{t - W}{D - W}\right)\right]
 $$
 
-Cosine is the dominant choice in modern training. It decays smoothly, spends a long time near peak before falling off, and crucially, ends near zero — so the final iterations are tiny correction steps rather than full-strength updates. The model "settles."
+Cosine is the dominant choice in modern training. It decays smoothly, spends a long time near peak before falling off, and crucially, ends near zero, so the final iterations are tiny correction steps rather than full-strength updates. The model "settles."
 </Step>
 
 <StepCheck
@@ -152,9 +152,9 @@ Tiny-shakespeare-char has $\lvert V \rvert = 65$. With reasonable initialization
 </StepCheck>
 
 <Step title="What you would actually see">
-Wire all of this up against a small transformer (4 layers, 4 heads, $d = 128$, $T = 64$, ~200k parameters — capstone size). Train on tiny-shakespeare-char with $B = 64$, $\eta_{\max} = 10^{-3}$, 100-iter warmup, cosine decay over 5,000 iterations.
+Wire all of this up against a small transformer (4 layers, 4 heads, $d = 128$, $T = 64$, ~200k parameters, capstone size). Train on tiny-shakespeare-char with $B = 64$, $\eta_{\max} = 10^{-3}$, 100-iter warmup, cosine decay over 5,000 iterations.
 
-Start point: $\ln 65 \approx 4.17$ nats. After ~100 iters of warmup, loss drops fast — by iter 500 it's around 1.7. By iter 2,000 it's around 1.4. Final val loss around 1.5 — a perplexity near 4.5.
+Start point: $\ln 65 \approx 4.17$ nats. After ~100 iters of warmup, loss drops fast; by iter 500 it's around 1.7. By iter 2,000 it's around 1.4. Final val loss around 1.5, a perplexity near 4.5.
 
 That curve is the same shape, scaled, at every model size from a 200k-parameter character model up to GPT-3. Initialize near $\log \lvert V \rvert$, drop fast in the first few percent of training, slow plateau for the rest. Next lesson: how to read it.
 </Step>

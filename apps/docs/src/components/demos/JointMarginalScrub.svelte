@@ -188,7 +188,7 @@
         class="marg-num"
       >{fmt(p)}</text>
     {/each}
-    <text x={padL + heatW / 2} y={14} text-anchor="middle" class="marg-title">p_X(x) — column sums</text>
+    <text x={padL + heatW / 2} y={14} text-anchor="middle" class="marg-title">p_X(x): column sums</text>
 
     <!-- Right marginal: p_Y(y) -->
     {#each pY as p, i}
@@ -300,8 +300,7 @@
           conditional on
           <strong class="strong">
             {conditional.kind === 'row' ? `Y = ${yLabels[conditional.idx]}` : `X = ${xLabels[conditional.idx]}`}
-          </strong>
-          —
+          </strong>:
           <span class="cond-desc">
             {conditional.kind === 'row' ? 'slice that row, renormalize to sum to 1' : 'slice that column, renormalize to sum to 1'}
           </span>

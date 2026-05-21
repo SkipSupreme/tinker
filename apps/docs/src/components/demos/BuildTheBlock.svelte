@@ -37,7 +37,7 @@
     if (res1 === 'off' || res2 === 'off') {
       return {
         state: 'no-residual',
-        label: 'broken — missing residual',
+        label: 'broken: missing residual',
         explain:
           'A sub-layer without a residual replaces the stream rather than writing into it. Gradients no longer route around the sub-layer; deep stacks become untrainable. Restore both residual adds.',
       };
@@ -45,7 +45,7 @@
     if (ln1 === 'off' || ln2 === 'off') {
       return {
         state: 'no-ln',
-        label: 'broken — missing LayerNorm',
+        label: 'broken: missing LayerNorm',
         explain:
           'Without LayerNorm, the magnitude of the residual stream grows as more deltas are added. Gradients to early layers either explode or vanish depending on initialization. Add LN to both sub-layers.',
       };
@@ -55,7 +55,7 @@
         state: 'pre',
         label: '✓ pre-LN block',
         explain:
-          'Modern default. Each sub-layer normalizes its input, computes a delta, and adds the unnormalized delta to the residual trunk. Gradient norm stays O(1/√L) at depth — no warmup needed. You will need a final LN at the top of the stack.',
+          'Modern default. Each sub-layer normalizes its input, computes a delta, and adds the unnormalized delta to the residual trunk. Gradient norm stays O(1/√L) at depth, no warmup needed. You will need a final LN at the top of the stack.',
       };
     }
     if (ln1 === 'post' && ln2 === 'post') {
@@ -63,12 +63,12 @@
         state: 'post',
         label: '✓ post-LN block',
         explain:
-          'The original 2017 wiring. LN sits on the trunk after each residual add. Gradient norm at the output grows with depth — requires a learning-rate warmup of ~4–10k steps to train stably above L = 12 or so. No final LN needed.',
+          'The original 2017 wiring. LN sits on the trunk after each residual add. Gradient norm at the output grows with depth; it requires a learning-rate warmup of ~4–10k steps to train stably above L = 12 or so. No final LN needed.',
       };
     }
     return {
       state: 'inconsistent',
-      label: '✗ inconsistent — mixing pre and post',
+      label: '✗ inconsistent: mixing pre and post',
       explain:
         'Real transformers pick one convention per block. Mixing pre-LN on one sub-layer and post-LN on the other produces an architecture that nobody trains, with the worst of both: needs warmup and still has no normalized output.',
     };

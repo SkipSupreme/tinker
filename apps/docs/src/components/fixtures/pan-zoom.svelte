@@ -14,13 +14,13 @@
     (window as unknown as { __panCalls: PanCall[] }).__panCalls = panCalls;
   }
 
-  // Hydration marker — tests wait for this before dispatching pointer
+  // Hydration marker: tests wait for this before dispatching pointer
   // events so the panZoom action is guaranteed attached.
   $effect(() => {
     (window as unknown as { __fixtureHydrated: boolean }).__fixtureHydrated = true;
   });
 
-  // pxToUser: identity — the spec works in page-pixel space, which is
+  // pxToUser: identity; the spec works in page-pixel space, which is
   // what panZoom's onZoom already reports for centerPx.
   const pxToUser = (px: [number, number]): [number, number] => px;
 

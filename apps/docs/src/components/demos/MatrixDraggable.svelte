@@ -2,7 +2,7 @@
   import { Mafs, Coordinates, Vector, MovablePoint, Polygon, Line } from 'svelte-mafs';
 
   /**
-   * MatrixDraggable — the keystone widget for Module 7 (linear algebra).
+   * MatrixDraggable: the keystone widget for Module 7 (linear algebra).
    *
    * Two MovablePoints are literally the tips of the two column vectors of a
    * 2×2 matrix. Drag either one and the grid + unit square transform in
@@ -16,7 +16,7 @@
    *   det(A) = a d - b c  = signed area of the parallelogram spanned by the columns
    */
 
-  // Default: identity — the unit square sits exactly on the unit square.
+  // Default: identity; the unit square sits exactly on the unit square.
   let { initialA = 1, initialB = 0, initialC = 0, initialD = 1 } = $props<{
     initialA?: number;
     initialB?: number;
@@ -47,7 +47,7 @@
   // Apply A to a point in the original (pre-transform) space.
   const apply = (x: number, y: number): [number, number] => [a * x + b * y, c * x + d * y];
 
-  // Transformed unit square corners — the "shape" that deforms.
+  // Transformed unit square corners, the "shape" that deforms.
   const squareCorners = $derived<[number, number][]>([
     apply(0, 0),
     apply(1, 0),
@@ -75,7 +75,7 @@
     })),
   ]);
 
-  // Preset buttons — clicking sets the matrix to a famous transformation.
+  // Preset buttons: clicking sets the matrix to a famous transformation.
   function setMatrix(A: number, B: number, C: number, D: number) {
     px1 = A; py1 = C;
     px2 = B; py2 = D;
@@ -127,7 +127,7 @@
       <Vector tail={[0, 0]} tip={[a, c]} color="var(--ink-red)" weight={2.75} />
       <Vector tail={[0, 0]} tip={[b, d]} color="var(--ink-coral)"  weight={2.75} />
 
-      <!-- Draggable tips — the only objects the user controls. -->
+      <!-- Draggable tips: the only objects the user controls. -->
       <MovablePoint bind:x={px1} bind:y={py1} color="var(--ink-red)" />
       <MovablePoint bind:x={px2} bind:y={py2} color="var(--ink-coral)"  />
     </Mafs>
@@ -156,7 +156,7 @@
       {#if flipped}
         <div class="flag flag-coral">orientation flipped</div>
       {:else if singular}
-        <div class="flag flag-warn">singular — space squashed</div>
+        <div class="flag flag-warn">singular, space squashed</div>
       {/if}
     </dl>
   </div>

@@ -2,7 +2,7 @@
  * localStorage keys used by Tinker. Centralized so a future rename can't
  * slip through grep.
  *
- * These values are stable user data — never change a string here without
+ * These values are stable user data: never change a string here without
  * shipping a migration that copies the old key forward.
  */
 export const LS_KEY = {

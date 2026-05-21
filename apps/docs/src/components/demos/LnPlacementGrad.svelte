@@ -1,8 +1,8 @@
 <script lang="ts">
   // Models the qualitative gradient-norm-per-layer profile from Xiong et al.
   // 2020. The exact theorem is stated for layer L (the top); we extend to
-  // layer ℓ with a simple monotone profile. The pedagogical claim — post-LN
-  // gradients diverge across depth, pre-LN stay flat — survives the
+  // layer ℓ with a simple monotone profile. The pedagogical claim (post-LN
+  // gradients diverge across depth, pre-LN stay flat) survives the
   // approximation.
 
   let L = $state(24);

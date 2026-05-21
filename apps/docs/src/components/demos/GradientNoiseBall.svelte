@@ -2,7 +2,7 @@
   import { Mafs, Coordinates, Point, Circle } from 'svelte-mafs';
 
   /**
-   * GradientNoiseBall — run mini-batch SGD on a quadratic for many random
+   * GradientNoiseBall: run mini-batch SGD on a quadratic for many random
    * seeds, scatter the endpoints, and report the empirical radius.
    *
    * Loss: L(w) = ½ ||w||²  (gradient = w). Each step:

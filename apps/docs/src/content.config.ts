@@ -5,13 +5,13 @@ import { glob } from 'astro/loaders';
  * Content hierarchy: Course → Arc → Module → Lesson.
  *
  * - A Course is the whole product ("Machine Learning, Backpropagation and
- *   AI — The Math"). The course file owns the arc list.
+ *   AI: The Math"). The course file owns the arc list.
  * - A Module is a unit of ~1–5 lessons teaching one cluster of concepts
- *   (e.g. "Single-variable calculus — derivatives & chain rule").
+ *   (e.g. "Single-variable calculus: derivatives & chain rule").
  * - A Lesson is one read-in-one-sitting interactive MDX page.
  *
  * Arcs are declared inline on the Course rather than as their own
- * collection — they're structural grouping, not authored content.
+ * collection: they're structural grouping, not authored content.
  */
 
 const courses = defineCollection({

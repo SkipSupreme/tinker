@@ -1,5 +1,5 @@
 <script lang="ts">
-  // M18 forward smoke — a /dev/-only widget that runs ONE forward pass through
+  // M18 forward smoke: a /dev/-only widget that runs ONE forward pass through
   // the WGSL engine on a hand-crafted batch, runs the same forward through the
   // CPU twin, and reports:
   //   • WebGPU availability + adapter name
@@ -125,13 +125,13 @@
     <dd>n_layer={cfg.nLayer} · n_head={cfg.nHead} · d_model={cfg.dModel} · d_ff={cfg.dFF} · T={cfg.contextLen} · vocab={cfg.vocabSize}</dd>
 
     <dt>adapter</dt>
-    <dd>{adapter || (status === 'error' ? '—' : 'detecting…')}</dd>
+    <dd>{adapter || (status === 'error' ? 'n/a' : 'detecting…')}</dd>
 
     <dt>dispatches / forward</dt>
-    <dd>{dispatchCount || '—'} <span class="muted">(10 ops × {cfg.nLayer} blocks + 3 boundary)</span></dd>
+    <dd>{dispatchCount || 'n/a'} <span class="muted">(10 ops × {cfg.nLayer} blocks + 3 boundary)</span></dd>
 
     <dt>logit shape</dt>
-    <dd>{logitShape || '—'}</dd>
+    <dd>{logitShape || 'n/a'}</dd>
 
     <dt>softmax row sum</dt>
     <dd>
@@ -140,7 +140,7 @@
           {softmaxRowsOk} / {softmaxRowsChecked} rows within 1e-3
         </span>
         <span class="muted"> · max |Σp − 1| = {sci(softmaxMaxAbsErr)}</span>
-      {:else}—{/if}
+      {:else}n/a{/if}
     </dd>
 
     <dt>WGSL vs CPU twin</dt>
@@ -150,11 +150,11 @@
           max |Δ| = {sci(wgslVsCpuMax)}
         </span>
         <span class="muted"> · mean |Δ| = {sci(wgslVsCpuMean)}</span>
-      {:else}—{/if}
+      {:else}n/a{/if}
     </dd>
 
     <dt>elapsed</dt>
-    <dd>{status === 'done' ? `${fmt(elapsedMs, 0)} ms` : '—'}</dd>
+    <dd>{status === 'done' ? `${fmt(elapsedMs, 0)} ms` : 'n/a'}</dd>
   </dl>
 
   {#if errorMsg}
@@ -163,7 +163,7 @@
 
   <p class="caption">
     One forward pass through the M18 engine (apps/docs/src/lib/m18/engine).
-    The hand-crafted batch is deterministic — re-running should reproduce the
+    The hand-crafted batch is deterministic; re-running should reproduce the
     same logits to floating-point. The CPU twin runs the same math in pure TS
     and the two are compared elementwise. Slice 2 ships forward only; backward
     + training arrive in Slice 3.

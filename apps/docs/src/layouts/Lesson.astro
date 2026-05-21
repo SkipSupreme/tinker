@@ -385,9 +385,9 @@ const moduleLabel = module.replace(/-/g, ' ');
 
   type CheckData = { answer: number; tolerance: number };
 
-  const FEEDBACK_OK = "Nice — that's right.";
+  const FEEDBACK_OK = "Nice. That's right.";
   const FEEDBACK_FAR = "Not quite. Re-read the previous step and try again.";
-  const FEEDBACK_CLOSE = "Close — check your precision.";
+  const FEEDBACK_CLOSE = "Close, check your precision.";
 
   const STUCK_MS = 30_000;
 
@@ -439,7 +439,7 @@ const moduleLabel = module.replace(/-/g, ' ');
       if (completeCard) {
         void celebrateLesson(completeCard);
       } else {
-        // No card in DOM (shouldn't happen) — fall back to bare XP so the
+        // No card in DOM (shouldn't happen); fall back to bare XP so the
         // user still gets credit for finishing the lesson.
         awardXp(XP_AWARD.lessonComplete, `lesson:${slug}`);
       }
@@ -553,7 +553,7 @@ const moduleLabel = module.replace(/-/g, ' ');
           if (submitBtn) {
             void celebrateCorrect(submitBtn);
           } else {
-            // No submit button (shouldn't happen) — fall back to bare XP.
+            // No submit button (shouldn't happen); fall back to bare XP.
             awardXp(XP_AWARD.correctFirstTry, `check:${slug}:${step.dataset.index}`);
           }
           // Reference XP_AWARD.correctRetry to keep the symbol live for future

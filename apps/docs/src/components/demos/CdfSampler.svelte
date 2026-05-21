@@ -7,7 +7,7 @@
     initialP?: number[];
     /** Token labels shown above each bar. */
     labels?: string[];
-    /** Hide the "sample 200" auto button — used when the lesson wants a deliberate, one-drop tempo. */
+    /** Hide the "sample 200" auto button; used when the lesson wants a deliberate, one-drop tempo. */
     hideAuto?: boolean;
   }
 
@@ -396,7 +396,7 @@
   }
   .u-ball {
     fill: var(--c-landed);
-    stroke: color-mix(in srgb, var(--c-landed) 50%, #000);
+    stroke: color-mix(in srgb, var(--c-landed) 50%, black);
     stroke-width: 1;
     transition: transform 120ms ease-out;
   }

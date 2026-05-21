@@ -4,7 +4,7 @@ import { Coordinates, Plot } from "./index.js";
 /**
  * Svelte 5 resolves `<Plot.OfX>` as a JS property lookup, so the namespace
  * contract is simply "every key maps to something the Svelte runtime will
- * accept as a component." That's any function (class) — these checks guard
+ * accept as a component." That's any function (class); these checks guard
  * against accidental key typos or export regressions in the two namespaces.
  */
 

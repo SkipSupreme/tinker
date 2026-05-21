@@ -190,7 +190,7 @@
   <p class="caption">
     Blue dot is the data minimum (where the unregularized loss is zero).
     Coral dot is the MAP solution. Dashed shape is the prior level set passing
-    through MAP — a <em>circle</em> for the Gaussian prior, a <em>diamond</em>
+    through MAP: a <em>circle</em> for the Gaussian prior, a <em>diamond</em>
     for the Laplace prior. Crank λ on L1 and you'll watch the coral dot slide
     toward the nearest axis and stick. That sticking is sparsity, and the
     diamond's corners are why it happens.

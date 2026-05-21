@@ -135,8 +135,8 @@ export function unembedding(x: F32, wte: F32, rows: number, d: number, V: number
 
 // ── Backward twins (Slice 3) ──────────────────────────────────────────────────
 //
-// Each takes the same inputs the WGSL kernel does — forward inputs (cached
-// activations) plus the upstream gradient — and returns the local gradients.
+// Each takes the same inputs the WGSL kernel does: forward inputs (cached
+// activations) plus the upstream gradient, and returns the local gradients.
 // All in pure TS so a vitest run can pin the math without WebGPU.
 
 // 1. matmul backward, dA branch.   dA[m,k] = Σ_n dC[m,n] · B[k,n]
@@ -224,14 +224,14 @@ export function geluBwd(dy: F32, x: F32): F32 {
   return out;
 }
 
-// 5. residualAdd backward — gradient flows identically to both inputs. We
+// 5. residualAdd backward: gradient flows identically to both inputs. We
 //    expose this as an explicit twin even though the WGSL path collapses it
 //    into the consumer's read.
 export function residualAddBwd(dy: F32): { da: F32; db: F32 } {
   return { da: dy.slice(), db: dy.slice() };
 }
 
-// 6. layerNorm backward — the 3-term in-shader form (research §5).
+// 6. layerNorm backward: the 3-term in-shader form (research §5).
 //    Given x, gamma, dy, returns dx, dGamma, dBeta. Reductions are per row
 //    for dx, summed across rows for dGamma/dBeta.
 export function layerNormBwd(
@@ -338,7 +338,7 @@ export function causalSdpaBwd(
   return dqkv;
 }
 
-// 8. embedding backward — scatter-add the per-token gradient back into wte and
+// 8. embedding backward: scatter-add the per-token gradient back into wte and
 //    wpe. Caller is responsible for ADDING to dWte if it has prior content
 //    from the unembedding backward (tied weights).
 export function embeddingBwd(

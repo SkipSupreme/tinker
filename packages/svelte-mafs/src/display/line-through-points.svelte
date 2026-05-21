@@ -29,7 +29,7 @@
   // null if the line misses the box (only possible for the degenerate p1==p2
   // case; a non-degenerate line through any two finite points always hits
   // any non-empty axis-aligned rectangle extended to infinity in both
-  // directions — but we still return null defensively).
+  // directions, but we still return null defensively).
   const clip = (p1: Vec2, p2: Vec2): Clipped => {
     const dx = p2[0] - p1[0];
     const dy = p2[1] - p1[1];

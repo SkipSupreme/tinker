@@ -1,7 +1,7 @@
 ---
 title: Two ways to keep weights small (and what they really mean)
 module: m13-training-dynamics
-summary: L2, L1, and dropout — framed as priors and as expected-value contracts. Two completely different stories that solve overlapping problems.
+summary: L2, L1, and dropout, framed as priors and as expected-value contracts. Two completely different stories that solve overlapping problems.
 estimatedMinutes: 14
 order: 2
 prereqs:
@@ -22,7 +22,7 @@ import DropoutMaskScrub from '../../components/demos/DropoutMaskScrub.svelte';
 <Step title="Regularization is bigger than λ-times-norm-squared">
 A lot of people who took a machine-learning course will tell you "regularization means L2." It does not. Regularization is *anything that biases search toward simpler hypotheses or constrains the hypothesis space*. Weight decay is one item under that umbrella. So is dropout. So is data augmentation. So is early stopping. So is the noise that mini-batch SGD injects for free.
 
-In this lesson we cover two — weight decay and dropout — because they both give the network a smaller effective capacity than the parameter count would suggest, and they do it for completely different reasons.
+In this lesson we cover two (weight decay and dropout) because they both give the network a smaller effective capacity than the parameter count would suggest, and they do it for completely different reasons.
 </Step>
 
 <Step title="Weight decay = L2">
@@ -78,17 +78,17 @@ $$
 \mathcal{L}_{\text{L1}}(w) \;=\; \mathcal{L}_{\text{data}}(w) \;+\; \lambda \sum_i \lvert w_i \rvert.
 $$
 
-The geometric difference is the whole reason L1 is used. The prior's level sets — the points of equal prior density — are *circles* for the Gaussian and *diamonds* for the Laplace. When the gradient of the data loss meets a constraint surface, it tends to land on whichever feature of the surface sticks out the most. The diamond has corners, and the corners sit on the axes. So L1's MAP solution tends to push individual coordinates of $w$ all the way to zero.
+The geometric difference is the whole reason L1 is used. The prior's level sets (the points of equal prior density) are *circles* for the Gaussian and *diamonds* for the Laplace. When the gradient of the data loss meets a constraint surface, it tends to land on whichever feature of the surface sticks out the most. The diamond has corners, and the corners sit on the axes. So L1's MAP solution tends to push individual coordinates of $w$ all the way to zero.
 
 That is *sparsity*. L2 shrinks all weights uniformly; L1 zeroes some out completely. The corners did the work.
 
 <PriorPenaltyEquivalence client:visible />
 
-The blue dot is the data minimum, sitting at $(1.6, 0.5)$. The coral dot is the MAP solution. Toggle to L1 and slide $\lambda$ past about 1 — you'll watch the smaller coordinate snap exactly to zero. With L2, both coordinates shrink continuously; nobody hits the axis.
+The blue dot is the data minimum, sitting at $(1.6, 0.5)$. The coral dot is the MAP solution. Toggle to L1 and slide $\lambda$ past about 1; you'll watch the smaller coordinate snap exactly to zero. With L2, both coordinates shrink continuously; nobody hits the axis.
 </Step>
 
 <Step title="AdamW: the decoupling fix">
-A subtlety worth flagging once: when you use Adam, its per-parameter step rescaling interacts badly with adding $\lambda w$ to the gradient. The penalty effectively gets divided by Adam's running second-moment estimate, so heavily-updated weights get shrunk *less* than lightly-updated ones — which is the opposite of what you want.
+A subtlety worth flagging once: when you use Adam, its per-parameter step rescaling interacts badly with adding $\lambda w$ to the gradient. The penalty effectively gets divided by Adam's running second-moment estimate, so heavily-updated weights get shrunk *less* than lightly-updated ones, which is the opposite of what you want.
 
 The fix is *decoupled weight decay*: subtract $\eta \lambda w$ directly from the parameter, after Adam's adaptive step. That's AdamW. We will use AdamW with $\lambda \approx 0.1$ when we train the transformer. This is the only correct way to combine adaptive optimizers with weight decay.
 </Step>
@@ -96,7 +96,7 @@ The fix is *decoupled weight decay*: subtract $\eta \lambda w$ directly from the
 <Step title="Dropout: the radical idea">
 The other technique. At training time, take every activation in a layer and zero it out independently with probability $p$. Then continue forward as if those neurons didn't exist for this step. The next step you sample a fresh random mask. The next step, again.
 
-The effect is that no single neuron can rely on any specific other neuron being there. Co-adaptation between units — where one neuron quietly compensates for another — gets discouraged because the compensator might vanish at any moment.
+The effect is that no single neuron can rely on any specific other neuron being there. Co-adaptation between units (where one neuron quietly compensates for another) gets discouraged because the compensator might vanish at any moment.
 
 Dropout is *not* "make the network smaller." All neurons are present at inference. Dropout is *noise injection*: the model has to find a solution that is robust to random subnetworks of itself.
 </Step>
@@ -139,7 +139,7 @@ A neuron outputs $a = 5.0$ and survives a dropout step with $p = 0.2$. **What is
 <Step title="Why dropout and L2 are not the same thing">
 They both regularize. They are not interchangeable.
 
-L2 shrinks all weights uniformly — every coordinate of $w$ pays the same multiplicative tax per step. Dropout's regularization is *adaptive*: it punishes co-adapted features (neurons that rely on others to compensate) much more than independently useful ones. In linear models, dropout can be shown to correspond to a *data-dependent* L2 penalty proportional to the input variance. Plain L2 is data-independent.
+L2 shrinks all weights uniformly: every coordinate of $w$ pays the same multiplicative tax per step. Dropout's regularization is *adaptive*: it punishes co-adapted features (neurons that rely on others to compensate) much more than independently useful ones. In linear models, dropout can be shown to correspond to a *data-dependent* L2 penalty proportional to the input variance. Plain L2 is data-independent.
 
 In practice you use both. The transformer block in this course will apply dropout to the attention output and to the MLP output, and AdamW will apply weight decay across all projection matrices.
 

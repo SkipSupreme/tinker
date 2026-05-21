@@ -24,7 +24,7 @@ export async function requireAdmin(
 }
 
 /**
- * Returns a generic 404 response — we deliberately don't 403 admin routes
+ * Returns a generic 404 response: we deliberately don't 403 admin routes
  * so the surface is invisible to non-admins.
  */
 function notFound(): Response {

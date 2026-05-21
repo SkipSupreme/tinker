@@ -39,7 +39,7 @@
   const VOCAB: string[] = ['.', ...'abcdefghijklmnopqrstuvwxyz'.split('')];
   const display = (c: string) => (c === '.' ? '·' : c);
 
-  // Ideal embedding positions — pre-arranged into rough clusters that
+  // Ideal embedding positions, pre-arranged into rough clusters that
   // reflect bigram co-occurrence (vowels group, common consonants group,
   // rare letters scatter at the edges). The simulated loss is the mean
   // squared deviation from these ideals; "training" the embedding means
@@ -80,6 +80,10 @@
     void positions; // re-run on positions change
     return loss();
   });
+
+  // In hero mode the loss pill tints coral once the visitor has dragged a
+  // letter meaningfully off its cluster. Baseline noise loss is ~0.002.
+  const lossBad = $derived(currentLoss > 0.02);
 
   // Two-way bind for the selected point so dragging updates state.
   const selX = $derived(positions[selected]?.[0] ?? 0);
@@ -141,7 +145,7 @@
     if (!dragStartFired) {
       dispatchHero(TINKER_HERO_EVENT.drag, { x: n.x, y: n.y, handle: selected, phase: 'start' });
       dragStartFired = true;
-      // Schedule a phase=end after stillness — debounced via timeout.
+      // Schedule a phase=end after stillness, debounced via timeout.
     } else {
       dispatchHero(TINKER_HERO_EVENT.drag, { x: n.x, y: n.y, handle: selected, phase: 'move' });
     }
@@ -154,9 +158,12 @@
     }
   });
 
-  // Hover focus tracking on the stage — apple eye-tracks toward where
+  // Hover focus tracking on the stage: apple eye-tracks toward where
   // the visitor is exploring. Throttled to ~60Hz via raf.
   let focusRaf = 0;
+  function clearTextSelection() {
+    globalThis.getSelection?.()?.removeAllRanges();
+  }
   function onStagePointerMove(e: PointerEvent) {
     if (!hero || !stageEl) return;
     if (focusRaf) return;
@@ -197,6 +204,7 @@
     class="stage"
     class:stage-hero={hero}
     bind:this={stageEl}
+    onpointerdown={clearTextSelection}
     onpointermove={onStagePointerMove}
     onpointerleave={onStagePointerLeave}
   >
@@ -208,26 +216,33 @@
         />
       {/if}
 
-      <!-- All other characters as static labeled points -->
+      <!-- Non-hero: every char except the selected one is a static point;
+           the picker grid below chooses which single point is movable.
+           Hero: every char is its own MovablePoint, so the visitor can grab
+           any letter directly without picker chrome. -->
       {#each VOCAB as c}
-        {#if c !== selected}
+        {#if hero}
+          <MovablePoint
+            bind:x={positions[c][0]}
+            bind:y={positions[c][1]}
+            color={colorFor(c)}
+            label={`Embedding of ${display(c)}, drag to reposition`}
+          />
+        {:else if c !== selected}
           <Point x={positions[c][0]} y={positions[c][1]} color={colorFor(c)} opacity={0.8} />
         {/if}
       {/each}
 
-      <!-- Selected char as a movable point. In hero mode the label is
-           rendered as a positioned overlay (no Mafs tooltip), so the
-           label prop is empty to avoid the dual-render. -->
-      <!-- aria-label only — not a visible Mafs tooltip. Hero mode still
-           needs a real accessible name; the prop name is unfortunate. -->
-      <MovablePoint
-        bind:x={positions[selected][0]}
-        bind:y={positions[selected][1]}
-        color={colorFor(selected)}
-        label={hero
-          ? `Embedding of ${display(selected)} — drag to reposition`
-          : `Embedding of ${display(selected)}`}
-      />
+      {#if !hero}
+        <!-- Selected char as the single movable point (aria-label only,
+             not a visible Mafs tooltip). -->
+        <MovablePoint
+          bind:x={positions[selected][0]}
+          bind:y={positions[selected][1]}
+          color={colorFor(selected)}
+          label={`Embedding of ${display(selected)}`}
+        />
+      {/if}
     </Mafs>
 
     <!-- Overlay labels, positioned via CSS calc on the SVG-coord system.
@@ -250,11 +265,26 @@
     </div>
 
     {#if hero}
-      <!-- Hero-only "try me" pulse on the active letter. CSS handles the
-           pulse animation; pointer-events: none so it doesn't intercept drag. -->
-      <div class="try-me" aria-hidden="true">drag a letter</div>
+      <!-- Live loss readout: the core feedback loop. Dragging a letter off
+           its cluster raises the loss; the pill tints coral when it does. -->
+      <div class="loss-pill" class:bad={lossBad} aria-hidden="true">
+        <span class="loss-k">loss</span>
+        <span class="loss-v">{fmt(currentLoss)}</span>
+      </div>
+      <div class="try-me" aria-hidden="true">drag any letter</div>
     {/if}
   </div>
+
+  {#if hero}
+    <div class="hero-foot">
+      <p class="hero-cap">
+        Every dot is a letter's learned position. Drag any of them and the
+        <em>loss</em> climbs as you pull a letter away from where training
+        put it. Red dots are vowels, blue are common consonants.
+      </p>
+      <button type="button" class="hero-reset" onclick={reset}>Reset</button>
+    </div>
+  {/if}
 
   {#if !hero}
     <div class="picker">
@@ -283,7 +313,7 @@
       Each dot is a row of the embedding matrix <em>C</em>. Vowels (red) cluster
       together because the model learned that their following-character
       distributions are similar; common consonants (blue) cluster too. Pluck
-      one and drag it across the plane — you're physically editing
+      one and drag it across the plane: you're physically editing
       <em>C[i]</em>, and the simulated loss reacts. The point of an embedding
       isn't anything mystical: it's a vector of learned parameters that
       happens to encode semantic structure.
@@ -342,7 +372,7 @@
     font-family: var(--font-mono);
     font-size: 0.7rem;
     font-weight: 600;
-    /* No text-shadow — at the top edge a thick 4-direction shadow can
+    /* No text-shadow: at the top edge a thick 4-direction shadow can
        merge across labels into solid white blobs. Use a subtle
        padding+background pill instead so labels read against any
        neighbor color without visual artifacts. */
@@ -413,7 +443,7 @@
     overflow: hidden;
   }
   /* In hero mode: bigger labels, same clean pill background as the
-     full-chrome variant. No text-shadow — clipped halos at the widget
+     full-chrome variant. No text-shadow: clipped halos at the widget
      edge merge into ugly white blobs. The pill is finite and predictable. */
   .widget-hero .lbl {
     font-size: 0.82rem;
@@ -427,22 +457,84 @@
     padding: 3px 7px;
   }
 
-  /* Drag affordance: in hero mode the only visible cue that the active
-     letter is interactive was the "DRAG A LETTER" hint at the bottom.
-     Add cursor:grab on the slider handle and a soft pulsing halo so the
-     dot reads as something you can pick up. */
+  /* Drag affordance: every letter in the hero variant is a movable point,
+     so a per-dot pulsing halo (27 of them) would be visual noise. Keep it
+     to a grab cursor plus a soft glow on hover only. */
   .widget-hero :global(.mafs-movable-point) {
     cursor: grab;
-    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ink-red) 70%, transparent));
-    animation: pluck-pulse 2.2s ease-in-out infinite;
+    transition: filter 140ms ease;
+  }
+  .widget-hero :global(.mafs-movable-point):hover {
+    filter: drop-shadow(0 0 7px color-mix(in srgb, var(--ink-red) 60%, transparent));
   }
   .widget-hero :global(.mafs-movable-point):active { cursor: grabbing; }
-  @keyframes pluck-pulse {
-    0%, 100% { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--ink-red) 55%, transparent)); }
-    50%      { filter: drop-shadow(0 0 12px color-mix(in srgb, var(--ink-red) 85%, transparent)); }
+
+  /* Live loss readout pill: top-right of the hero stage. */
+  .loss-pill {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--demo-stage) 92%, transparent);
+    border: 1px solid color-mix(in srgb, var(--site-fg) 12%, transparent);
+    color: var(--site-fg-muted);
+    transition: color 220ms ease, border-color 220ms ease;
   }
-  @media (prefers-reduced-motion: reduce) {
-    .widget-hero :global(.mafs-movable-point) { animation: none; }
+  .loss-pill .loss-k {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.62rem;
+  }
+  .loss-pill .loss-v {
+    color: var(--site-fg);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .loss-pill.bad { border-color: color-mix(in srgb, var(--ink-coral) 50%, transparent); }
+  .loss-pill.bad .loss-v { color: var(--ink-coral); }
+
+  /* Hero caption + reset row below the stage. */
+  .hero-foot {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+  }
+  .hero-cap {
+    margin: 0;
+    flex: 1;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: var(--site-fg-muted);
+  }
+  .hero-cap em {
+    font-style: normal;
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    color: var(--site-fg);
+  }
+  .hero-reset {
+    flex-shrink: 0;
+    border: 1px solid color-mix(in srgb, var(--site-fg) 18%, transparent);
+    background: transparent;
+    color: var(--site-fg-muted);
+    border-radius: 999px;
+    padding: 0.35rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 160ms ease, color 160ms ease, transform 120ms ease;
+  }
+  .hero-reset:hover {
+    border-color: var(--site-fg);
+    color: var(--site-fg);
+    transform: translateY(-1px);
   }
 
   .try-me {

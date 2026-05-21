@@ -3,7 +3,7 @@
   import { Mafs, Coordinates, Circle, Ellipse, Plot, Point, Line, MovablePoint, Vector } from 'svelte-mafs';
 
   /**
-   * LossLandscapeNavigator — mandatory keystone widget for Module 10.
+   * LossLandscapeNavigator: mandatory keystone widget for Module 10.
    *
    * Drag the START point. Pick a landscape. Pick an optimizer. Hit Run.
    * Watch the trajectory descend (or fail to, for educational reasons).
@@ -101,7 +101,7 @@
       ny = y - lr * velY;
     }
 
-    // Bound check — stop if we've flown off the viewport.
+    // Bound check: stop if we've flown off the viewport.
     if (Math.abs(nx) > 6 || Math.abs(ny) > 4) {
       stop();
       return;
@@ -139,7 +139,7 @@
 
   // When user drags the start point OR switches landscape/optimizer, reset.
   $effect(() => {
-    // Read startX, startY, landscape, optimizer — re-run effect on change.
+    // Read startX, startY, landscape, optimizer; re-run effect on change.
     startX; startY; landscape; optimizer;
     resetAll();
   });
@@ -157,7 +157,7 @@
     }
   }
 
-  const fmt = (n: number, d = 2) => (Number.isFinite(n) ? (n >= 0 ? '+' : '') + n.toFixed(d) : '—');
+  const fmt = (n: number, d = 2) => (Number.isFinite(n) ? (n >= 0 ? '+' : '') + n.toFixed(d) : 'n/a');
 </script>
 
 <div class="widget">

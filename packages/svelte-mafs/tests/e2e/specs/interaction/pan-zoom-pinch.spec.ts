@@ -9,7 +9,7 @@ import { test, expect } from "@playwright/test";
  * We inject PointerEvents directly via page.evaluate rather than driving
  * the browser's touchscreen. The panZoom action listens for `pointerdown /
  * pointermove / pointerup`, not `touchstart/*`, and synthetic PointerEvents
- * exercise exactly the path we care about — regardless of whether the
+ * exercise exactly the path we care about, regardless of whether the
  * project has `hasTouch: true`. That makes this spec portable across
  * desktop chromium and mobile emulation projects.
  */

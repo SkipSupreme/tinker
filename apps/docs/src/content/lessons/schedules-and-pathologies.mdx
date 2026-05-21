@@ -21,12 +21,12 @@ import StepCheck from '../../components/lesson/StepCheck.astro';
 import ScheduleDesigner from '../../components/demos/ScheduleDesigner.svelte';
 
 <Step title="Why a schedule at all?">
-Adam with default $\eta = 10^{-3}$ works out of the box, but for big models at scale, the learning rate isn't one number — it's a **function of time**.
+Adam with default $\eta = 10^{-3}$ works out of the box, but for big models at scale, the learning rate isn't one number: it's a **function of time**.
 
 Two things go wrong with a constant $\eta$:
 
 1. **At the start**, the model is freshly initialized and bias-corrected statistics are still settling. Large steps in this regime can blow up the run.
-2. **At the end**, you want to fine-tune — smaller steps to zero in on a good minimum. A large $\eta$ keeps bouncing around in the noise ball.
+2. **At the end**, you want to fine-tune: smaller steps to zero in on a good minimum. A large $\eta$ keeps bouncing around in the noise ball.
 
 The fix: start small (warm up), peak, and decay. That's a learning-rate schedule.
 </Step>
@@ -34,13 +34,13 @@ The fix: start small (warm up), peak, and decay. That's a learning-rate schedule
 <Step title="Design one yourself.">
 Below: drag the warmup and decay endpoints, pick a decay shape, watch the curve. Three knobs decide a schedule:
 
-- **Warmup endpoint** $T_w$ — how long to ramp up.
-- **Peak** $\eta_{\max}$ — the highest LR you ever use.
-- **Decay shape** — cosine (modern), linear, step (classic).
+- **Warmup endpoint** $T_w$: how long to ramp up.
+- **Peak** $\eta_{\max}$: the highest LR you ever use.
+- **Decay shape**: cosine (modern), linear, step (classic).
 
 <ScheduleDesigner client:visible />
 
-Try the three shapes back-to-back. Cosine spends most of its time at high LR (exploration) and tails off smoothly. Linear is symmetric. Step drops once near $0.6 T$ — the old-school approach. Cosine wins for transformers.
+Try the three shapes back-to-back. Cosine spends most of its time at high LR (exploration) and tails off smoothly. Linear is symmetric. Step drops once near $0.6 T$: the old-school approach. Cosine wins for transformers.
 </Step>
 
 <Step title="Linear warmup, in formulas">
@@ -50,7 +50,7 @@ $$
 \eta_t^{\text{warm}} \;=\; \eta_{\max} \cdot \frac{t}{T_w}, \qquad t \le T_w.
 $$
 
-At step 0, effective LR is near zero. At step $T_w$ (typically 1000–10,000 for a large model), it reaches peak. Warmup prevents early blowups — especially with Adam, where the first few bias-uncorrected steps can be erratic.
+At step 0, effective LR is near zero. At step $T_w$ (typically 1000–10,000 for a large model), it reaches peak. Warmup prevents early blowups, especially with Adam, where the first few bias-uncorrected steps can be erratic.
 </Step>
 
 <StepCheck
@@ -63,7 +63,7 @@ At step 0, effective LR is near zero. At step $T_w$ (typically 1000–10,000 for
 With $T_w = 1000$ and $\eta_{\max} = 3 \times 10^{-4}$, what is $\eta_t$ at $t = 500$?
 </StepCheck>
 
-<Step title="Cosine decay — the post-warmup workhorse">
+<Step title="Cosine decay: the post-warmup workhorse">
 After warmup, decay smoothly from $\eta_{\max}$ to a small $\eta_{\min}$ following a cosine curve:
 
 $$
@@ -72,14 +72,14 @@ $$
 
 Why cosine? Three reasons:
 
-- It's parameter-free beyond the peak and the horizon — no fiddly drop points.
+- It's parameter-free beyond the peak and the horizon: no fiddly drop points.
 - It spends most of the budget at high LR, the exploration phase.
 - It tails off smoothly, avoiding the abrupt jolts of step decay.
 
-nanoGPT, GPT-3, PaLM, Llama — all use warmup followed by cosine decay. It's become the reference schedule for transformer training.
+nanoGPT, GPT-3, PaLM, and Llama all use warmup followed by cosine decay. It's become the reference schedule for transformer training.
 </Step>
 
-<Step title="Gradient clipping — the safety net for cliffs">
+<Step title="Gradient clipping: the safety net for cliffs">
 Real loss landscapes have **cliffs**: regions where the gradient magnitude jumps by orders of magnitude over a short distance. Common in recurrent nets, occasional in transformers. One step through a cliff can throw the optimizer into the void.
 
 The fix, applied **after** computing the gradient but **before** the update: project the gradient onto a ball of radius $c$. If $\|g\| > c$, rescale to length $c$:
@@ -98,15 +98,15 @@ In 1D, a random critical point is a min or a max with 50/50 odds. In 2D, the pro
 
 At $d = 1000$ (a small neural network), this is astronomically small. The critical points you encounter in high-dimensional loss landscapes are **overwhelmingly saddles**, not minima.
 
-So when training "stalls" — loss barely dropping, gradient norm small — the prior should be: we're passing through a saddle, not sitting at a minimum. Momentum and Adam's adaptive scaling both help escape saddles by keeping the update non-zero even when the raw gradient is small. Vanilla SGD can get stuck at saddles for a long time. Dauphin et al. (2014) is the canonical reference.
+So when training "stalls" (loss barely dropping, gradient norm small) the prior should be: we're passing through a saddle, not sitting at a minimum. Momentum and Adam's adaptive scaling both help escape saddles by keeping the update non-zero even when the raw gradient is small. Vanilla SGD can get stuck at saddles for a long time. Dauphin et al. (2014) is the canonical reference.
 </Step>
 
 <Step title="The overparameterized regime">
 One more fact to rewire before we close out.
 
-Classical optimization frames training as "find the global minimum of $L(\mathbf{w})$." For deep networks, this picture is wrong. A modern transformer has more parameters than training examples. The loss surface has **infinitely many** zero-loss minima — entire manifolds of parameter settings that fit the training data perfectly.
+Classical optimization frames training as "find the global minimum of $L(\mathbf{w})$." For deep networks, this picture is wrong. A modern transformer has more parameters than training examples. The loss surface has **infinitely many** zero-loss minima: entire manifolds of parameter settings that fit the training data perfectly.
 
-So "reaching the global minimum" isn't the goal. *Which* zero-loss minimum you reach determines how the model generalizes. Flat, wide minima generalize well. Sharp, narrow minima generalize badly. SGD's noise (Lesson 10.2) biases convergence toward flat minima — that's a big part of why SGD-trained models generalize at all.
+So "reaching the global minimum" isn't the goal. *Which* zero-loss minimum you reach determines how the model generalizes. Flat, wide minima generalize well. Sharp, narrow minima generalize badly. SGD's noise (Lesson 10.2) biases convergence toward flat minima, and that's a big part of why SGD-trained models generalize at all.
 
 Practical implication: **validation metric** is the stopping criterion, not training loss. Stop when held-out performance plateaus, even if training loss is still dropping. Universal early-stopping rule.
 </Step>
@@ -129,7 +129,7 @@ Everything in this module is now visible inside one production training loop. Ka
 decay_params = [p for n, p in params if p.dim() >= 2]       # matmul weights
 no_decay_params = [p for n, p in params if p.dim() < 2]     # biases, LayerNorm
 
-# AdamW — so weight decay is decoupled from the adaptive step.
+# AdamW: weight decay is decoupled from the adaptive step.
 optimizer = torch.optim.AdamW(
     [
         {'params': decay_params, 'weight_decay': 0.1},        # regularize matmul weights
@@ -144,7 +144,7 @@ optimizer = torch.optim.AdamW(
 # During training: torch.nn.utils.clip_grad_norm_(parameters, 1.0)   # gradient clipping
 ```
 
-Every knob here is something you now understand. `AdamW` because of decoupled decay. `betas=(0.9, 0.95)` — $\beta_2 = 0.95$ instead of the default $0.999$ because transformer gradients are less stationary than generic problems, and a shorter memory for squared gradients is better. Weight decay $0.1$ on matmul weights only. Peak LR $6 \times 10^{-4}$ with warmup + cosine. Gradient clip at 1.0.
+Every knob here is something you now understand. `AdamW` because of decoupled decay. `betas=(0.9, 0.95)`: $\beta_2 = 0.95$ instead of the default $0.999$ because transformer gradients are less stationary than generic problems, and a shorter memory for squared gradients is better. Weight decay $0.1$ on matmul weights only. Peak LR $6 \times 10^{-4}$ with warmup + cosine. Gradient clip at 1.0.
 
 Everything has a reason, and you know every reason.
 </Step>
@@ -154,7 +154,7 @@ A few things we skipped on purpose:
 
 - **Second-order methods** (Newton, quasi-Newton, L-BFGS). Beautiful convergence but require the Hessian, which is too big to store for neural nets. Rarely used at scale.
 - **Adaptive LR-free methods** (AdaBelief, LAMB, Sophia). Active research. Sometimes win on specific tasks; not universally better.
-- **Sharpness-aware minimization (SAM).** Actively seeks flat minima. Real effect, real cost — two forward/backward passes per step.
+- **Sharpness-aware minimization (SAM).** Actively seeks flat minima. Real effect, real cost: two forward/backward passes per step.
 
 You now have the core vocabulary to read any optimizer paper. The rest is empirical.
 </Step>

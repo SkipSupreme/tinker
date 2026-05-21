@@ -10,7 +10,7 @@
  *
  * Streak counts consecutive UTC days with at least one completed step.
  * Sundays never break a streak. Per DESIGN.md, streak display is opt-in
- * after the user's first 30 days — we count silently, but the bumpStreak()
+ * after the user's first 30 days; we count silently, but the bumpStreak()
  * helper is wired up for when that opt-in flow ships.
  *
  * Events: `tinker:xp` (detail: { amount, total, reason }) and

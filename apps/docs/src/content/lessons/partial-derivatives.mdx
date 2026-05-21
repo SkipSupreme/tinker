@@ -1,5 +1,5 @@
 ---
-title: Partial Derivatives — one knob at a time
+title: 'Partial Derivatives: one knob at a time'
 module: m6-multivariable
 summary: Two inputs instead of one. Freeze one, move the other, and the ordinary derivative still works. That's all a partial derivative is.
 estimatedMinutes: 15
@@ -23,7 +23,7 @@ The function below has *two* inputs ($x$ and $y$). The two panels show what happ
 
 <PartialSlicer client:visible />
 
-Drag the $x$ slider with $y$ frozen. The left panel's curve is the **slice of $f$ at the current $y$** — a one-variable function. It has a slope. That slope is a perfectly ordinary derivative, except its name has the word "partial" in front.
+Drag the $x$ slider with $y$ frozen. The left panel's curve is the **slice of $f$ at the current $y$**: a one-variable function. It has a slope. That slope is a perfectly ordinary derivative, except its name has the word "partial" in front.
 
 Same trick on the right, with $x$ frozen. Same rule.
 
@@ -33,15 +33,15 @@ That's the whole concept. Calculus already had a tool for one-variable slopes; p
 <Step title="Two pictures of a multivariable function">
 A function of two variables lives in a 3D picture: height $z = f(x, y)$ is a **surface** sitting over the $(x, y)$ plane. Pretty, but bad at high dimensions.
 
-A more useful picture is the **contour view** — a topographic map. Draw curves of constant height $f(x, y) = c$ for a few values of $c$. Tighter contours = steeper ground. We'll spend most of our time here, because contours collapse the height axis and leave a 2D picture in *input space*, where the action is. (Neural-network losses have *millions* of inputs and one output. There's no surface to draw. Contours are the only picture that scales.)
+A more useful picture is the **contour view**: a topographic map. Draw curves of constant height $f(x, y) = c$ for a few values of $c$. Tighter contours = steeper ground. We'll spend most of our time here, because contours collapse the height axis and leave a 2D picture in *input space*, where the action is. (Neural-network losses have *millions* of inputs and one output. There's no surface to draw. Contours are the only picture that scales.)
 </Step>
 
 <Step title="Notation">
 Three spellings of the same thing:
 
-- $\dfrac{\partial f}{\partial x}$ — explicit, textbook-y, the one you'll see most often. The curly $\partial$ ("partial") distinguishes it from $d/dx$.
-- $f_x$ — terse subscript form. The subscript is the variable being differentiated.
-- $\partial_x f$ or $\partial_i f$ — compact, common in physics and ML matrix-calculus writeups.
+- $\dfrac{\partial f}{\partial x}$: explicit, textbook-y, the one you'll see most often. The curly $\partial$ ("partial") distinguishes it from $d/dx$.
+- $f_x$: terse subscript form. The subscript is the variable being differentiated.
+- $\partial_x f$ or $\partial_i f$: compact, common in physics and ML matrix-calculus writeups.
 
 All three mean "derivative of $f$ with everything except $x$ held constant." Pick whichever is clearest in context. We'll lean on $\dfrac{\partial f}{\partial x}$ for definitions and $f_x$ for quick calculation.
 </Step>
@@ -50,12 +50,12 @@ All three mean "derivative of $f$ with everything except $x$ held constant." Pic
 To compute $\dfrac{\partial f}{\partial x}$ for $f(x, y) = x^2 y + 3 y^2$:
 
 - Treat $y$ as a constant. $y$ is a block of lead sitting on the table.
-- Differentiate as if $y$ were just, say, the number 7. $\dfrac{\partial}{\partial x}(x^2 \cdot y) = 2 x y$. And $3 y^2$ doesn't contain $x$, so it's constant with respect to $x$ — its partial is $0$.
+- Differentiate as if $y$ were just, say, the number 7. $\dfrac{\partial}{\partial x}(x^2 \cdot y) = 2 x y$. And $3 y^2$ doesn't contain $x$, so it's constant with respect to $x$: its partial is $0$.
 - Answer: $\dfrac{\partial f}{\partial x} = 2 x y$.
 
 To get $\dfrac{\partial f}{\partial y}$: swap roles. Freeze $x$, differentiate the $y$-parts. $\dfrac{\partial}{\partial y}(x^2 y) = x^2$. $\dfrac{\partial}{\partial y}(3 y^2) = 6 y$. Sum: $\dfrac{\partial f}{\partial y} = x^2 + 6 y$.
 
-No new machinery. The power rule, the sum rule, the constant-multiple rule — all still apply. The only new habit is noticing which symbol is the variable you're currently paying attention to.
+No new machinery. The power rule, the sum rule, and the constant-multiple rule all still apply. The only new habit is noticing which symbol is the variable you're currently paying attention to.
 </Step>
 
 <StepCheck
@@ -67,7 +67,7 @@ No new machinery. The power rule, the sum rule, the constant-multiple rule — a
 >
 For $f(x, y) = x^2 y + 3 y^2$, compute $\dfrac{\partial f}{\partial x}$ at the point $(2, 1)$.
 
-(You can verify with the playground above — set $x = 2$, $y = 1$, read the left panel's slope.)
+(You can verify with the playground above: set $x = 2$, $y = 1$, read the left panel's slope.)
 </StepCheck>
 
 <StepCheck
@@ -81,11 +81,11 @@ Same $f$. Now compute $\dfrac{\partial f}{\partial y}$ at $(2, 1)$.
 </StepCheck>
 
 <Step title="The Clairaut surprise">
-Take the partial of a partial. $\dfrac{\partial}{\partial y}\left(\dfrac{\partial f}{\partial x}\right)$ — differentiate $f$ with respect to $x$ first, then with respect to $y$. Call that $f_{xy}$.
+Take the partial of a partial. $\dfrac{\partial}{\partial y}\left(\dfrac{\partial f}{\partial x}\right)$: differentiate $f$ with respect to $x$ first, then with respect to $y$. Call that $f_{xy}$.
 
 You could also go the other way: differentiate with respect to $y$ first, then $x$. Call that $f_{yx}$.
 
-Common sense says those might differ — different order of operations, different answers. **Common sense is wrong.** For any reasonably smooth function, they're equal. This is **Clairaut's theorem** (sometimes called Schwarz's theorem):
+Common sense says those might differ: different order of operations, different answers. **Common sense is wrong.** For any reasonably smooth function, they're equal. This is **Clairaut's theorem** (sometimes called Schwarz's theorem):
 
 $$
 \frac{\partial^2 f}{\partial x \partial y} \;=\; \frac{\partial^2 f}{\partial y \partial x}.
@@ -103,5 +103,5 @@ It takes a real proof to establish but is easy to verify on examples. Verify on 
 >
 For $f(x, y) = x^2 y + x y^3$, compute $f_{xy}$ at $(1, 2)$.
 
-Try computing $f_{yx}$ the other way too — Clairaut says you'll get the same number.
+Try computing $f_{yx}$ the other way too. Clairaut says you'll get the same number.
 </StepCheck>

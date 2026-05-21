@@ -1,7 +1,7 @@
 ---
 title: When your model memorizes the training set
 module: m13-training-dynamics
-summary: Train and validation curves are diagnostic instruments. Learn to read them — and learn why touching the test set is a sin.
+summary: Train and validation curves are diagnostic instruments. Learn to read them, and learn why touching the test set is a sin.
 estimatedMinutes: 12
 order: 1
 conceptsCovered:
@@ -17,7 +17,7 @@ import StepCheck from '../../components/lesson/StepCheck.astro';
 import LossCurveDoctor from '../../components/demos/LossCurveDoctor.svelte';
 
 <Step title="A 5-parameter and a 5000-parameter polynomial walk into a bar">
-Twenty noisy points on a roughly-quadratic curve. Fit a degree-2 polynomial to them — three parameters, intercept included. The fit is approximate. Some points sit above the curve, some below. It misses on purpose. Three parameters cannot memorize twenty points; there isn't enough wiggle room.
+Twenty noisy points on a roughly-quadratic curve. Fit a degree-2 polynomial to them: three parameters, intercept included. The fit is approximate. Some points sit above the curve, some below. It misses on purpose. Three parameters cannot memorize twenty points; there isn't enough wiggle room.
 
 Now fit a degree-19 polynomial to the same twenty points. It hits every one. It contorts itself between them with bumps and dips that exist only because they happen to fall between data points. It is *perfect* on the training set.
 
@@ -35,9 +35,9 @@ $$
 \mathbb{E}\!\left[(y - \hat{f}(x))^2\right] \;=\; \sigma^2 \;+\; \text{bias}^2 \;+\; \text{variance}.
 $$
 
-- **$\sigma^2$** — irreducible noise in the data itself. You cannot fix this without better data.
-- **bias** — how wrong your model class is on average. A linear model trying to fit a parabola has high bias before noise gets anywhere near it.
-- **variance** — how much your fit jumps when you swap in a different training set. A degree-19 polynomial has huge variance: twenty fresh noisy points produce a wildly different curve.
+- **$\sigma^2$**: irreducible noise in the data itself. You cannot fix this without better data.
+- **bias**: how wrong your model class is on average. A linear model trying to fit a parabola has high bias before noise gets anywhere near it.
+- **variance**: how much your fit jumps when you swap in a different training set. A degree-19 polynomial has huge variance: twenty fresh noisy points produce a wildly different curve.
 
 Simple model: high bias, low variance. Flexible model: low bias, high variance. The whole sport is finding a sweet spot in between.
 </Step>
@@ -94,7 +94,7 @@ You have 10,000 labeled examples and want a 70/15/15 split. **How many examples 
 Train and validation curves over training steps tell you exactly what's going wrong. Five canonical shapes you should recognize on sight:
 
 1. **Clean fit.** Both curves drop, both plateau, the gap stays small. Ship it.
-2. **Overfitting fork.** Train keeps dropping; validation bottoms out and starts *climbing*. The fork point is where you should have stopped — that's early stopping.
+2. **Overfitting fork.** Train keeps dropping; validation bottoms out and starts *climbing*. The fork point is where you should have stopped. That's early stopping.
 3. **Plateau.** Both curves stop dropping at a high value. Underfitting, or an optimization problem (too small a learning rate, too small a model, dead activations).
 4. **Divergence spike.** Loss is dropping; suddenly it shoots up to a huge number, often NaN. Learning rate too high, missing warmup, exploded gradient.
 5. **Dead curve.** Loss never moves from its initial value. The network is not learning at all. Almost always bad initialization, or the wrong loss for the problem.
@@ -103,11 +103,11 @@ Read curves the way a doctor reads a chart. The shape tells you what the bug is,
 
 <LossCurveDoctor client:visible />
 
-Six unlabeled cases. Pick the diagnosis, get feedback. The point is the *perception* skill — pattern-match the shape before you know what fixed it.
+Six unlabeled cases. Pick the diagnosis, get feedback. The point is the *perception* skill: pattern-match the shape before you know what fixed it.
 </Step>
 
 <Step title="What you'll do with this">
-You will train a tiny char-level transformer later in this course. You will watch its train and validation loss in real time. The next four lessons hand you the tools — regularization, initialization, normalization, residuals — that turn each of the failure shapes above back into a clean fit.
+You will train a tiny char-level transformer later in this course. You will watch its train and validation loss in real time. The next four lessons hand you the tools (regularization, initialization, normalization, residuals) that turn each of the failure shapes above back into a clean fit.
 
 Recognizing the failure shape *while it is happening* is the diagnostic skill. The rest of this module is the toolbox.
 </Step>

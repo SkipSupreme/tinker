@@ -1,7 +1,7 @@
 ---
 title: Why your gradients explode
 module: m13-training-dynamics
-summary: Initialization is not folklore. It falls out of one line of variance algebra — and it's the difference between a network that trains and a network that sits dead at step zero.
+summary: Initialization is not folklore. It falls out of one line of variance algebra, and it's the difference between a network that trains and a network that sits dead at step zero.
 estimatedMinutes: 15
 order: 3
 prereqs:
@@ -19,9 +19,9 @@ import StepCheck from '../../components/lesson/StepCheck.astro';
 import VarianceFanOut from '../../components/demos/VarianceFanOut.svelte';
 
 <Step title="A network that won't move">
-Build a 10-layer MLP. 200 hidden units per layer. Tanh activations. Initialize every weight from $\mathcal{N}(0, 1)$ — a "reasonable" looking standard-normal sample. Now feed in a batch of unit-variance inputs.
+Build a 10-layer MLP. 200 hidden units per layer. Tanh activations. Initialize every weight from $\mathcal{N}(0, 1)$, a "reasonable" looking standard-normal sample. Now feed in a batch of unit-variance inputs.
 
-By layer 2 or 3, every tanh is pinned at $\pm 1$. By layer 10, every neuron is fully saturated — derivatives are essentially zero everywhere. Now run backprop. The gradient is the chain of all those tiny derivatives multiplied together. It vanishes. The optimizer cannot move parameters whose gradient is numerically zero. The loss does nothing. Your network is dead, and the loss curve looks like the "dead curve" pathology from the previous lesson.
+By layer 2 or 3, every tanh is pinned at $\pm 1$. By layer 10, every neuron is fully saturated; derivatives are essentially zero everywhere. Now run backprop. The gradient is the chain of all those tiny derivatives multiplied together. It vanishes. The optimizer cannot move parameters whose gradient is numerically zero. The loss does nothing. Your network is dead, and the loss curve looks like the "dead curve" pathology from the previous lesson.
 
 There is no error message. No NaN. The optimizer ran "successfully." It just produced no learning. And the bug is one number: the standard deviation of the initial weights.
 
@@ -29,7 +29,7 @@ Why does it matter so much? Algebra.
 
 <VarianceFanOut client:visible />
 
-Drag the slider all the way to the right (σ_W ≈ 0.4) and watch every layer's histogram collapse to a wall at $\pm 1$ — that's tanh saturation. Drag to the far left (σ_W ≈ 0.01) and the activations decay toward zero. Hit the *He* preset and the histograms stabilize to a clean Gaussian at every depth. The layer-1 gradient readout in the corner tells you whether the network can learn at all.
+Drag the slider all the way to the right (σ_W ≈ 0.4) and watch every layer's histogram collapse to a wall at $\pm 1$: that's tanh saturation. Drag to the far left (σ_W ≈ 0.01) and the activations decay toward zero. Hit the *He* preset and the histograms stabilize to a clean Gaussian at every depth. The layer-1 gradient readout in the corner tells you whether the network can learn at all.
 </Step>
 
 <Step title="Variance through one linear layer">
@@ -69,7 +69,7 @@ A fully-connected layer has 256 inputs and a tanh nonlinearity. Using Xavier (fo
 </StepCheck>
 
 <Step title="Why Xavier breaks for ReLU">
-The variance derivation assumed activations had mean 0. Tanh roughly does — it's symmetric around the origin. But ReLU is *not* symmetric. ReLU zeros out everything below zero. Half the inputs, in expectation, go to zero. So the actual variance of the output of a ReLU layer is *half* what the linear analysis predicts.
+The variance derivation assumed activations had mean 0. Tanh roughly does, since it's symmetric around the origin. But ReLU is *not* symmetric. ReLU zeros out everything below zero. Half the inputs, in expectation, go to zero. So the actual variance of the output of a ReLU layer is *half* what the linear analysis predicts.
 
 If you use Xavier with ReLU, you've lost half your variance per layer, and your activations decay toward zero exponentially with depth. Same kind of failure, opposite direction.
 
@@ -79,7 +79,7 @@ $$
 \sigma_w^2 \;=\; \frac{2}{n_{\text{in}}}.
 $$
 
-This is **He initialization** (also called Kaiming, after Kaiming He). It is the default for any layer followed by a ReLU or ReLU variant — which means it is the default for almost everything you'll build.
+This is **He initialization** (also called Kaiming, after Kaiming He). It is the default for any layer followed by a ReLU or ReLU variant, which means it is the default for almost everything you'll build.
 </Step>
 
 <StepCheck
@@ -101,7 +101,7 @@ This is *symmetry breaking*: randomness exists not for any deep statistical reas
 </Step>
 
 <Step title="The transformer's initialization, exactly">
-Modern transformers add one more wrinkle. Even with He init in each individual layer, the *residual stream* — the running sum $x + F_1(x) + F_2(x) + \dots$ — has variance that grows with depth. The fix from the GPT-2 paper, used by every nanoGPT-shaped codebase since:
+Modern transformers add one more wrinkle. Even with He init in each individual layer, the *residual stream* (the running sum $x + F_1(x) + F_2(x) + \dots$) has variance that grows with depth. The fix from the GPT-2 paper, used by every nanoGPT-shaped codebase since:
 
 $$
 \sigma_W \;=\; \frac{0.02}{\sqrt{2 N_{\text{layers}}}}

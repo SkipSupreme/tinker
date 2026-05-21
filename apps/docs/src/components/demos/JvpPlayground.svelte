@@ -2,7 +2,7 @@
   import { Mafs, Coordinates, Vector, MovablePoint, Point } from 'svelte-mafs';
 
   /**
-   * JvpPlayground — visualize forward (JVP) and reverse (VJP) mode autodiff
+   * JvpPlayground: visualize forward (JVP) and reverse (VJP) mode autodiff
    * on a small vector-valued function F.
    *
    *   F(x, y) = (x² + y,  x·y)
@@ -19,7 +19,7 @@
   type Mode = 'forward' | 'reverse';
   let mode = $state<Mode>('forward');
 
-  // Base point — fixed for visual stability. Pick one with non-trivial J.
+  // Base point: fixed for visual stability. Pick one with non-trivial J.
   const baseX = 1;
   const baseY = 0.8;
   const Fx = baseX * baseX + baseY;

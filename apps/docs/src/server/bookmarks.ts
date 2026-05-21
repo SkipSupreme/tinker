@@ -22,7 +22,7 @@ export async function createBookmark(
     .onConflictDoNothing({ target: [bookmark.userId, bookmark.lessonSlug, bookmark.anchor] })
     .returning({ id: bookmark.id });
   if (inserted.length > 0) return { id: inserted[0].id, created: true };
-  // Already existed — fetch the original. If a parallel transaction deleted
+  // Already existed: fetch the original. If a parallel transaction deleted
   // it between our insert and select we'd see null here; treat that the same
   // as "fresh insert raced and lost".
   const existing = await db

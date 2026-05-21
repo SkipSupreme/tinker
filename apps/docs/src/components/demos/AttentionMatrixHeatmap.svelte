@@ -6,7 +6,7 @@
   let hoveredRow = $state<number | null>(null);
 
   // Deterministic pre-softmax scores. Hand-tuned so the unmasked pattern shows
-  // some interesting structure (not uniform, not one-hot) — including a
+  // some interesting structure (not uniform, not one-hot), including a
   // long-range "coreference" hit at (5, 1) for an "it → animal" feel.
   const RAW: number[][] = [
     [1.4, -0.3, 0.1, 0.0, -0.5, 0.2],
