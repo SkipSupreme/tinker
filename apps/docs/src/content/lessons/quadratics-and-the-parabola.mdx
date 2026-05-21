@@ -1,0 +1,148 @@
+---
+title: Quadratics and the parabola
+module: m2-algebra
+summary: A quadratic is one curve, the parabola, wearing three different equations. Vertex form, factored form, standard form. The quadratic formula is not magic; it is completing the square, done once.
+estimatedMinutes: 30
+order: 5
+conceptsCovered:
+  - polynomials-and-degree
+  - parabola-three-forms
+  - factoring-and-vieta
+  - completing-the-square
+  - discriminant
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import ParabolaSurgery from '../../components/demos/ParabolaSurgery.svelte';
+
+<Step title="Polynomials and degree">
+A **polynomial** is a sum of terms, each a number times a whole-number power of the variable:
+
+$$
+a_n x^n + \dots + a_2 x^2 + a_1 x + a_0
+$$
+
+The **degree** is the largest power with a nonzero coefficient. Degree $1$ is a line, $y = a_1 x + a_0$, last lesson's object. This lesson is degree $2$:
+
+$$
+y = ax^2 + bx + c
+$$
+
+That $x^2$ term bends the graph. A degree-2 polynomial is a **quadratic**, and its graph is a **parabola**: a single smooth U (or, when $a$ is negative, an upside-down U).
+</Step>
+
+<Step title="One curve, three equations">
+The parabola is the real object. The equation is just how you write it down, and there are three useful ways, each anchored to something different.
+
+**Standard form**, $y = ax^2 + bx + c$: the default, good for reading off $c$ (the $y$-intercept).
+
+**Vertex form**, $y = a(x - h)^2 + k$: anchored at the **vertex** $(h, k)$, the parabola's turning point. This form says "take the simplest parabola $y = ax^2$ and shift it to sit at $(h, k)$."
+
+**Factored form**, $y = a(x - r_1)(x - r_2)$: anchored at the **roots** $r_1, r_2$, the spots where the curve crosses the $x$-axis.
+
+<ParabolaSurgery client:visible />
+
+Drag the vertex to move the parabola; drag the steepness handle to bend it. All three equations update at once. They are never in conflict, because they are three descriptions of the one curve you're holding.
+</Step>
+
+<Step title="The vertex sits at -b/(2a)">
+A parabola is perfectly symmetric about a vertical line through its vertex. That line sits at
+
+$$
+x = -\frac{b}{2a}
+$$
+
+so the vertex's $x$-coordinate is $-b/(2a)$, and its height is whatever $y$ you get by plugging that $x$ back in. Every parabola written in standard form hands you its turning point through this one formula.
+</Step>
+
+<StepCheck
+  title="Find the turning point"
+  prompt="vertex x = "
+  answer={3}
+  hint="For y = x² − 6x + 5, a = 1 and b = −6. Vertex x = −b/(2a) = −(−6)/(2·1) = 6/2 = 3."
+>
+The quadratic $y = x^2 - 6x + 5$ has $a = 1$ and $b = -6$.
+
+Find the $x$-coordinate of its vertex using $x = -b/(2a)$. **What is it?**
+</StepCheck>
+
+<Step title="Factoring: roots by sum and product">
+For a quadratic $x^2 + bx + c$ (with $a = 1$), factoring means finding two numbers $r_1, r_2$ so that
+
+$$
+x^2 + bx + c = (x - r_1)(x - r_2)
+$$
+
+Multiply the right side out and match: the two roots **multiply to $c$** and **add to $-b$**. That pairing is called Vieta's relation, and it turns factoring into a small search: find two numbers with the right product and the right sum.
+
+For $x^2 - 5x + 6$: you need two numbers multiplying to $6$ and adding to $5$. That's $2$ and $3$. So $x^2 - 5x + 6 = (x - 2)(x - 3)$, and the roots are $x = 2$ and $x = 3$.
+</Step>
+
+<Step title="Zero product, not zero and">
+Once factored, finding the roots uses one property: if a product is zero, **at least one factor is zero**.
+
+So $(x - 2)(x - 3) = 0$ forces $x - 2 = 0$ **or** $x - 3 = 0$. That's an *or*, giving two separate roots, $x = 2$ and $x = 3$. It is not an *and*; no single $x$ makes both factors zero at once. The parabola crosses the axis at each root in turn, not at both simultaneously.
+</Step>
+
+<StepCheck
+  title="Factor and read the roots"
+  prompt="smaller root = "
+  answer={2}
+  hint="Two numbers that multiply to 6 and add to 5: that's 2 and 3. So x² − 5x + 6 = (x−2)(x−3), roots 2 and 3. The smaller is 2."
+>
+Factor $x^2 - 5x + 6$ into $(x - r_1)(x - r_2)$ by finding two numbers with product $6$ and sum $5$.
+
+**What is the smaller of the two roots?**
+</StepCheck>
+
+<Step title="Completing the square, once">
+Factoring is lovely when the roots are tidy integers. They usually aren't. So instead of guessing, derive a formula that always works, by **completing the square**.
+
+Start from $ax^2 + bx + c = 0$. Divide by $a$, move the constant, and add exactly the right number to make the left side a perfect square:
+
+$$
+\left(x + \frac{b}{2a}\right)^2 = \frac{b^2 - 4ac}{4a^2}
+$$
+
+Take the square root of both sides and solve for $x$. Nothing here is a trick; it's the rewrites from lesson 1, applied with care. What falls out is the **quadratic formula**:
+
+$$
+x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+$$
+
+It is completing the square, frozen into a reusable result. Factoring is just this formula's easy special case, the one where the roots happen to be nice.
+</Step>
+
+<Step title="The discriminant counts the roots">
+Look at the piece under the square root:
+
+$$
+\Delta = b^2 - 4ac
+$$
+
+This is the **discriminant**, and its sign alone tells you the root structure before you compute anything.
+
+- $\Delta > 0$: the square root is a real nonzero number, the $\pm$ splits it, **two real roots**. The parabola crosses the $x$-axis twice.
+- $\Delta = 0$: the square root is zero, the $\pm$ does nothing, **one repeated root**. The parabola just kisses the axis at its vertex.
+- $\Delta < 0$: the square root of a negative number is not real, **no real roots**. The parabola floats entirely above or below the axis.
+
+You can see why in the widget: as the parabola slides off the $x$-axis, the discriminant badge flips sign in step with the crossings disappearing.
+</Step>
+
+<StepCheck
+  title="Compute the discriminant"
+  prompt="Δ = "
+  answer={-16}
+  hint="For x² + 2x + 5: a = 1, b = 2, c = 5. Δ = b² − 4ac = 2² − 4(1)(5) = 4 − 20 = −16."
+>
+For $x^2 + 2x + 5$, compute the discriminant $\Delta = b^2 - 4ac$.
+
+**What is $\Delta$?** (Its sign tells you this parabola never touches the $x$-axis.)
+</StepCheck>
+
+<Step title="Where this goes next">
+A quadratic is the simplest curved function, and the parabola is the shape of the simplest loss surface you can optimize. When module 10 teaches gradient descent, the first bowl it rolls a ball down is a parabola, and the minimum it hunts for is the vertex you've been dragging around.
+
+`g(f(x))` is one layer wired into the next. `log(∏) = ∑(log)` is why a million tiny probabilities don't sink training. Everything that follows is those two facts at scale, and the parabola is the curve they first bend.
+</Step>

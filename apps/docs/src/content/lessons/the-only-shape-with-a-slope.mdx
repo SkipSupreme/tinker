@@ -1,0 +1,110 @@
+---
+title: The only shape with a slope
+module: m2-algebra
+summary: A line is the one curve whose steepness never changes. Slope is that single number. The plane, the three equation forms, and parallel-versus-perpendicular all fall out of it.
+estimatedMinutes: 30
+order: 2
+conceptsCovered:
+  - cartesian-plane
+  - slope-as-rate
+  - slope-intercept-and-point-slope
+  - parallel-and-perpendicular
+  - equation-as-solution-set
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import LinePlayground from '../../components/demos/LinePlayground.svelte';
+
+<Step title="The plane is a set of pairs">
+The number line held one coordinate. Glue a second number line crossing it at a right angle and you get the **Cartesian plane**: every point is an ordered pair $(x, y)$.
+
+Now the move that matters. An equation in two variables, like $y = 2x - 1$, is not a thing to "solve." It's a **filter**. It looks at every point in the plane and keeps the ones that make the equation true. The set of survivors is the equation's graph.
+
+For $y = 2x - 1$, the point $(3, 5)$ survives because $5 = 2(3) - 1$. The point $(3, 4)$ does not. Plot every survivor and a shape appears. An equation *is* its solution set.
+</Step>
+
+<Step title="Slope is a rate, and a line keeps it constant">
+Take any two points on a graph. Going from one to the other you rise some amount and run some amount:
+
+$$
+\text{slope} = \frac{\text{rise}}{\text{run}} = \frac{\Delta y}{\Delta x}
+$$
+
+That ratio is the **rate**: how much $y$ changes per unit of $x$.
+
+Here's what makes a line a line. On a curve, this ratio depends on which two points you pick. On a **line**, it is the *same number* no matter which two points you choose. That constant rate is the defining property. A line is the only graph with a single, location-independent slope, and that one number is the line's whole identity.
+
+<LinePlayground client:visible />
+
+Drag the two anchor points. The blue and coral legs are the run and the rise. Drag one anchor *along the line it's already on*: the slope readout does not move. Pick different points, get the same slope. That invariance is the lesson.
+</Step>
+
+<StepCheck
+  title="Rise over run"
+  prompt="slope = "
+  answer={3}
+  hint="Δy = 14 − 2 = 12. Δx = 5 − 1 = 4. slope = 12 / 4 = 3."
+>
+Find the slope of the line through $(1, 2)$ and $(5, 14)$.
+
+Compute $\Delta y$ and $\Delta x$, then divide. **What is the slope?**
+</StepCheck>
+
+<Step title="Three forms, one line">
+A line has one slope, but you can write its equation several ways depending on which point you anchor to.
+
+**Slope-intercept**, $y = mx + b$: anchored at the spot where the line crosses the $y$-axis. $m$ is the slope, $b$ is that crossing height.
+
+**Point-slope**, $y - y_0 = m(x - x_0)$: anchored at *any* point $(x_0, y_0)$ you already know is on the line. This is the more honest form, because a line doesn't care which point you name it from.
+
+Slope-intercept is just point-slope with the anchor forced to be $(0, b)$. Same line, same slope, different starting address. In the widget, both point-slope forms and the slope-intercept form update together as you drag, and they always describe the identical line.
+</Step>
+
+<StepCheck
+  title="Find the intercept"
+  prompt="b = "
+  answer={5}
+  hint="Substitute the point into y = −2x + b: −1 = −2(3) + b, so −1 = −6 + b, so b = 5."
+>
+A line has slope $-2$ and passes through $(3, -1)$. Its equation is $y = -2x + b$.
+
+Substitute the point to find $b$. **What is $b$?**
+</StepCheck>
+
+<Step title="Slope is geometric, not syntactic">
+A trap worth disarming now. In $y = mx + b$, the slope is the number in front of $x$. True. But that is a fact about *that form*, not about slope itself.
+
+Given $3x + 6y = 12$, the number in front of $x$ is $3$, and the slope is **not** $3$. Rearrange to slope-intercept: $6y = -3x + 12$, so $y = -\tfrac{1}{2}x + 2$. The slope is $-\tfrac{1}{2}$.
+
+Slope is rise over run, a geometric quantity. "The coefficient of $x$" only reports it once the equation is in the one form built to display it. Get the equation into $y = mx + b$ before you read the slope off.
+</Step>
+
+<Step title="Parallel and perpendicular">
+Two non-vertical lines are **parallel** exactly when they have the same slope: $m_1 = m_2$. Same steepness, never meeting. Nothing subtle there.
+
+**Perpendicular** is the surprising one. Two lines cross at a right angle exactly when
+
+$$
+m_1 \cdot m_2 = -1
+$$
+
+Why? Rotating a direction by $90°$ sends a step of $(\Delta x, \Delta y)$ to a step of $(-\Delta y, \Delta x)$. The original slope is $\Delta y / \Delta x$; the rotated slope is $-\Delta x / \Delta y$. Multiply them and everything cancels to $-1$. So a perpendicular slope is the **negative reciprocal**: flip the fraction, flip the sign.
+</Step>
+
+<StepCheck
+  title="Turn the corner"
+  prompt="perpendicular slope = "
+  answer={-4}
+  hint="The line has slope 1/4. Negative reciprocal: flip to 4/1, negate to −4."
+>
+A line has equation $y = \tfrac{1}{4}x + 7$. What is the slope of any line perpendicular to it?
+
+Take the negative reciprocal. **What is that slope?**
+</StepCheck>
+
+<Step title="Where this goes next">
+A line is one number's worth of information: its slope. The intercept just says where it sits. Every learning model you will meet starts here, because the simplest model that can learn anything is a straight line, and "fit a line to data" is the seed of all of it.
+
+`g(f(x))` is one layer wired into the next. `log(∏) = ∑(log)` is why a million tiny probabilities don't sink training. Everything that follows is those two facts at scale, and the line is the first object simple enough to see them coming.
+</Step>

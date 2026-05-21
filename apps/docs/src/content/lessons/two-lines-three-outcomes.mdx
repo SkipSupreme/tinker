@@ -1,0 +1,109 @@
+---
+title: Two lines, three outcomes
+module: m2-algebra
+summary: A system of two linear equations is two lines in one plane. Solving it is finding where they cross, and elimination is a chain of moves that never lets the crossing point escape.
+estimatedMinutes: 25
+order: 3
+conceptsCovered:
+  - systems-of-equations
+  - substitution-method
+  - elimination-method
+  - one-none-infinite-solutions
+  - row-operations-preserve-solution
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import EliminateOrSubstitute from '../../components/demos/EliminateOrSubstitute.svelte';
+
+<Step title="Two equations at once">
+A **system** is two equations that must both be true at the same time:
+
+$$
+\begin{cases} 2x + 3y = 12 \\ 4x - y = 10 \end{cases}
+$$
+
+Each equation, on its own, is a line: a whole set of $(x, y)$ points. A *solution to the system* is a point that lies on **both** lines at once. Geometrically, that's exactly where the two lines cross.
+
+So "solve the system" and "find the intersection point" are the same sentence in two dialects, one algebraic, one geometric. Everything in this lesson is translating between them.
+</Step>
+
+<Step title="Substitution: collapse two variables into one">
+The first method is **substitution**. Solve one equation for one variable, then push that expression into the other equation.
+
+From $4x - y = 10$, solve for $y$: $y = 4x - 10$. Now substitute that into the first equation wherever $y$ appears:
+
+$$
+2x + 3(4x - 10) = 12
+$$
+
+That's a one-variable equation, exactly the kind module 1 taught you to peel. It gives $14x - 30 = 12$, so $x = 3$. Back-substitute into $y = 4x - 10$ to get $y = 2$. The lines cross at $(3, 2)$.
+
+The move that makes it work: a two-variable problem became a one-variable problem because substitution *spent* one equation to eliminate one variable.
+</Step>
+
+<Step title="Elimination: scale and add">
+The second method is **elimination**, and it's the one that scales up to real machinery later.
+
+The idea: add the two equations together in a way that makes one variable cancel. You're allowed to scale an entire equation by a constant first (both sides, every term) because that doesn't change its line. Then add the equations.
+
+For the system above: multiply the second equation by $3$ to get $12x - 3y = 30$. Add it to the first equation, $2x + 3y = 12$. The $+3y$ and $-3y$ annihilate, leaving $14x = 42$, so $x = 3$. Same crossing point, reached by cancellation instead of replacement.
+
+<EliminateOrSubstitute client:visible />
+
+Drive the algorithm yourself. Scale a row, add one row to another, and watch the right-hand panel. The two lines change how they're written, but the marked intersection point never moves. That fixed dot is the solution, and no legal move is allowed to disturb it.
+</Step>
+
+<StepCheck
+  title="Solve a system"
+  prompt="x = "
+  answer={3}
+  hint="Add the two equations: (x+y) + (x−y) = 5 + 1 gives 2x = 6, so x = 3."
+>
+Solve the system below. The two equations are lined up so that *adding them* cancels $y$ immediately.
+
+$$
+\begin{cases} x + y = 5 \\ x - y = 1 \end{cases}
+$$
+
+**What is $x$?**
+</StepCheck>
+
+<Step title="Why the solution can't escape">
+Every move elimination offers is **value-preserving** at the level of the whole system. Scaling an equation by a nonzero constant keeps the same line. Replacing one equation with itself-plus-another keeps the same intersection, because any point satisfying both originals still satisfies the combination.
+
+So the solution set is an **invariant**. The equations get simpler, move by move, until one row reads $x = \text{something}$ and the other reads $y = \text{something}$, but the point they pin down was fixed from the first line. You're not searching for the answer; you're rewriting the system until the answer is impossible not to read.
+</Step>
+
+<Step title="Three outcomes, all geometric">
+Two lines in a plane can do exactly three things, and each is an outcome for the system.
+
+**They cross once.** One intersection, one solution. The everyday case.
+
+**They're parallel and distinct.** Never touch, no solution. The system is **inconsistent**. When you run elimination on it, the variables all cancel and you're left with something false, like $0 = 4$. Algebra reporting a contradiction is algebra telling you the lines never meet.
+
+**They're the same line.** Every point on it works, infinitely many solutions. The system is **dependent**. Elimination collapses it to something always true, like $0 = 0$. A tautology means the second equation told you nothing new.
+</Step>
+
+<StepCheck
+  title="Read the contradiction"
+  prompt="right-hand side = "
+  answer={4}
+  hint="Scale the second equation by 2: 2x + 4y = 10. Subtract the first, 2x + 4y = 6. The variables vanish; the right side is 10 − 6 = 4. The equation 0 = 4 is false: no solution."
+>
+Run elimination on this system:
+
+$$
+\begin{cases} x + 2y = 3 \\ 2x + 4y = 10 \end{cases}
+$$
+
+Scale the first equation by $2$, then subtract it from the second. Every variable cancels, leaving $0 = \text{something}$.
+
+**What number is on the right-hand side?**
+</StepCheck>
+
+<Step title="Where this goes next">
+A two-by-two system is the smallest interesting linear system. Module 7 takes the exact same moves, scale a row, add it to another, and runs them on systems with thousands of equations. There it has a name: Gaussian elimination, the workhorse of linear algebra. The intersection-that-cannot-escape becomes the solution to $Ax = b$.
+
+`g(f(x))` is one layer wired into the next. `log(∏) = ∑(log)` is why a million tiny probabilities don't sink training. Everything that follows is those two facts at scale, and elimination is the first algorithm you've run that survives being made enormous.
+</Step>

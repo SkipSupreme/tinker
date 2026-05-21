@@ -1,0 +1,157 @@
+---
+title: The one identity we live by
+module: m2-algebra
+summary: Exponents, the exponential function, and its inverse the logarithm. The payoff is a single identity, log turns products into sums, and it is the reason training a model is even possible.
+estimatedMinutes: 40
+order: 6
+conceptsCovered:
+  - exponent-laws
+  - exponential-function
+  - logarithm-as-inverse
+  - log-laws
+  - product-to-sum-bridge
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import LogScope from '../../components/demos/LogScope.svelte';
+
+<Step title="Exponents, and the one rule that runs the show">
+$a^n$ for a counting number $n$ is $n$ copies of $a$ multiplied: $2^4 = 2 \cdot 2 \cdot 2 \cdot 2 = 16$. You met this in module 1.
+
+From that, one rule follows immediately. Multiply $a^m$ by $a^n$ and you've lined up $m$ copies then $n$ more, so:
+
+$$
+a^m \cdot a^n = a^{m+n}
+$$
+
+Hold onto this rule. It is the load-bearing one. Everything strange-looking about exponents, the zero, the negatives, the fractions, is forced by the demand that *this rule keeps working*.
+</Step>
+
+<Step title="What zero, negative, and fraction exponents must be">
+"Three copies of $a$" makes no sense for $a^0$ or $a^{-2}$ or $a^{1/2}$. So we don't define them by counting. We define them by insisting $a^m \cdot a^n = a^{m+n}$ stays true, and see what that forces.
+
+**Zero:** $a^0 \cdot a^n = a^{0+n} = a^n$. The only number that leaves $a^n$ unchanged when multiplied in is $1$. So $a^0 = 1$. Forced.
+
+**Negative:** $a^{-n} \cdot a^n = a^{0} = 1$. So $a^{-n}$ is whatever you multiply $a^n$ by to get $1$, namely $a^{-n} = 1/a^n$. Forced.
+
+**Fraction:** $a^{1/2} \cdot a^{1/2} = a^{1} = a$. So $a^{1/2}$ is the number that squares to $a$: $a^{1/2} = \sqrt{a}$. Forced.
+
+None of these is an arbitrary convention. Each is the *only* value that keeps the product rule intact.
+</Step>
+
+<StepCheck
+  title="Exercise the laws"
+  prompt="value = "
+  answer={16}
+  hint="Inside: 2³ · 2⁻¹ = 2^(3−1) = 2². Then (2²)² = 2^(2·2) = 2⁴ = 16."
+>
+Simplify $\left(2^3 \cdot 2^{-1}\right)^2$ using the exponent laws. Combine the powers inside, then apply the outer exponent.
+
+**What is the value?**
+</StepCheck>
+
+<StepCheck
+  title="A fractional exponent"
+  prompt="27^(2/3) = "
+  answer={9}
+  hint="27^(1/3) is the cube root of 27, which is 3. Then 27^(2/3) = (27^(1/3))² = 3² = 9."
+>
+Evaluate $27^{2/3}$. The denominator is a root, the numerator is a power: take the cube root of $27$ first, then square it.
+
+**What is the value?**
+</StepCheck>
+
+<Step title="The exponential function">
+So far the exponent moved. Now flip it: fix the base, let the **exponent** be the variable. That's the **exponential function**:
+
+$$
+f(x) = b^x \qquad (b > 0,\ b \neq 1)
+$$
+
+A line adds a constant per step. An exponential **multiplies** by a constant per step: every time $x$ goes up by $1$, the output is multiplied by $b$. $b > 1$ gives growth; $b < 1$ gives decay. Populations, compound interest, radioactive material, and the loss curves you'll stare at later all live on this shape.
+</Step>
+
+<Step title="The logarithm undoes the exponential">
+The exponential traps a variable up in the exponent. $2^x = 32$, what is $x$? You need the machine that runs $b^x$ **backwards**. That machine is the **logarithm**:
+
+$$
+\log_b(x) = y \quad \Longleftrightarrow \quad b^y = x
+$$
+
+In words: $\log_b(x)$ answers the question *"to what power must I raise $b$ to get $x$?"* So $\log_2(32) = 5$, because $2^5 = 32$.
+
+That's the entire definition. The logarithm is not a calculator button you press and trust. It is the inverse function of the exponential, exactly the inverse-machine idea from the functions lesson, applied to $b^x$. Its domain is $x > 0$, because $b^x$ never produces zero or a negative, so its inverse is never asked about them.
+</Step>
+
+<StepCheck
+  title="Ask the logarithm's question"
+  prompt="log₂(32) = "
+  answer={5}
+  hint="log₂(32) asks: 2 to what power is 32? 2¹=2, 2²=4, 2³=8, 2⁴=16, 2⁵=32. The answer is 5."
+>
+Evaluate $\log_2(32)$ from the definition: to what power must you raise $2$ to get $32$?
+
+**What is $\log_2(32)$?**
+</StepCheck>
+
+<Step title="The log laws come from the exponent laws">
+Because the logarithm is the exponential's inverse, each exponent law reflects into a log law. The product rule $b^u \cdot b^v = b^{u+v}$ is the important one. Reflected through the logarithm it becomes:
+
+$$
+\log_b(xy) = \log_b(x) + \log_b(y)
+$$
+
+A logarithm turns a **product into a sum**. Its siblings: $\log_b(x/y) = \log_b(x) - \log_b(y)$ turns a quotient into a difference, and $\log_b(x^k) = k\log_b(x)$ turns a power into a multiple.
+
+One caution, the single most common log error: this is the log of a *product*. The log of a **sum** is nothing nice. $\log(a + b)$ does **not** equal $\log a + \log b$. The sum of the logs is the log of the product, never the log of the sum.
+</Step>
+
+<Step title="e and ln, on credit">
+You'll see one base constantly: $e \approx 2.71828\ldots$, an irrational constant, and its logarithm $\ln = \log_e$, the **natural log**.
+
+Why $e$ and not $10$? Because $e$ is the base that makes calculus come out clean: the exponential $e^x$ is the one function that is its own rate of change. That sentence can't be cashed in yet, it needs module 5. For now, take it on credit: $e$ is just a base, a specific number near $2.718$, and $\ln$ is its logarithm. Module 5 will tell you why it's *the* base. Until then, every log law above works with $\ln$ exactly as written.
+</Step>
+
+<Step title="The identity we live by">
+Here is the payoff the whole module has been walking toward.
+
+A model that predicts a sequence assigns a probability to each piece, then multiplies them for the joint probability: $P = p_1 \cdot p_2 \cdots p_N$, a product of millions of numbers each between $0$ and $1$.
+
+Multiplying millions of small numbers is a disaster on a real computer. The product shrinks past the smallest number the machine can represent and silently collapses to exactly $0$. That's **underflow**, and once it happens every trace of the real value is gone.
+
+The logarithm rescues this. Because $\log$ turns products into sums:
+
+$$
+\log\!\left(\prod_{i=1}^N p_i\right) = \sum_{i=1}^N \log(p_i)
+$$
+
+<LogScope client:visible />
+
+Drag the three probabilities tiny. The multiply track collapses to $0$ and dies. The sum-of-logs track keeps the real number, every time. That collapse, and that survival, is the demo of the lesson.
+</Step>
+
+<Step title="Why a sum, specifically">
+Switching from a product to a sum of logs buys two things, and a model is trained on both.
+
+**It survives the arithmetic.** A sum of a million moderate negative numbers is an ordinary, representable number. The product those logs came from would have underflowed to zero long ago. The sum is the only form that physically fits in the machine.
+
+**It can be differentiated cheaply.** Module 5 will show that the rate of change of a sum is just the sum of the rates of change of its parts. A product of a million terms has no such mercy. Training means nudging parameters using exactly those rates, so the loss *has* to be a sum. That is why every loss function you'll meet is written $\mathcal{L} = -\sum_i \log p_i$, a sum of logs, not a product of probabilities.
+</Step>
+
+<StepCheck
+  title="A negative log-likelihood"
+  prompt="−log₁₀(0.001) = "
+  answer={3}
+  hint="log₁₀(0.001) asks: 10 to what power is 0.001? That's 10⁻³, so log₁₀(0.001) = −3. The negative log-likelihood is −(−3) = 3."
+>
+A model assigns probability $0.001$ to an event. Its **negative log-likelihood**, the loss contribution, is $-\log_{10}(0.001)$.
+
+Find $\log_{10}(0.001)$ first, then negate it. **What is the negative log-likelihood?**
+</StepCheck>
+
+<Step title="Where this goes next">
+That's module 2. You can reshape expressions, graph lines, solve systems, wire functions into pipelines, bend parabolas, and turn a doomed product into a workable sum of logs.
+
+`g(f(x))` is one layer wired into the next, the forward pass you built in the functions lesson. `log(∏) = ∑(log)` is why a million tiny probabilities don't sink training, the identity you just watched rescue a computation. Modules 8 and 9 cash in the logarithm as the loss function. Module 11 cashes in composition as the network. Everything that follows is these two facts at scale, and you now hold both.
+</Step>

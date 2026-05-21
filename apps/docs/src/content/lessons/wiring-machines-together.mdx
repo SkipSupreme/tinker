@@ -1,0 +1,149 @@
+---
+title: Wiring machines together
+module: m2-algebra
+summary: A function is a machine with one input and one output, every single time. Composition wires one machine's output into the next one's input, which is exactly what a neural network is.
+estimatedMinutes: 35
+order: 4
+conceptsCovered:
+  - function-as-machine
+  - function-notation
+  - domain-and-range
+  - function-composition
+  - inverse-functions
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import MachineWiring from '../../components/demos/MachineWiring.svelte';
+
+<Step title="A function is a machine">
+A **function** is a rule with one job: take an input, produce an output. Two conditions, no more.
+
+- It is **deterministic**: the same input always yields the same output.
+- It produces **exactly one** output per input. Never zero, never two.
+
+That's it. You already write these all day. A function in your language of choice, one that takes an argument and returns a value with no surprises, *is* a mathematical function. School made this feel exotic; it isn't. It's a pure function.
+
+A function is not required to be a formula. It can be a lookup table, a piecewise rule with an `if` in it, a trained model with a billion parameters. As long as one input deterministically gives one output, it's a function. "Function equals formula" is a school habit worth dropping today.
+</Step>
+
+<Step title="Domain, codomain, range">
+A machine comes with a spec sheet.
+
+The **domain** is the set of legal inputs, the values you're allowed to feed it. The **codomain** is the declared universe the outputs live in. The **range** is the set of outputs the machine *actually* produces as the input sweeps the whole domain.
+
+For $f(x) = x^2$ with domain "all real numbers": you may feed it anything, but the range is only the non-negative numbers, because a square is never negative. Domain is the inputs you're allowed; range is the outputs you really get.
+
+The **vertical-line test** is just the "exactly one output" rule, drawn. If any vertical line hits a graph twice, that $x$ has two $y$'s, and the graph is not a function.
+</Step>
+
+<Step title="f(x) is evaluation, not multiplication">
+The notation $f(x)$ trips people because it looks like $f$ times $x$. It is not.
+
+$f(x)$ means: **the output of machine $f$ when the input is $x$.** It is a function call. If it helps, read it as `f.call(x)` or `f(x)` the way you'd write it in code, because that is precisely what it is.
+
+So $f(7)$ doesn't multiply anything. It runs the machine $f$ on the input $7$ and names whatever comes out.
+</Step>
+
+<StepCheck
+  title="Run the machine"
+  prompt="f(7) = "
+  answer={19}
+  hint="f(x) = 3x − 2 means: multiply the input by 3, then subtract 2. f(7) = 3(7) − 2 = 21 − 2 = 19."
+>
+Let $f(x) = 3x - 2$. Evaluate the function at the input $7$.
+
+**What is $f(7)$?**
+</StepCheck>
+
+<Step title="Composition: wire the output into the next input">
+Now the move this whole lesson is built around. Take two machines and **wire them in series**: send the output of the first straight into the input of the second.
+
+That's **composition**, written $(g \circ f)(x) = g(f(x))$. Run $f$ on $x$, take what comes out, run $g$ on that.
+
+<MachineWiring client:visible />
+
+Pick a rule for each machine, draw the wire from one output port to the next input port, then drop an input value in and run it. Watch the value get relabeled as it clears each machine. That pipeline, an input flowing through stacked machines, is not a metaphor for a neural network. It is the shape of one.
+</Step>
+
+<Step title="Read composition right to left">
+The notation $g(f(x))$ is read **from the inside out**. The input $x$ touches $f$ first, because $f$ is the innermost machine, the one wrapped directly around $x$. Then $g$ runs on the result.
+
+This catches everyone once: $g \circ f$ does **not** mean "do $g$ first." The machine nearest the input runs first. In $g(f(x))$, that's $f$. Trace the parentheses from the center outward and you'll never get the order wrong.
+</Step>
+
+<StepCheck
+  title="Compose two machines"
+  prompt="(g∘f)(4) = "
+  answer={14}
+  hint="Inner first: f(4) = 4 + 3 = 7. Then g(7) = 2(7) = 14."
+>
+Let $f(x) = x + 3$ and $g(x) = 2x$. Compute $(g \circ f)(4)$.
+
+Run the inner machine $f$ first, then feed its output to $g$. **What is $(g \circ f)(4)$?**
+</StepCheck>
+
+<Step title="Order matters">
+Swap the wiring and you usually get a different machine. With the same $f(x) = x + 3$ and $g(x) = 2x$:
+
+$$
+(g \circ f)(4) = g(f(4)) = g(7) = 14
+$$
+$$
+(f \circ g)(4) = f(g(4)) = f(8) = 11
+$$
+
+Different answers. In general $g \circ f \neq f \circ g$. Composition is not commutative.
+
+This is not a technicality. It's the reason a neural network's layer order is a *design decision*. Stack attention then a feed-forward block, or the other way around, and you have built two different functions. The wiring order is part of the architecture.
+</Step>
+
+<StepCheck
+  title="The other order"
+  prompt="(f∘g)(4) = "
+  answer={11}
+  hint="Inner first: g(4) = 2(4) = 8. Then f(8) = 8 + 3 = 11."
+>
+Same $f(x) = x + 3$ and $g(x) = 2x$. Now compute $(f \circ g)(4)$, the other order.
+
+**What is $(f \circ g)(4)$?**
+</StepCheck>
+
+<Step title="The deep-network preview">
+Wire three machines, then four, then ninety-six. An input enters, gets transformed, passes to the next stage, again, again, and a prediction falls out the end.
+
+That run, input flowing forward through a stack of composed machines, has a name you'll hear from module 11 onward: the **forward pass**. A deep network is $f_{96}(\dots f_2(f_1(x)) \dots)$. What's missing from today's version is only the *content* of each machine: a matrix multiply and a nonlinear bend, which modules 7 and 11 supply. The skeleton, composition, you already have.
+</Step>
+
+<Step title="Inverses: running the machine backwards">
+Every machine raises a question: can you undo it? The **inverse** $f^{-1}$ is the machine that takes $f$'s output and hands back the original input. Composing a function with its inverse gets you nowhere, which is the point: $f^{-1}(f(x)) = x$.
+
+One notation warning. $f^{-1}$ does **not** mean $1/f$. The $-1$ is not a reciprocal exponent here; it's the symbol for "the inverse machine." $f^{-1}(x)$ and $\tfrac{1}{f(x)}$ are unrelated. Different operation, unlucky collision of notation.
+
+To find an inverse, run the construction backwards. For $f(x) = 5x + 1$: $f$ multiplies by $5$ then adds $1$, so $f^{-1}$ subtracts $1$ then divides by $5$, giving $f^{-1}(x) = \tfrac{x - 1}{5}$. It's the outside-in peel from module 1, packaged as its own function.
+</Step>
+
+<StepCheck
+  title="Undo the machine"
+  prompt="f⁻¹(11) = "
+  answer={2}
+  hint="f(x) = 5x + 1, so f⁻¹ undoes it: subtract 1, then divide by 5. f⁻¹(11) = (11 − 1)/5 = 10/5 = 2."
+>
+Let $f(x) = 5x + 1$. Its inverse is $f^{-1}(x) = \tfrac{x - 1}{5}$.
+
+Evaluate the inverse at $11$. **What is $f^{-1}(11)$?**
+</StepCheck>
+
+<Step title="Inverses need the right domain">
+Not every machine can be run backwards. $f(x) = x^2$ sends both $2$ and $-2$ to $4$. Asked to invert $4$, the machine can't choose; an inverse would need to return two values, and then it isn't a function.
+
+The fix is not to give up, it's to **restrict the domain**. Limit $f(x) = x^2$ to inputs $x \ge 0$ and now every output traces back to exactly one input. On that restricted domain $f^{-1}(x) = \sqrt{x}$ is a genuine function.
+
+Domain restriction isn't bureaucracy. It is the thing that *makes the inverse exist*. A function can be inverted exactly when it's one-to-one, and choosing the domain is how you make it one-to-one.
+</Step>
+
+<Step title="Where this goes next">
+You can build machines, wire them in series, and run them backwards. Composition is the forward pass; inverses are the seed of running a computation in reverse, which module 12 will turn into backpropagation.
+
+`g(f(x))` is one layer wired into the next. `log(∏) = ∑(log)` is why a million tiny probabilities don't sink training. Everything that follows is those two facts at scale, and you just built the first one with your own hands.
+</Step>

@@ -1,0 +1,126 @@
+---
+title: Same value, different shape
+module: m2-algebra
+summary: The distributive law and combining like terms are rewrites. They change what an expression looks like without touching what it computes. Substitution is the check that proves it.
+estimatedMinutes: 25
+order: 1
+conceptsCovered:
+  - multi-variable-expressions
+  - like-terms
+  - distributive-law
+  - rewrites-preserve-value
+  - substitution-as-type-check
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import ExpressionRewriter from '../../components/demos/ExpressionRewriter.svelte';
+
+<Step title="An expression is a recipe">
+Module 1 left you with single-variable expressions and the tree behind them. Module 2 takes the lid off: more variables, more structure, but no new *kind* of object.
+
+An expression like $3(2x + 5) - (x - 4)$ is still just a recipe. Hand it values for its variables and it collapses to a single number. The variables are named boxes; the operators are the steps; the output is whatever falls out the bottom.
+
+The new skill this lesson is about isn't evaluating expressions. It's *rewriting* them: turning one expression into a different-looking expression that computes the exact same thing.
+</Step>
+
+<Step title="Like terms: same box, same power">
+Two terms are **like terms** when their variable parts are identical: the same letters raised to the same powers. $3x$ and $5x$ are like terms. $3x$ and $3y$ are not. $3x$ and $3x^2$ are not.
+
+Like terms collapse together by adding *only their coefficients*: $3x + 5x = 8x$. Unlike terms just sit side by side; there's nothing to merge.
+
+Why is this legal? Because $3x + 5x$ means "three copies of $x$ plus five copies of $x$," which is eight copies of $x$, for *every* value $x$ could take. You're not solving anything. You're noticing that two ways of writing the count are the same count.
+</Step>
+
+<StepCheck
+  title="Collect the like terms"
+  prompt="value at a = 5 = "
+  answer={20}
+  hint="4a − 2a = 2a, and 7 + 3 = 10, so the expression is 2a + 10. At a = 5: 2(5) + 10 = 20."
+>
+Simplify $4a + 7 - 2a + 3$ by combining like terms. Then evaluate your simplified expression at $a = 5$.
+
+**What is the value?**
+</StepCheck>
+
+<Step title="The distributive law, both directions">
+Here is the one structural rule that does most of the work in algebra:
+
+$$
+a(b + c) = ab + ac
+$$
+
+Read left to right, it's **distributing**: a product wrapped around a sum becomes a sum of products. Read right to left, it's **factoring**: a sum with a shared piece becomes a single product.
+
+It's not a coincidence or a convention. Picture a rectangle that is $a$ tall and $(b + c)$ wide. Its area is $a(b+c)$. Now slice it down the middle into an $a \times b$ piece and an $a \times c$ piece. Same rectangle, same area, two names for it. That's the whole proof.
+
+<ExpressionRewriter client:visible />
+
+Click a node in the tree and pick a rewrite. Distribute a product into a sum, combine like terms, factor a common piece back out. The tree changes shape with every move. Watch the **value at x = 2** readout the entire time.
+</Step>
+
+<Step title="The thing that never moves">
+You just watched an expression's tree get rearranged repeatedly, and the **value at x = 2** readout did not flinch. That is the point of the whole lesson.
+
+A rewrite is a *value-preserving* transformation. It changes the syntax (what the expression looks like, how its tree is shaped) and leaves the semantics (what it computes, for every input) untouched. Distributing, factoring, collecting like terms: all of them are this.
+
+This is exactly what a compiler does when it optimizes your code, and what a computer algebra system does when it simplifies. The expression on the screen is allowed to change. The function it denotes is not.
+</Step>
+
+<Step title="The minus-sign trap">
+One rewrite causes more wrong answers than all the others combined: distributing a *negative*.
+
+The expression $-(x - 4)$ is shorthand for $-1 \cdot (x - 4)$. Distribute the $-1$ into **both** terms:
+
+$$
+-(x - 4) = -x + 4
+$$
+
+Not $-x - 4$. The $-1$ hits the $x$ *and* the $-4$, and a negative times a negative is a positive. Miss the second term and every sign downstream is wrong. When you see a minus sign in front of a parenthesis, treat it as a $-1$ that must touch everything inside.
+</Step>
+
+<StepCheck
+  title="Distribute, then collect"
+  prompt="value at x = 3 = "
+  answer={5}
+  hint="3(2x−5) = 6x−15. −2(x−4) = −2x+8. Sum: 4x−7. At x = 3: 4(3)−7 = 5."
+>
+Simplify $3(2x - 5) - 2(x - 4)$. Distribute both products first, mind the signs, then combine like terms. Evaluate the result at $x = 3$.
+
+**What is the value?**
+</StepCheck>
+
+<Step title="Substitution is the type check">
+How do you *know* a rewrite didn't break anything? You substitute.
+
+Pick a value, plug it into the original expression and into your rewritten one, and confirm they land on the same number. They have to, if the rewrite was legal, because a legal rewrite preserves value at *every* input.
+
+In code you'd call this a test. You changed the implementation; you ran it on a known input; you asserted the output is unchanged. Same instinct, same safety. One substitution won't *prove* two expressions are equal everywhere, but it catches almost every slip, and the slips it catches are the sign errors and the dropped terms that would otherwise haunt you for three more steps.
+</Step>
+
+<Step title="When distribution does not apply">
+A warning that will save you later. The distributive law connects multiplication and addition. It does **not** mean exponents distribute over addition.
+
+$$
+(a + b)^2 \neq a^2 + b^2
+$$
+
+Check it: $(2 + 3)^2 = 5^2 = 25$, but $2^2 + 3^2 = 4 + 9 = 13$. Not equal. The correct expansion is $(a+b)^2 = a^2 + 2ab + b^2$, and the extra $2ab$ is the two off-diagonal rectangles when you draw $(a+b)$ by $(a+b)$ as a square. The cross terms are real area; you can't wish them away.
+</Step>
+
+<StepCheck
+  title="Square a sum"
+  prompt="(a + b)² at a=2, b=3 = "
+  answer={25}
+  hint="(a+b)² means square the whole sum: (2+3)² = 5² = 25. It is NOT a² + b² = 13."
+>
+Evaluate $(a + b)^2$ at $a = 2$ and $b = 3$. Add *first*, then square the result.
+
+**What is the value?**
+</StepCheck>
+
+<Step title="Where this goes next">
+You can now take an expression and reshape it: distribute, factor, collect like terms, and prove you didn't break it by substituting. Every later lesson leans on this. Solving an equation will mean rewriting it into a shape you can read off; deriving the quadratic formula will be one long chain of legal rewrites.
+
+`g(f(x))` is one layer of a neural network wired into the next. `log(∏) = ∑(log)` is why a million tiny probabilities don't sink training. Everything in this module is those two facts at scale, and rewriting expressions without changing their value is the ground they stand on.
+</Step>

@@ -4,7 +4,7 @@ arc: arc-0-foundations
 order: 2
 title: Algebra I & II
 summary: Linear equations & graphing, slope, systems, quadratics, functions as machines, function composition, polynomials, exponents, logarithms.
-status: planned
+status: drafting
 estimatedMinutes: 240
 prereqs: [m1-pre-algebra]
 conceptsCovered: [linear-equations, slope, quadratics, function-composition, exponentials, logarithms]
