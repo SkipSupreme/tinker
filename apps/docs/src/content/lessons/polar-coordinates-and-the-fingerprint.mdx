@@ -1,0 +1,164 @@
+---
+title: Polar coordinates and the position fingerprint
+module: m3-trigonometry
+summary: Polar coordinates are the unit circle scaled up. Inverse trig works only once you restrict the domain. Then the payoff. Tag a position with sines and cosines at many frequencies and every position gets a unique fingerprint, which is exactly a transformer's positional encoding.
+estimatedMinutes: 24
+order: 5
+conceptsCovered:
+  - polar-coordinates
+  - inverse-trig
+  - multi-frequency-position-vector
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import PolarSketcher from '../../components/demos/PolarSketcher.svelte';
+import PositionFingerprint from '../../components/demos/PositionFingerprint.svelte';
+
+<Step title="A second way to name a point">
+Cartesian coordinates locate a point by "go right $x$, go up $y$." There is another way, and it is the unit circle scaled up.
+
+**Polar coordinates** name a point by $(r, \theta)$: how far it is from the origin, and at what angle. To convert to the familiar $x$ and $y$, you walk distance $r$ in the direction $\theta$:
+
+$$
+x = r\cos\theta, \qquad y = r\sin\theta
+$$
+
+That is just the unit-circle definition, stretched by $r$. Cosine and sine point you in a direction; $r$ says how far to go.
+
+<PolarSketcher client:visible />
+
+Pick a curve and scrub the angle dial. The left panel draws the path in polar; the right panel plots the same $r(\theta)$ as an ordinary wave. One motion, two pictures.
+</Step>
+
+<Step title="Converting both directions">
+Forward, polar to Cartesian, is the pair above. Backward, Cartesian to polar, uses Pythagoras and an angle:
+
+$$
+r = \sqrt{x^2 + y^2}, \qquad \theta = \operatorname{atan2}(y, x)
+$$
+
+The radius is easy. The angle needs care, and that is the next idea: getting an angle *back* out of a coordinate is what inverse trig is for, and it has a catch.
+</Step>
+
+<StepCheck
+  title="Polar to Cartesian"
+  prompt="x = "
+  answer={4.3301}
+  tolerance={0.02}
+  hint="x = r·cosθ = 5·cos(π/6) = 5·(√3/2) = 5√3/2 ≈ 4.3301."
+>
+Convert the polar point $(r, \theta) = (5, \pi/6)$ to Cartesian. Recall $\cos(\pi/6) = \sqrt{3}/2 \approx 0.866$.
+
+**What is the $x$-coordinate?**
+</StepCheck>
+
+<Step title="Inverse trig needs a restricted domain">
+You want to go from a sine value back to the angle. Define $\arcsin$: "the angle whose sine is this."
+
+But there is a problem. $\sin\theta = \tfrac12$ is true at $\theta = \pi/6$, and again at $5\pi/6$, and again every full turn after each of those. Infinitely many angles share a sine. So "the angle whose sine is $\tfrac12$" is not a function yet, because a function must return *one* answer.
+
+The fix is the same one you saw in algebra with $f(x) = x^2$, where $\sqrt{\ }$ returns only the non-negative root. We **restrict the domain** to a stretch where sine hits each value exactly once, the interval $[-\pi/2, \pi/2]$, and define $\arcsin$ to return the angle from that stretch. That chosen stretch is called the **principal branch**.
+
+$$
+\arcsin: [-1, 1] \to [-\tfrac{\pi}{2}, \tfrac{\pi}{2}]
+$$
+
+Cosine and tangent get the same treatment: $\arccos$ returns angles in $[0, \pi]$, and $\arctan$ returns angles in $(-\pi/2, \pi/2)$.
+</Step>
+
+<Step title="The reciprocal trap">
+One notation warning. You will see $\arcsin$ written as $\sin^{-1}$. The $-1$ there means "inverse function," not "reciprocal."
+
+$$
+\sin^{-1}(x) \ \text{means}\ \arcsin(x), \qquad \text{NOT}\ \ \frac{1}{\sin x}
+$$
+
+The reciprocal $1/\sin x$ has its own name, cosecant, and it is a different thing. When in doubt, write $\arcsin$. It cannot be misread.
+</Step>
+
+<StepCheck
+  title="An inverse sine"
+  prompt="arcsin(1/2) = "
+  answer={0.5236}
+  tolerance={0.02}
+  hint="arcsin returns the angle in [−π/2, π/2] whose sine is 1/2. That angle is π/6 ≈ 0.5236."
+>
+Evaluate $\arcsin(1/2)$, the principal angle whose sine is $\tfrac12$.
+
+**What is it, in radians?**
+</StepCheck>
+
+<StepCheck
+  title="An inverse tangent"
+  prompt="arctan(1) = "
+  answer={0.7854}
+  tolerance={0.02}
+  hint="arctan returns the angle in (−π/2, π/2) whose tangent is 1. Tangent is 1 when sine equals cosine, at π/4 ≈ 0.7854."
+>
+Evaluate $\arctan(1)$, the principal angle whose tangent is $1$.
+
+**What is it, in radians?**
+</StepCheck>
+
+<Step title="Why atan2 exists">
+Back to converting a Cartesian point to its angle. Here is the catch in concrete form.
+
+The point $(1, 1)$ and the point $(-1, -1)$ have the same ratio $y/x = 1$. Feed that ratio to $\arctan$ and it returns $\pi/4$ for both. But the two points are in *opposite* quadrants, $\pi$ apart. $\arctan$ alone cannot tell them apart, because it only ever saw the ratio.
+
+That is why code has a two-argument version, `atan2(y, x)`. It takes both coordinates separately, so it can see the signs, and it returns the angle in the correct quadrant across the full $[-\pi, \pi]$. If you have ever written `Math.atan2` in a program without quite knowing why it took two arguments, that is the reason: one argument throws away the quadrant.
+</Step>
+
+<Step title="Tagging a position with waves">
+Now the payoff the whole module was climbing toward.
+
+Suppose you have a position, an integer $p$, and you want to hand a machine a set of numbers that uniquely identifies it, smoothly, so that nearby positions get nearby numbers. Here is the move. Sample a stack of sine and cosine waves at the input $p$, each wave at a different frequency:
+
+$$
+\Big[\ \sin(p/w_1),\ \cos(p/w_1),\ \sin(p/w_2),\ \cos(p/w_2),\ \dots\ \Big]
+$$
+
+where the wavelengths $w_1, w_2, \dots$ span a wide range. The fast waves change a lot between $p$ and $p+1$; the slow waves barely move. Together, the list of numbers is a **fingerprint** of $p$.
+
+<PositionFingerprint client:visible />
+
+Drag the position. The bar chart is the fingerprint at the current $p$. The heatmap stacks the fingerprints of positions $0$ through $30$, one per row.
+</Step>
+
+<Step title="Why many frequencies">
+Look at the heatmap. The high-frequency columns on the left flicker rapidly as you move down the rows: those waves separate adjacent positions sharply. The low-frequency columns on the right change slowly: those waves tell *far apart* from *nearby*.
+
+Use only fast waves and distant positions start to look alike once the waves wrap around. Use only slow waves and neighbors are nearly identical. Use a spread of frequencies and you get both at once: every position gets a fingerprint that is unique, and that varies smoothly, so "close" and "far" are both visible in the numbers.
+</Step>
+
+<StepCheck
+  title="The fingerprint at position zero"
+  prompt="components equal to 1 = "
+  answer={4}
+  tolerance={0.01}
+  hint="At p = 0, every sin(0/w) = 0 and every cos(0/w) = 1. With 4 frequency bands there are 4 cosine components, so 4 of the 8 components equal 1."
+>
+At $p = 0$, every $\sin$ term is $\sin(0) = 0$ and every $\cos$ term is $\cos(0) = 1$.
+
+With $4$ frequency bands switched on, the fingerprint has $8$ components. **How many of them equal $1$?**
+</StepCheck>
+
+<Step title="The endgame: where this whole module was going">
+Here is the artifact you have been building toward, named at last.
+
+A transformer sees a bag of tokens with no order. "the cat sat" and "sat the cat" look identical to it unless position is added back in. To put position back, it tags each token with a vector of sines and cosines read off the unit circle at many frequencies, the exact fingerprint you just built. That is **sinusoidal positional encoding**, from the 2017 paper *Attention Is All You Need*:
+
+$$
+\mathrm{PE}(p, 2i) = \sin\!\left(\frac{p}{10000^{2i/d}}\right), \qquad \mathrm{PE}(p, 2i+1) = \cos\!\left(\frac{p}{10000^{2i/d}}\right)
+$$
+
+That fraction $10000^{2i/d}$ is just the wavelength schedule, fast waves for small $i$, slow waves for large $i$, the same spread you saw in the heatmap.
+
+And inside LLaMA 2 and 3, Mistral, and Gemma, the machine goes one step further: it *rotates* the query and key vectors by an angle proportional to position, the exact 2D rotation you derived from the angle addition formulas in the last lesson. That is RoPE. You did not just preview these ideas. You derived both halves of them.
+</Step>
+
+<Step title="What to expect next">
+The trigonometry you needed is done, and you can see the far shore from here.
+
+Module four sharpens function transformations. Module five, calculus, shows why sine and cosine are unusually well-behaved under the derivative. Module seven recasts your rotation rule as a $2\times2$ matrix. Module fifteen uses that matrix as RoPE inside attention, and module sixteen uses the multi-frequency fingerprint you built in this lesson. Every one of those is a turn of the same circle you have been dragging since lesson one.
+</Step>

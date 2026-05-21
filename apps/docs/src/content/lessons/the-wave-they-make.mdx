@@ -1,0 +1,129 @@
+---
+title: The wave they make
+module: m3-trigonometry
+summary: Stop thinking of sine and cosine as angle machines. Feed them any real number and their outputs trace a wave. You can stretch it, squeeze it, and slide it, and every transformer you ever meet is built from waves like these.
+estimatedMinutes: 20
+order: 3
+conceptsCovered:
+  - sin-cos-as-functions-of-real-numbers
+  - graphs-period-amplitude
+  - phase-relationship
+  - frequency-scaling
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import UnitCircleScrubber from '../../components/demos/UnitCircleScrubber.svelte';
+import WaveLab from '../../components/demos/WaveLab.svelte';
+
+<Step title="From angle to function">
+Until now $\theta$ has meant "an angle." Drop that. Treat $\sin$ as an ordinary **function**: hand it a real number, get a real number back. The input does not have to be an angle in any picture. $\sin(1)$, $\sin(2.5)$, $\sin(100)$ are all perfectly good outputs.
+
+Mechanically nothing changed. To compute $\sin(\theta)$ you still walk a distance $\theta$ around the unit circle and read off the height. But now $\theta$ is just "how far along the input axis we are," and we are going to plot the output.
+
+<UnitCircleScrubber client:visible />
+
+As you drag the point, the $\sin\theta$ readout is the height. Imagine pulling that height out sideways and plotting it against $\theta$. That is the next step.
+</Step>
+
+<Step title="The graph of sine">
+Walk the input $\theta$ steadily from $0$ upward and plot $\sin\theta$ as you go.
+
+At $\theta = 0$ the height is $0$. It climbs to $1$ at $\theta = \pi/2$, falls back through $0$ at $\theta = \pi$, down to $-1$ at $\theta = 3\pi/2$, and returns to $0$ at $\theta = 2\pi$. Then it does the exact same thing again, forever, because going around the circle again retraces the same heights.
+
+The result is a smooth, endlessly repeating **wave**. Its height never exceeds $1$ or drops below $-1$, and one full copy takes a horizontal distance of $2\pi$ before repeating.
+</Step>
+
+<Step title="The graph of cosine is the same wave">
+Now plot $\cos\theta$, the $x$-coordinate, the same way. You get a wave of the identical shape: same height limits, same repeat distance $2\pi$.
+
+The only difference is where it starts. Cosine begins at its *peak*: $\cos 0 = 1$. Sine begins at zero on the way up. Slide the cosine wave to the right by a quarter of a full cycle and it lands exactly on the sine wave.
+
+There is only one wave shape in this lesson. Sine and cosine are two readings of it, a quarter-turn apart.
+</Step>
+
+<StepCheck
+  title="Cosine as shifted sine"
+  prompt="shift amount = "
+  answer={1.5708}
+  tolerance={0.02}
+  hint="Cosine leads sine by a quarter of a full 2π cycle. A quarter of 2π is π/2 ≈ 1.5708. So cos θ = sin(θ + π/2)."
+>
+Cosine is sine shifted left. We can write $\cos\theta = \sin(\theta + c)$ for the right constant $c$.
+
+**What is $c$?** (Give a decimal. It is a quarter of a full cycle.)
+</StepCheck>
+
+<Step title="Three knobs on the wave">
+Every wave you will ever care about is a plain sine wave with three things adjusted. The general form is
+
+$$
+y = A\sin(k\theta + \phi)
+$$
+
+and each letter is one independent knob:
+
+- **$A$**, the **amplitude**, sets the height of the peaks.
+- **$k$**, the **frequency factor**, sets how tightly the wave is packed horizontally.
+- **$\phi$**, the **phase**, slides the whole wave left or right.
+
+<WaveLab client:visible />
+
+The three handles on the curve each grab one knob. Drag the top handle to stretch the peaks, the side handle to squeeze the cycles closer, the baseline handle to slide it. Watch the equation update.
+</Step>
+
+<Step title="Amplitude and period are different knobs">
+This is the confusion the widget exists to kill.
+
+**Amplitude** is vertical. $A\sin\theta$ has peaks at height $A$ instead of $1$. Pulling the peaks taller never changes how often the wave repeats.
+
+**Period** is horizontal: the input distance for one full cycle. Plain $\sin\theta$ has period $2\pi$. In $\sin(k\theta)$, the inside finishes a full $2\pi$ when $\theta$ has only travelled $2\pi/k$, so
+
+$$
+\text{period of } \sin(k\theta) = \frac{2\pi}{k}
+$$
+
+Multiply the input by $k$ and the wave speeds up by a factor of $k$, so its period *shrinks*. Bigger $k$, tighter wave. They are separate handles in the widget because they are separate ideas.
+</Step>
+
+<StepCheck
+  title="Period from frequency"
+  prompt="period of sin(4θ) = "
+  answer={1.5708}
+  tolerance={0.02}
+  hint="Period is 2π/k. Here k = 4, so the period is 2π/4 = π/2 ≈ 1.5708."
+>
+Consider the wave $\sin(4\theta)$.
+
+Using period $= 2\pi/k$, **what is its period?** (Give a decimal.)
+</StepCheck>
+
+<Step title="Frequency, the engineering word">
+**Period** is "input per cycle." Its reciprocal is **frequency**: "cycles per unit input." They move in opposite directions: squeeze the period and the frequency rises.
+
+Engineers usually write a wave as $\sin(2\pi f\theta)$, where $f$ is the frequency directly. Check it: that has $k = 2\pi f$, so its period is $2\pi / (2\pi f) = 1/f$. A wave at $f = 60$ cycles per second repeats every $1/60$ of a second. The widget shows both numbers at once so you can watch them trade off.
+</Step>
+
+<StepCheck
+  title="Recover k from the period"
+  prompt="k = "
+  answer={10}
+  tolerance={0.01}
+  hint="period = 2π/k, so k = 2π/period. If the period is 2π/10, then k = 2π ÷ (2π/10) = 10."
+>
+A wave $\sin(k\theta)$ is observed to have period $2\pi/10$.
+
+**What is $k$?**
+</StepCheck>
+
+<Step title="Phase is a delay">
+The last knob, $\phi$, does not change the shape or the spacing at all. It slides the wave bodily along the input axis. A positive $\phi$ shifts it left, meaning the wave reaches each value *earlier*; a negative $\phi$ delays it.
+
+This is exactly the relationship from earlier: $\cos\theta = \sin(\theta + \pi/2)$ is a sine wave with $\phi = \pi/2$. Toggle the cosine overlay in the widget and you see two waves of identical shape, offset by that one quarter-cycle of phase.
+</Step>
+
+<Step title="Where this goes next">
+You now have the full vocabulary of a wave: amplitude, frequency, period, phase.
+
+Hold onto the frequency knob in particular. A transformer has no built-in sense of *where* a word sits in a sentence. To give it one, it tags each position with a stack of these waves, every one ticking at a different frequency $k$. Sample them all at the same input and you get a list of numbers that is unique to that position. You will build that list by hand in lesson five, and the lesson before it shows what those waves do when you start rotating with them.
+</Step>

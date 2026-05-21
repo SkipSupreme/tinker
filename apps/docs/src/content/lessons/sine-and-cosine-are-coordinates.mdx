@@ -1,0 +1,162 @@
+---
+title: Sine and cosine are coordinates
+module: m3-trigonometry
+summary: Cosine and sine are just the x and y of a point on the unit circle. Inside a right triangle the same two numbers reappear as ratios of sides. It is one definition wearing two outfits, not two topics to memorize.
+estimatedMinutes: 24
+order: 2
+conceptsCovered:
+  - cos-sin-as-coordinates
+  - right-triangle-ratios
+  - circle-triangle-reconciliation
+  - tangent-as-slope
+  - pythagorean-identity
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import UnitCircleScrubber from '../../components/demos/UnitCircleScrubber.svelte';
+import TriangleCircleMorph from '../../components/demos/TriangleCircleMorph.svelte';
+
+<Step title="The definition">
+Stand on the unit circle from last lesson. Pick an angle $\theta$. Rotate the point $(1, 0)$ counterclockwise by $\theta$. It lands somewhere on the circle, at some coordinates $(x, y)$.
+
+Those coordinates have names:
+
+$$
+\cos\theta = x, \qquad \sin\theta = y
+$$
+
+That is the definition. **Cosine is the $x$-coordinate of the point. Sine is the $y$-coordinate.** Nothing is happening here except naming the two numbers that locate a point on a circle.
+
+<UnitCircleScrubber client:visible />
+
+Drag the point. The horizontal segment is $\cos\theta$, the vertical drop is $\sin\theta$. They are the coordinates, live.
+</Step>
+
+<Step title="Signs come from the picture">
+Because $\cos\theta$ and $\sin\theta$ are just coordinates, their signs are not a rule to memorize. They are wherever the point is.
+
+In the first quadrant both are positive. In the second quadrant the point is up and to the left, so $x < 0$ and $y > 0$: cosine negative, sine positive. Third quadrant, both negative. Fourth, $x > 0$ and $y < 0$.
+
+Do not memorize a sign chart. Drag the point into each quadrant and read the signs off the axes. The picture *is* the chart.
+</Step>
+
+<StepCheck
+  title="Read a coordinate"
+  prompt="cos(3π/4) = "
+  answer={-0.7071}
+  tolerance={0.02}
+  hint="3π/4 is 135°, in the second quadrant. It is the π/4 point reflected across the y-axis, so its coordinates are (−√2/2, √2/2). Cosine is the x-coordinate: −0.7071."
+>
+Drag the point to $\theta = 3\pi/4$ (use the angle input, or snap-to-reference and the degree readout: $3\pi/4$ is $135^\circ$).
+
+**What is $\cos\theta$, as a decimal?**
+</StepCheck>
+
+<Step title="Drop a triangle out of the circle">
+Most people meet sine and cosine first as triangle ratios, months before they ever see a circle. Those two stories get filed as separate topics. They are not. They are the same picture.
+
+Take the point $(\cos\theta, \sin\theta)$ on the unit circle and drop a straight vertical line from it to the $x$-axis. You have just drawn a right triangle:
+
+- the **hypotenuse** is the radius, running from the origin to the point, length $1$,
+- the **opposite** leg is the vertical drop, length $\sin\theta$,
+- the **adjacent** leg lies along the $x$-axis, length $\cos\theta$.
+
+<TriangleCircleMorph client:visible />
+
+The triangle was inside the circle the whole time. Its legs are literally the coordinates.
+</Step>
+
+<Step title="Stretch the hypotenuse">
+Now the part that makes the two stories one story.
+
+In the widget, drag the vertex outward so the hypotenuse grows past length $1$. The triangle gets bigger. The leg lengths grow to $r\sin\theta$ and $r\cos\theta$, where $r$ is the new hypotenuse length.
+
+But watch the two **ratios** in the readout:
+
+$$
+\frac{\text{opposite}}{\text{hypotenuse}} = \frac{r\sin\theta}{r} = \sin\theta, \qquad \frac{\text{adjacent}}{\text{hypotenuse}} = \frac{r\cos\theta}{r} = \cos\theta
+$$
+
+The $r$ cancels. Stretch the triangle as much as you like: the leg *lengths* change, but those two ratios do not budge. They depend only on the angle.
+</Step>
+
+<Step title="SOH-CAH-TOA, finally earned">
+That is the school mnemonic, and now it is a consequence instead of a starting point:
+
+$$
+\sin\theta = \frac{\text{opposite}}{\text{hypotenuse}}, \qquad \cos\theta = \frac{\text{adjacent}}{\text{hypotenuse}}
+$$
+
+It works for *any* right triangle, not just ones with hypotenuse $1$, precisely because the ratio cancels the scale. The unit circle is just the case where the hypotenuse is $1$ and the ratios are the legs themselves.
+
+One definition. The circle is the clean version; the triangle is what you get when the hypotenuse is some other length $r$.
+</Step>
+
+<StepCheck
+  title="Use the ratio"
+  prompt="opposite leg = "
+  answer={5}
+  tolerance={0.01}
+  hint="sin(30°) = opposite / hypotenuse, so opposite = hypotenuse · sin(30°) = 10 · 0.5 = 5."
+>
+A right triangle has hypotenuse $10$, and the angle at one vertex is $30^\circ$. Recall $\sin(30^\circ) = \tfrac12$.
+
+**How long is the leg opposite that angle?**
+</StepCheck>
+
+<Step title="Tangent is the third ratio">
+There is one more combination worth a name. Define
+
+$$
+\tan\theta = \frac{\sin\theta}{\cos\theta}
+$$
+
+Two ways to see it. As a triangle ratio, dividing $\text{opposite}/\text{hypotenuse}$ by $\text{adjacent}/\text{hypotenuse}$ cancels the hypotenuse and leaves $\text{opposite}/\text{adjacent}$.
+
+As a circle fact, $\tan\theta$ is the **slope** of the radius drawn to $(\cos\theta, \sin\theta)$: rise over run is $\sin\theta / \cos\theta$. Tangent is steepness. It blows up toward infinity as $\theta$ approaches $90^\circ$, exactly when the radius goes vertical and the run hits zero.
+</Step>
+
+<StepCheck
+  title="A tangent value"
+  prompt="tan(π/4) = "
+  answer={1}
+  tolerance={0.01}
+  hint="At π/4 (45°) the point is (√2/2, √2/2), so x and y are equal. tan = sin/cos = 1."
+>
+At $\theta = \pi/4$ the unit-circle point has equal coordinates.
+
+**What is $\tan(\pi/4) = \sin\theta / \cos\theta$?**
+</StepCheck>
+
+<Step title="The Pythagorean identity, in one line">
+Here is the most-quoted identity in trigonometry, and it costs you nothing.
+
+The point $(\cos\theta, \sin\theta)$ is on the unit circle. The unit circle is the set where $x^2 + y^2 = 1$. Substitute $x = \cos\theta$ and $y = \sin\theta$:
+
+$$
+\sin^2\theta + \cos^2\theta = 1
+$$
+
+That is it. It is not a trick pulled out of nowhere; it is the Pythagorean theorem with the legs renamed. Watch the `sin²θ + cos²θ` readout in the circle widget as you drag: it sits at $1.000$ forever, because the point never leaves the circle.
+
+The identity is a labor-saver. If you know one of $\sin\theta$ or $\cos\theta$, you know the other up to a sign, and the quadrant fixes the sign.
+</Step>
+
+<StepCheck
+  title="Trade one coordinate for the other"
+  prompt="sin θ = "
+  answer={0.8}
+  tolerance={0.01}
+  hint="sin²θ = 1 − cos²θ = 1 − 0.36 = 0.64, so sinθ = √0.64 = 0.8. Positive because θ is in the first quadrant."
+>
+You are told $\cos\theta = 0.6$ and that $\theta$ is in the first quadrant.
+
+Use $\sin^2\theta + \cos^2\theta = 1$ to find $\sin\theta$. **What is it?**
+</StepCheck>
+
+<Step title="Where this goes next">
+From here on, when this course says $\sin$ or $\cos$, it means the unit-circle coordinate. The triangle picture is the special case at hypotenuse $1$, and you can always summon it by dropping a vertical line.
+
+So far $\theta$ has been an *angle*. Next lesson we cut that cord. We feed $\sin$ and $\cos$ any real number at all and watch what their outputs draw. The answer is a wave, and that wave is the shape a transformer will later use to tell positions apart.
+</Step>

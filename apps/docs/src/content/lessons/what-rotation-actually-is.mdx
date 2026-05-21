@@ -1,0 +1,157 @@
+---
+title: What rotation actually is
+module: m3-trigonometry
+summary: The angle addition formulas are not party tricks to memorize. They are the algebra of stacking two turns, and out of them falls the rule for rotating any point in the plane. That rule is the one a transformer uses to track position.
+estimatedMinutes: 26
+order: 4
+conceptsCovered:
+  - angle-addition-formulas
+  - rotation-of-a-point
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import AngleAdditionProof from '../../components/demos/AngleAdditionProof.svelte';
+import RotatePoint from '../../components/demos/RotatePoint.svelte';
+
+<Step title="Turning, then turning again">
+Turn by $\alpha$. Then, from where you stopped, turn by $\beta$ more. You have turned by $\alpha + \beta$ total. Obvious.
+
+The non-obvious question: if you know the coordinates of the point at angle $\alpha$ and the coordinates at angle $\beta$, can you compute the coordinates at angle $\alpha + \beta$ without measuring anything new?
+
+You can, and the recipe is the **angle addition formulas**. They are the arithmetic of stacking turns. Once you have them, the rule for rotating a point falls out for free, and that rule is the destination of this whole module.
+</Step>
+
+<Step title="The formula for sine">
+Here is the sine of a sum:
+
+$$
+\sin(\alpha + \beta) = \sin\alpha\cos\beta + \cos\alpha\sin\beta
+$$
+
+First, a warning about the obvious wrong guess. Addition does **not** distribute through sine: $\sin(\alpha + \beta)$ is not $\sin\alpha + \sin\beta$. Check it with $\alpha = \beta = \pi/2$: the left side is $\sin\pi = 0$, the right side is $1 + 1 = 2$. Trig functions are not linear, and that single counterexample settles it forever.
+
+<AngleAdditionProof client:visible />
+
+Drag $P_\alpha$ and $P_\beta$. The widget reads their four coordinates straight off the circle, plugs them into the formula, and shows the result landing exactly on $P_{\alpha+\beta}$.
+</Step>
+
+<Step title="The formula for cosine">
+And the cosine of a sum:
+
+$$
+\cos(\alpha + \beta) = \cos\alpha\cos\beta - \sin\alpha\sin\beta
+$$
+
+Mind the **minus sign**. Sine of a sum adds its two terms; cosine of a sum subtracts. That sign is the single most common slip in this lesson, and it is the sign that will later separate a counterclockwise rotation from a clockwise one. The widget verifies this one too: the computed $\cos\alpha\cos\beta - \sin\alpha\sin\beta$ matches the $x$-coordinate of $P_{\alpha+\beta}$ every time.
+
+You do not have to memorize four formulas. Memorize these two for the plus case. The minus versions come from $\sin(-\beta) = -\sin\beta$ and $\cos(-\beta) = \cos\beta$: just flip the sign of $\beta$ and watch the second term flip with it.
+</Step>
+
+<StepCheck
+  title="Build an exact value"
+  prompt="sin(75°) = "
+  answer={0.9659}
+  tolerance={0.01}
+  hint="75 = 45 + 30. sin(75°) = sin45·cos30 + cos45·sin30 = (√2/2)(√3/2) + (√2/2)(1/2) = (√6 + √2)/4 ≈ 0.9659."
+>
+You cannot read $\sin(75^\circ)$ off the unit circle directly, but $75 = 45 + 30$, and both of those are reference angles.
+
+Apply $\sin(\alpha+\beta) = \sin\alpha\cos\beta + \cos\alpha\sin\beta$ with $\alpha = 45^\circ$, $\beta = 30^\circ$. **What is $\sin(75^\circ)$, as a decimal?**
+</StepCheck>
+
+<Step title="Double angles, for free">
+Set $\beta = \alpha$ in the two formulas and you get the **double-angle formulas** with no extra work:
+
+$$
+\sin(2\theta) = 2\sin\theta\cos\theta, \qquad \cos(2\theta) = \cos^2\theta - \sin^2\theta
+$$
+
+These are not new facts to file away. They are the angle addition formulas with both inputs equal. Mention them so you recognize them later; they cost nothing.
+</Step>
+
+<Step title="The load-bearing step">
+Now the reason this lesson exists.
+
+Take any point $P = (x, y)$. Write it in circle language: it sits at some distance $r$ from the origin, at some angle $\alpha$. By the definition of sine and cosine scaled up by $r$,
+
+$$
+x = r\cos\alpha, \qquad y = r\sin\alpha
+$$
+
+**Rotate $P$ counterclockwise by an angle $\theta$.** It stays the same distance $r$ from the origin, it just swings to a new angle, $\alpha + \theta$. So its new coordinates are $(r\cos(\alpha + \theta),\ r\sin(\alpha + \theta))$.
+
+Those are angle-sum expressions. Expand them.
+</Step>
+
+<Step title="Out falls the rotation rule">
+Expand $r\cos(\alpha + \theta)$ with the cosine formula:
+
+$$
+r\cos(\alpha+\theta) = r\cos\alpha\cos\theta - r\sin\alpha\sin\theta = x\cos\theta - y\sin\theta
+$$
+
+because $r\cos\alpha$ is just $x$ and $r\sin\alpha$ is just $y$. Do the same with sine:
+
+$$
+r\sin(\alpha+\theta) = r\sin\alpha\cos\theta + r\cos\alpha\sin\theta = y\cos\theta + x\sin\theta
+$$
+
+Put them together. **Rotating $(x, y)$ counterclockwise by $\theta$ sends it to:**
+
+$$
+(x, y) \;\longmapsto\; (x\cos\theta - y\sin\theta,\ \ x\sin\theta + y\cos\theta)
+$$
+
+This was derived, not declared. It is the angle addition formulas read as a map on coordinate pairs. The $r$ and $\alpha$ vanished; you never need them.
+</Step>
+
+<Step title="Watch it run">
+The rotation rule is a plain function: feed it a pair of numbers and an angle, get a pair of numbers out.
+
+<RotatePoint client:visible />
+
+Drag the point $P$ anywhere. Drag the angle dial to set $\theta$. The second dot is $P'$, and the readout substitutes your current numbers into $x\cos\theta - y\sin\theta$ and $x\sin\theta + y\cos\theta$ step by step. No matrices, no magic. Two formulas, plugged in.
+</Step>
+
+<StepCheck
+  title="Rotate a point, x-coordinate"
+  prompt="new x = "
+  answer={0}
+  tolerance={0.01}
+  hint="With θ = π/2, cosθ = 0 and sinθ = 1. New x = x·cosθ − y·sinθ = 3·0 − 0·1 = 0."
+>
+Rotate the point $(3, 0)$ counterclockwise by $\theta = \pi/2$. Recall $\cos(\pi/2) = 0$ and $\sin(\pi/2) = 1$.
+
+Use $x' = x\cos\theta - y\sin\theta$. **What is the new $x$-coordinate?**
+</StepCheck>
+
+<StepCheck
+  title="Rotate a point, y-coordinate"
+  prompt="new y = "
+  answer={3}
+  tolerance={0.01}
+  hint="New y = x·sinθ + y·cosθ = 3·1 + 0·0 = 3. The point (3,0) swings up to (0,3), a clean quarter turn."
+>
+Same rotation: $(3, 0)$ turned counterclockwise by $\pi/2$.
+
+Use $y' = x\sin\theta + y\cos\theta$. **What is the new $y$-coordinate?**
+</StepCheck>
+
+<Step title="A note for later">
+One aside for the curious. If you have seen linear algebra, you will recognize the rotation rule as multiplication by the matrix
+
+$$
+\begin{pmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{pmatrix}
+$$
+
+That is the same map, repackaged. Module seven will introduce that packaging properly. The point worth making now: nothing you learned here will need to be unlearned. The matrix is just a tidier way to write the two formulas you derived.
+</Step>
+
+<Step title="Where this goes next">
+You just derived rotation from scratch, and that is not a small thing.
+
+A transformer reads its words with no position attached. To fix that, it rotates pairs of numbers inside each word's query and key vectors by an angle proportional to that word's position. The mechanism has a name, **rotary positional embedding**, or **RoPE**, and it is the positional scheme inside LLaMA 2 and 3, Mistral, Gemma, Code-LLaMA, and PaLM. Flip the "RoPE view" toggle in the widget to see the same rotation relabeled in transformer terms.
+
+The rotation is settled. The last lesson collects the other tools, polar coordinates and inverse trig, and then builds the position fingerprint itself.
+</Step>

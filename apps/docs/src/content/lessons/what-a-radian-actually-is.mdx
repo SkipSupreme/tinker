@@ -1,0 +1,140 @@
+---
+title: What a radian actually is
+module: m3-trigonometry
+summary: An angle is a turn. The unit circle is its natural home. A radian is not a mysterious unit, it is just the length of the arc your turn carves out on a circle of radius one.
+estimatedMinutes: 20
+order: 1
+conceptsCovered:
+  - angle-as-rotation
+  - degree-measure
+  - pythagorean-theorem
+  - unit-circle
+  - arc-length-on-unit-circle
+  - radian-measure
+  - degree-radian-conversion
+  - reference-angles
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import UnitCircleScrubber from '../../components/demos/UnitCircleScrubber.svelte';
+
+<Step title="An angle is a turn">
+Forget, for a moment, that an angle is a wedge in a textbook diagram. An **angle** is an amount of *turning*. You start with a ray pointing along the positive $x$-axis, you pivot it counterclockwise about its base, and the angle is how far you turned.
+
+That is the whole idea. An angle measures rotation.
+
+<UnitCircleScrubber client:visible />
+
+Grab the point and drag it around the circle. The radius sweeping behind it is your turning ray. Everything in this module, every formula, every wave, every rotation, is a fact about this one picture.
+</Step>
+
+<Step title="Degrees are a human choice">
+You already know one way to measure a turn: **degrees**. A full turn is $360^\circ$, a quarter turn is $90^\circ$.
+
+But notice that nothing about the circle *asks* for 360. The Babylonians picked it because 360 divides cleanly into halves, thirds, quarters, fifths, sixths, and a dozen other pieces, and because their year was roughly 360 days. It is a convenient number, not a geometric one. A circle does not come with tick marks.
+
+So degrees are a unit we *imposed*. The question worth asking is whether the circle suggests a measurement of its own, one that comes from the geometry instead of from a calendar. It does. We will find it in three steps.
+</Step>
+
+<Step title="Pythagoras, once">
+First, the one fact this whole module leans on. For a right triangle with legs $a$ and $b$ and hypotenuse $c$,
+
+$$
+a^2 + b^2 = c^2
+$$
+
+Here is why, in one picture you can hold in your head. Take a square of side $a + b$. Drop four copies of the right triangle into its corners, each rotated a quarter turn from the last. The four triangles leave a tilted square hole in the middle, and that hole has side $c$.
+
+Now the same big square, rearranged: slide the triangles into pairs and the hole splits into two squares, one of side $a$ and one of side $b$. Same outer square, same four triangles, so the leftover area is the same either way: $c^2 = a^2 + b^2$. Nothing was measured. Areas were just moved.
+</Step>
+
+<Step title="The unit circle">
+Now the stage. The **unit circle** is the circle of radius $1$ centered at the origin. By Pythagoras, a point $(x, y)$ sits on it exactly when
+
+$$
+x^2 + y^2 = 1
+$$
+
+because the segment from the origin to $(x, y)$ is the hypotenuse of a right triangle with legs $x$ and $y$, and we are demanding that hypotenuse have length $1$.
+
+Radius $1$ is not a throwaway choice. It is what makes the next idea work. Keep your eye on the circle in the widget above; it has radius $1$.
+</Step>
+
+<Step title="The arc is the angle">
+Here is the measurement the circle hands us for free.
+
+When you turn through some angle, the tip of your ray traces an **arc** along the circle. That arc has a *length*. On the unit circle, define the **radian measure** of the angle to be exactly that arc length.
+
+That is the entire definition. Turn a little, short arc, small radian measure. Turn a lot, long arc, large radian measure. The angle and the distance walked along the circle are the same number.
+
+In the widget, drag the point and watch the swept arc thicken. The arc-length readout *is* the angle in radians. No calendar, no 360. Just: how far did the tip travel.
+</Step>
+
+<StepCheck
+  title="One full revolution"
+  prompt="arc length = "
+  answer={6.2832}
+  tolerance={0.02}
+  hint="The circumference of a circle is 2πr. Here r = 1, so one full lap has length 2π ≈ 6.2832."
+>
+You turn all the way around, one complete revolution, back to where you started.
+
+The tip of the ray has walked the entire circumference of the unit circle. **What arc length did it cover?** (Give a decimal.)
+</StepCheck>
+
+<Step title="So 180 degrees is pi radians">
+You just found that one full turn is $2\pi$ radians, because the circumference of a circle of radius $1$ is $2\pi$.
+
+Line that up against degrees. One full turn is $360^\circ$ and also $2\pi$ radians, so
+
+$$
+360^\circ = 2\pi \text{ rad}, \qquad 180^\circ = \pi \text{ rad}
+$$
+
+That second equation is the only conversion fact you need. To go from degrees to radians, multiply by $\pi/180$. To go back, multiply by $180/\pi$.
+
+And notice what $\pi$ is doing here. It is not a label that means "radians." It is just a number, about $3.14159$, that happens to show up because circumferences involve it. A radian measure of $3$ is a perfectly good angle, and it has no $\pi$ in it at all.
+</Step>
+
+<StepCheck
+  title="Convert to radians"
+  prompt="60° in radians = "
+  answer={1.0472}
+  tolerance={0.02}
+  hint="Multiply by π/180. So 60 · π/180 = π/3 ≈ 1.0472."
+>
+Convert $60^\circ$ to radians by multiplying by $\pi/180$.
+
+**What is the result, as a decimal?**
+</StepCheck>
+
+<Step title="The reference angles">
+A handful of angles come up constantly, and their points on the unit circle have exact, clean coordinates. These are the **reference angles**:
+
+$$
+0, \quad \frac{\pi}{6}, \quad \frac{\pi}{4}, \quad \frac{\pi}{3}, \quad \frac{\pi}{2}
+$$
+
+in radians, which are $0^\circ, 30^\circ, 45^\circ, 60^\circ, 90^\circ$. Every other angle worth memorizing is one of these reflected into another quadrant.
+
+Turn on "snap to reference angles" in the widget and drag the point. It clicks to each of these in turn, and you can read its coordinates straight off. You do not memorize four quadrants. You learn one, and the rest come from symmetry.
+</Step>
+
+<StepCheck
+  title="Arc length and radian measure"
+  prompt="radian measure = "
+  answer={3}
+  tolerance={0.01}
+  hint="On a circle of radius 1, the radian measure of an angle is defined to BE the arc length it sweeps. The arc is 3, so the angle is 3."
+>
+On the unit circle, an angle sweeps out an arc of length $3$.
+
+**What is the radian measure of that angle?** (This is not a trick. Read the definition of a radian once more if you need to.)
+</StepCheck>
+
+<Step title="Where this goes next">
+You now have the stage and its natural ruler: a circle of radius $1$, and angles measured by the arc length they carve out of it.
+
+Next lesson, two numbers walk onto this stage. The $x$ and $y$ coordinates of the point you have been dragging turn out to be the most useful functions in this entire course. You already know their names. They are cosine and sine, and they are hiding in plain sight as the coordinates of that point.
+</Step>
