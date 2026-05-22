@@ -295,6 +295,97 @@ const moduleLabel = module.replace(/-/g, ' ');
     color: var(--lesson-fg);
   }
 
+  /* StepChoice. Multiple-choice / select-all answer gate. The clickable
+     options are slotted into .step-body; the Check button + feedback live
+     in .choice-block so the lock/complete rules hide them like a
+     StepCheck form, leaving the chosen options visible after completion. */
+  :global(.lesson-shell .step--locked .choice-block),
+  :global(.lesson-shell .step--completed .choice-block) { display: none; }
+
+  :global(.lesson-shell .choice-option) {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    width: 100%;
+    margin: 0.5rem 0;
+    padding: 0.8rem 1rem;
+    border: 1.5px solid var(--lesson-border);
+    border-radius: var(--radius-md);
+    background: var(--lesson-surface);
+    color: var(--lesson-fg);
+    font: inherit;
+    font-size: 1.02rem;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 140ms ease, background-color 140ms ease,
+      transform 140ms ease;
+  }
+  :global(.lesson-shell .choice-option:hover:not(:disabled)) {
+    border-color: color-mix(in srgb, var(--cta) 55%, var(--lesson-border));
+    transform: translateY(-1px);
+  }
+  :global(.lesson-shell .choice-option[aria-pressed='true']) {
+    border-color: var(--cta);
+    background: color-mix(in srgb, var(--cta) 12%, var(--lesson-surface));
+  }
+  :global(.lesson-shell .choice-option:disabled) { cursor: default; }
+  :global(.lesson-shell .choice-option--right),
+  :global(.lesson-shell .choice-option--right[aria-pressed='true']) {
+    border-color: var(--cta-hover);
+    background: color-mix(in srgb, var(--cta) 16%, var(--lesson-surface));
+  }
+  :global(.lesson-shell .choice-option--wrong[aria-pressed='true']) {
+    border-color: var(--ink-coral);
+    background: color-mix(in srgb, var(--ink-coral) 12%, var(--lesson-surface));
+  }
+
+  /* The marker box: an empty square that fills with a check when picked. */
+  :global(.lesson-shell .choice-mark) {
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 1.5px solid var(--lesson-border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    position: relative;
+    transition: border-color 140ms ease, background-color 140ms ease;
+  }
+  :global(.lesson-shell .choice-option[aria-pressed='true'] .choice-mark) {
+    border-color: var(--cta);
+    background: var(--cta);
+  }
+  :global(.lesson-shell .choice-option[aria-pressed='true'] .choice-mark)::after {
+    content: '';
+    position: absolute;
+    left: 0.4rem;
+    top: 0.16rem;
+    width: 0.28rem;
+    height: 0.58rem;
+    border: solid var(--cta-fg);
+    border-width: 0 2.5px 2.5px 0;
+    transform: rotate(45deg);
+  }
+  :global(.lesson-shell .choice-option--wrong[aria-pressed='true'] .choice-mark) {
+    border-color: var(--ink-coral);
+    background: var(--ink-coral);
+  }
+
+  :global(.lesson-shell .choice-block) {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+  }
+  :global(.lesson-shell .choice-feedback) {
+    width: 100%;
+    margin: 0;
+    font-size: 0.92rem;
+    min-height: 1.2em;
+  }
+  :global(.lesson-shell .choice-feedback.ok)  { color: var(--cta-hover); }
+  :global(.lesson-shell .choice-feedback.bad) { color: var(--ink-coral); }
+
   /* Done state for the last step. */
   :global(.lesson-shell .step.is-final .step-advance) { display: none; }
 
@@ -572,6 +663,86 @@ const moduleLabel = module.replace(/-/g, ' ');
           // Localized shake + announce. No haptic/sound on wrong by design.
           void celebrateWrong(input);
           input.select();
+        }
+      });
+    });
+
+    // Wire StepChoice steps (multiple-choice / select-all answer gate).
+    // A choice step carries `data-choice` but not `data-check`, so the
+    // numeric branch above skips it; this branch grades it instead.
+    steps.forEach((step) => {
+      if (!step.hasAttribute('data-choice')) return;
+      const options = Array.from(
+        step.querySelectorAll<HTMLButtonElement>('[data-choice-option]'),
+      );
+      const submitBtn = step.querySelector<HTMLButtonElement>('[data-choice-submit]');
+      const feedback = step.querySelector<HTMLElement>('[data-choice-feedback]');
+      const hintEl = step.querySelector<HTMLElement>('[data-choice-hint]');
+      if (options.length === 0 || !submitBtn || !feedback) return;
+      const single = step.dataset.single === 'true';
+      let attempts = 0;
+      let solved = false;
+
+      const clearFeedback = () => {
+        feedback.className = 'choice-feedback';
+        feedback.textContent = '';
+        options.forEach((o) => o.classList.remove('choice-option--wrong'));
+      };
+
+      options.forEach((opt) => {
+        opt.addEventListener('click', () => {
+          if (solved) return;
+          const pressed = opt.getAttribute('aria-pressed') === 'true';
+          if (single && !pressed) {
+            options.forEach((o) => o.setAttribute('aria-pressed', 'false'));
+          }
+          opt.setAttribute('aria-pressed', pressed ? 'false' : 'true');
+          play('tick');
+          clearFeedback();
+        });
+      });
+
+      submitBtn.addEventListener('click', () => {
+        if (solved) return;
+        const picked = options.filter(
+          (o) => o.getAttribute('aria-pressed') === 'true',
+        );
+        if (picked.length === 0) {
+          feedback.className = 'choice-feedback bad';
+          feedback.textContent = 'Pick at least one option.';
+          return;
+        }
+        // Correct iff the selected set equals the correct set exactly.
+        const allRight = options.every(
+          (opt) =>
+            (opt.dataset.correct === 'true') ===
+            (opt.getAttribute('aria-pressed') === 'true'),
+        );
+        if (allRight) {
+          solved = true;
+          feedback.className = 'choice-feedback ok';
+          feedback.textContent = FEEDBACK_OK;
+          options.forEach((opt) => {
+            opt.disabled = true;
+            if (opt.dataset.correct === 'true') {
+              opt.classList.add('choice-option--right');
+            }
+          });
+          void celebrateCorrect(submitBtn);
+          setTimeout(() => advance(Number(step.dataset.index)), 520);
+        } else {
+          attempts += 1;
+          feedback.className = 'choice-feedback bad';
+          feedback.textContent = FEEDBACK_FAR;
+          options.forEach((opt) => {
+            opt.classList.toggle(
+              'choice-option--wrong',
+              opt.getAttribute('aria-pressed') === 'true' &&
+                opt.dataset.correct !== 'true',
+            );
+          });
+          if (attempts >= 2 && hintEl) hintEl.hidden = false;
+          void celebrateWrong(submitBtn);
         }
       });
     });

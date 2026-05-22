@@ -1,0 +1,55 @@
+---
+/**
+ * /dev/step-choice -- internal verification harness for <StepChoice>.
+ * Renders the multiple-choice answer gate inside a real Lesson shell so
+ * the gating, hint reveal, and advance behavior can be checked on the
+ * live domain. Not linked from anywhere user-facing.
+ */
+export const prerender = true;
+import Lesson from '../../layouts/Lesson.astro';
+import Step from '../../components/lesson/Step.astro';
+import StepChoice from '../../components/lesson/StepChoice.astro';
+import Choice from '../../components/lesson/Choice.astro';
+---
+
+<Lesson
+  slug="dev-step-choice"
+  title="StepChoice harness"
+  summary="Internal verification page for the multiple-choice answer gate."
+  estimatedMinutes={1}
+  module="dev"
+>
+  <Step title="Plain step">
+    <p>A normal gated step. Continue to reach the two choice gates below.</p>
+  </Step>
+
+  <StepChoice
+    title="Select-all-that-apply"
+    hint="A function is non-differentiable at 0 if it has a corner or a vertical tangent there."
+  >
+    <p>
+      Which of these functions are <strong>not</strong> differentiable at x = 0?
+      Select every one that applies.
+    </p>
+    <Choice>x squared (a smooth parabola)</Choice>
+    <Choice correct>the absolute value |x| (a corner at the origin)</Choice>
+    <Choice>sin x (smooth everywhere)</Choice>
+    <Choice correct>the cube root x^(1/3) (a vertical tangent at 0)</Choice>
+  </StepChoice>
+
+  <StepChoice
+    title="Single-answer mode"
+    single
+    hint="The derivative of a sum is the sum of the derivatives, and the derivative of a constant is 0."
+  >
+    <p>What is the derivative of 3x squared + 5?</p>
+    <Choice correct>6x</Choice>
+    <Choice>6x + 5</Choice>
+    <Choice>3x</Choice>
+    <Choice>6x squared</Choice>
+  </StepChoice>
+
+  <Step title="Done">
+    <p>Reaching this step means both choice gates graded and advanced correctly.</p>
+  </Step>
+</Lesson>

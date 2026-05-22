@@ -1,0 +1,43 @@
+---
+/**
+ * A multiple-choice answer gate. Works like <StepCheck>, but the learner
+ * picks from <Choice> options instead of typing a number.
+ *
+ *   <StepChoice title="..." hint="...">
+ *     <p>Question prose, may contain $math$.</p>
+ *     <Choice>a wrong option</Choice>
+ *     <Choice correct>a right option</Choice>
+ *   </StepChoice>
+ *
+ * Grading: the learner must select exactly the set of `correct` options,
+ * no more and no less. Select-all-that-apply by default; pass `single`
+ * for one-answer questions (picking an option then clears the others).
+ * Wiring lives in src/layouts/Lesson.astro (the `data-choice` branch of
+ * initLesson), parallel to the `data-check` StepCheck branch.
+ */
+interface Props {
+  title?: string;
+  /** One-answer mode: selecting an option clears the others. Default: multi. */
+  single?: boolean;
+  /** Optional hint, revealed after two wrong attempts. */
+  hint?: string;
+}
+const { title, single = false, hint } = Astro.props;
+---
+
+<section
+  class="step step-choice"
+  data-step
+  data-choice
+  data-single={single ? 'true' : undefined}
+>
+  {title && <h2 class="step-title">{title}</h2>}
+  <div class="step-body">
+    <slot />
+  </div>
+  <div class="choice-block" data-choice-block>
+    <button type="button" class="continue-btn" data-choice-submit>Check</button>
+    <p class="choice-feedback" data-choice-feedback aria-live="polite"></p>
+    {hint && <p class="check-hint" data-choice-hint hidden>{hint}</p>}
+  </div>
+</section>

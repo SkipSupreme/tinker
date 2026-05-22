@@ -1,0 +1,23 @@
+---
+/**
+ * One option inside a <StepChoice>. Add the `correct` prop to mark it as
+ * part of the answer set. Renders a toggle button; selection and grading
+ * are wired by the `data-choice` branch of initLesson in Lesson.astro.
+ */
+interface Props {
+  /** Marks this option as part of the correct answer set. */
+  correct?: boolean;
+}
+const { correct = false } = Astro.props;
+---
+
+<button
+  type="button"
+  class="choice-option"
+  data-choice-option
+  data-correct={correct ? 'true' : 'false'}
+  aria-pressed="false"
+>
+  <span class="choice-mark" aria-hidden="true"></span>
+  <span class="choice-text"><slot /></span>
+</button>
