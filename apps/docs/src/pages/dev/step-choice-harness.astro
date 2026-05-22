@@ -1,6 +1,9 @@
 ---
 /**
- * /dev/step-choice -- internal verification harness for <StepChoice>.
+ * /dev/step-choice-harness -- internal verification harness for <StepChoice>.
+ * Filename intentionally not `step-choice.astro`: Astro derives a page's
+ * internal component name from its filename, and `StepChoice` would then
+ * collide with the imported component (ts2440).
  * Renders the multiple-choice answer gate inside a real Lesson shell so
  * the gating, hint reveal, and advance behavior can be checked on the
  * live domain. Not linked from anywhere user-facing.
