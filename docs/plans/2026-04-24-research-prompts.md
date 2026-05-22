@@ -43,7 +43,7 @@ Per-module work units: one research fire, one conversion pass, one editing pass,
 | m8-probability | yes | yes | 5 | drafting |
 | m9-information-theory | yes | yes | 4 | drafting |
 | m10-optimization | yes | yes | 5 | drafting |
-| m11-neural-networks | yes | yes | 0 | planned |
+| m11-neural-networks | yes | yes | 1 | drafting |
 | m12-backpropagation | yes | yes | 0 | planned |
 | m13-training-dynamics | yes | yes | 5 | drafting |
 | m14-sequence-models | yes | yes | 6 | shipped |
@@ -57,7 +57,8 @@ Per-module work units: one research fire, one conversion pass, one editing pass,
 **Known state, so it does not surprise the next session:**
 - **m5-calculus** now has a research brief (`docs/research/m5-calculus.md`). It has 3 lessons (`what-is-a-derivative`, `the-power-rule`, `the-chain-rule`) that were built before the brief existed. Section 6 of the brief calls for reconciling those 3 against a 6-lesson decomposition (split `what-is-a-derivative` into definition + derivative-as-function; expand `the-power-rule` into a full differentiation-rules lesson; add a product/quotient bridging lesson and a second-derivatives/optima lesson). Reconcile, do not assume a clean slate.
 - The m5 brief was saved with ~21 paste-transmission artifacts reconstructed from context (dropped mid-word characters, two merged concept-graph entries). All reconstructed; widget 6's lost attribution was recovered (3Blue1Brown, Essence of Calculus ch. 5).
-- **m11, m12, m18** have research briefs but zero lessons. They are ready to build now with no new research. m12-backpropagation is the keystone module.
+- **m11-neural-networks** is now in `drafting`: lesson 1 of 5 (`what-a-perceptron-really-is`, widget `PerceptronLine`) has landed. Remaining per the brief's section-6 decomposition: 11.2 The XOR moment, 11.3 Why a stack of linear layers is just one linear layer, 11.4 ReLU and the activation zoo, 11.5 Forward pass end to end.
+- **m12, m18** have research briefs but zero lessons. They are ready to build now with no new research. m12-backpropagation is the keystone module.
 - **m14 through m17** are fully shipped. The course was built from both ends toward the middle, which is why the foundation arc still has gaps.
 
 ---

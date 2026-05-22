@@ -1,0 +1,126 @@
+---
+title: What's a perceptron, really?
+module: m11-neural-networks
+summary: A single neuron is three numbers and a threshold. It computes a weighted sum, compares it to zero, and answers yes or no. Geometrically, it draws a line.
+estimatedMinutes: 15
+order: 1
+conceptsCovered:
+  - weighted-sum
+  - bias-as-offset
+  - perceptron
+  - decision-boundary
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import PerceptronLine from '../../components/demos/PerceptronLine.svelte';
+
+<Step title="Three numbers and a threshold">
+You've heard a neural network is made of "neurons," and you've probably seen the cartoon: a blob with wires going in, modelled on a brain cell. Set the biology aside right now. A real cortical neuron has thousands of synapses, dendritic compartments, and messy chemistry. The thing in a neural network is not that.
+
+The thing in a neural network is this: take some input numbers, multiply each by a weight, add them up, add one more number, and check whether the result cleared zero. That's the whole unit. It's called a **perceptron**, and the only reason it's called a "neuron" is that someone in 1943 thought the analogy was cute. The analogy will cost you later. Drop it now.
+
+What's left is arithmetic. Let's look at it.
+</Step>
+
+<Step title="The weighted sum">
+A perceptron with two inputs holds three numbers: two **weights** $w_1, w_2$ and a **bias** $b$. Hand it an input $x = (x_1, x_2)$ and it computes one scalar:
+
+$$
+z \;=\; w_1 x_1 + w_2 x_2 + b \;=\; w \cdot x + b.
+$$
+
+That's a dot product plus an offset. Nothing you haven't seen. We'll call $z$ the **pre-activation**: the number the neuron has before it decides anything.
+
+Below, the four corners of the unit square are a tiny dataset. Three are class 0, one is class 1 (this is the logical AND). The red line is the perceptron's boundary. Drag its two handles around and watch the weights and bias change.
+
+<PerceptronLine client:visible />
+
+Notice you never typed a weight. You moved a *line*, and $w_1, w_2, b$ came along for the ride. Hold onto that.
+</Step>
+
+<StepCheck
+  title="Compute a pre-activation"
+  prompt="z = "
+  answer={0.5}
+  tolerance={0.01}
+  hint="z = w₁x₁ + w₂x₂ + b = (1)(1) + (1)(1) + (−1.5). Add it up."
+>
+A perceptron has weights $w = (1, 1)$ and bias $b = -1.5$. You feed it the input $x = (1, 1)$.
+
+**What is the pre-activation $z = w \cdot x + b$?**
+</StepCheck>
+
+<Step title="The threshold turns a number into a decision">
+The pre-activation $z$ is just a number. The perceptron's actual output is a yes/no, and it gets there with a hard threshold at zero:
+
+$$
+y \;=\; \text{step}(z) \;=\; \begin{cases} 1 & z \ge 0 \\ 0 & z < 0 \end{cases}
+$$
+
+So the input $(1,1)$ with $z = 0.5$ comes out as class **1**. The other three corners of the AND square produce a negative $z$ and come out as class **0**. One neuron, four inputs, correct on all of them.
+
+The threshold is doing something quietly important: it splits every possible input into exactly two camps, the ones that clear zero and the ones that don't. The dividing wall between those camps is where the next idea lives.
+</Step>
+
+<Step title="A perceptron is a line">
+The wall is the set of inputs where the perceptron is exactly on the fence: $z = 0$, that is
+
+$$
+w \cdot x + b = 0.
+$$
+
+In two dimensions, that equation is a **straight line**. (In three dimensions it's a plane; in $n$ dimensions, a hyperplane. Same object, more axes.) Everything on one side is class 1, everything on the other is class 0. The shaded region in the widget is the class-1 side.
+
+This is the whole geometric story of a single neuron: **it picks a line and answers "which side are you on?"** The weights $w$ control the line's *tilt* (the vector $w$ points perpendicular to it). The bias $b$ controls how far the line sits from the origin.
+
+Drag the handles again, this time watching only the line. Every position is a different perceptron.
+</Step>
+
+<StepCheck
+  title="Place the boundary"
+  prompt="b = "
+  answer={-1}
+  tolerance={0.01}
+  hint="On the boundary, w·x + b = 0. With w = (1,1) and x = (0.5, 0.5): 0.5 + 0.5 + b = 0."
+>
+You keep the weights $w = (1, 1)$ and want the decision boundary to pass exactly through the point $(0.5,\ 0.5)$.
+
+A point is *on* the boundary when $w \cdot x + b = 0$.
+
+**What bias $b$ puts the boundary through $(0.5, 0.5)$?**
+</StepCheck>
+
+<Step title="Why the bias is not optional">
+A tempting instinct: "$b$ is a small correction, start it at zero." Try it. Set $b = 0$ in $w \cdot x + b = 0$ and the boundary becomes $w \cdot x = 0$, which is the set of points perpendicular to $w$ *through the origin*. The line is now nailed to $(0,0)$.
+
+A line forced through the origin **cannot** separate the AND dataset. The one class-1 point is the far corner $(1,1)$; the three class-0 points include $(0,0)$ itself. No line through the origin puts $(1,1)$ alone on one side. The bias is the only knob that lets the boundary *miss* the origin, and AND needs it to.
+
+So $b$ is not a correction. It's the parameter that decides whether the neuron can solve the problem at all.
+</Step>
+
+<StepCheck
+  title="Read off a classification"
+  prompt="class (0 or 1): "
+  answer={1}
+  tolerance={0.01}
+  hint="Compute z = 3·0 + (−2)·0 + 1 = 1. Then step(z): is z ≥ 0?"
+>
+A perceptron has weights $w = (3, -2)$ and bias $b = 1$. You feed it the input $x = (0, 0)$.
+
+Compute $z$, then apply the threshold.
+
+**Which class does it output, 0 or 1?**
+</StepCheck>
+
+<Step title="Training is just moving the line">
+Step back and look at what you've built. A perceptron is three numbers. Those three numbers *are* a line. Classifying an input is checking which side of the line it landed on.
+
+So what would it mean to "train" this thing? It would mean nudging the line until the two classes sit cleanly on opposite sides. That's it. No magic, no biology: training a perceptron is sliding a line into place.
+
+Try it directly. Switch the widget to **OR** and drag the handles until all four points are correct. You just trained a perceptron by hand.
+
+<PerceptronLine client:visible />
+
+Here's the catch that runs the rest of this module. A perceptron can only ever draw *one straight line*. Some datasets cannot be split by any straight line at all, no matter how you drag. The smallest, most famous such dataset broke the field's confidence for over a decade. Next lesson, you meet it.
+</Step>
