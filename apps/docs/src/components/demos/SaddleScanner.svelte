@@ -10,7 +10,9 @@
 
   let a = $state(1);
   let b = $state(-1);
-  let theta = $state(Math.PI / 4);
+  // 30°, not 45°: at 45° the default saddle (a=1, b=-1) reads as a flat ray,
+  // which hides the whole point. 30° opens on a clearly climbing parabola.
+  let theta = $state(Math.PI / 6);
 
   const f = (x: number, y: number) => a * x * x + b * y * y;
 
