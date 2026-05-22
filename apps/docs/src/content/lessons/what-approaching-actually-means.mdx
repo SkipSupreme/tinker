@@ -1,0 +1,157 @@
+---
+title: What approaching actually means
+module: m4-precalc
+summary: A limit asks where a function is headed near a point, not what it does at the point. Read it three ways, by graph, by table, by zoom. Meet the ways a limit can fail, and the property called continuity that makes most limits a plug-in.
+estimatedMinutes: 30
+order: 3
+conceptsCovered:
+  - limit-informal
+  - limit-three-views
+  - one-sided-limits
+  - limit-failures
+  - continuity
+  - continuity-of-elementary-functions
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import LimitProbe from '../../components/demos/LimitProbe.svelte';
+
+<Step title="A function with a hole in it">
+Consider this function:
+
+$$
+f(x) = \frac{x^2 - 4}{x - 2}
+$$
+
+Try to evaluate it at $x = 2$. The numerator is $0$, the denominator is $0$, and $0/0$ is undefined. The function has no value at $x = 2$. There is a hole in the graph.
+
+But factor the top: $x^2 - 4 = (x-2)(x+2)$. For every $x$ except 2, the $(x-2)$ cancels and $f(x) = x + 2$. So just to the left and just to the right of the hole, the function is sitting right next to the line $x + 2$, which passes through $(2, 4)$.
+
+The function is undefined *at* 2, yet everything *around* 2 is pointing straight at the value 4. That gap, between what happens at a point and what happens near it, is what a limit is for.
+</Step>
+
+<Step title="Probe it with a table">
+Pick the function $(x^2-4)/(x-2)$ in the widget and drag the probe to $x = 2$.
+
+<LimitProbe client:visible />
+
+The table evaluates $f$ at points closing in on 2 from both sides: $1.9, 1.99, 1.999$ from the left, and $2.001, 2.01, 2.1$ from the right. Hit zoom to close in tighter.
+
+Read the columns. From the left the outputs march $3.9, 3.99, 3.999, \ldots$. From the right they march $4.1, 4.01, 4.001, \ldots$. Both sides are squeezing in on the same number, 4, even though the function never actually has a value at 2. The table never asks for $f(2)$; it only ever asks what happens nearby.
+</Step>
+
+<Step title="The informal definition">
+Here is what that table is measuring.
+
+> $\displaystyle\lim_{x \to a} f(x) = L$ means: $f(x)$ gets and stays arbitrarily close to $L$ as $x$ closes in on $a$ from either side, ignoring whatever happens at $a$ itself.
+
+Two phrases carry the weight. **From either side**: both the left approach and the right approach have to agree. **Ignoring whatever happens at $a$**: the value $f(a)$ is explicitly not consulted. A hole at $x = a$ does not block a limit. The function does not even have to be defined at $a$.
+
+A limit is a statement about the neighborhood of a point, never about the point itself.
+</Step>
+
+<StepCheck
+  title="Read the limit"
+  prompt="limit = "
+  answer={4}
+  tolerance={0.01}
+  hint="(x²−4)/(x−2) factors to x+2 for every x ≠ 2. As x closes in on 2, x+2 closes in on 4. The hole at x=2 is irrelevant."
+>
+From the table, both sides of $(x^2-4)/(x-2)$ close in on the same value as $x \to 2$.
+
+**What is $\displaystyle\lim_{x\to 2}\frac{x^2-4}{x-2}$?**
+</StepCheck>
+
+<Step title="One side at a time">
+Splitting the approach into two halves gives a sharper tool: the **one-sided limits**.
+
+- The **left limit** $\displaystyle\lim_{x\to a^-} f(x)$ watches only $x$ values below $a$.
+- The **right limit** $\displaystyle\lim_{x\to a^+} f(x)$ watches only $x$ values above $a$.
+
+The rule that ties them together:
+
+$$
+\lim_{x\to a} f(x) = L \iff \lim_{x\to a^-} f(x) = \lim_{x\to a^+} f(x) = L
+$$
+
+The two-sided limit exists exactly when both one-sided limits exist **and agree**. If the two sides head for different numbers, there is no single answer, and the limit does not exist.
+</Step>
+
+<Step title="A limit that fails by jumping">
+Switch the widget to $|x|/x$ and probe $x = 0$.
+
+<LimitProbe client:visible />
+
+For any positive $x$, $|x|/x = 1$. For any negative $x$, $|x|/x = -1$. The left column of the table sits flat at $-1$; the right column sits flat at $+1$.
+
+Both one-sided limits exist. They simply disagree. So the two-sided limit at 0 **does not exist**. The graph has a clean jump, a step down of height 2, and no single value lives in the gap. A tempting wrong move is to average the two sides and call the limit 0. Resist it: the function never goes near 0; it is only ever exactly $-1$ or exactly $+1$.
+</Step>
+
+<Step title="Three ways a limit dies">
+Cycle the widget through its remaining functions. There are exactly three ways a two-sided limit can fail.
+
+1. **Jump.** The one-sided limits disagree, like $|x|/x$ at 0.
+2. **Blow-up.** The function runs off to $\pm\infty$, like $1/x^2$ at 0. Note carefully: "the limit is $+\infty$" is a *named failure*, not a value. The limit still does not exist.
+3. **Oscillation.** Try $\sin(1/x)$ near 0. As $x$ shrinks, $1/x$ races off to infinity, so $\sin(1/x)$ swings between $-1$ and $+1$ faster and faster, forever. Zoom in and the wiggles get *denser*, never calmer. No jump, no asymptote, and still no limit, because the output never settles on anything.
+
+That third one is the subtle case. The input $x$ heads obediently to 0, but the output refuses to.
+</Step>
+
+<StepCheck
+  title="Does it settle?"
+  prompt="exists? 1 = yes, 0 = no"
+  answer={0}
+  tolerance={0.01}
+  hint="sin(1/x) swings between −1 and +1 infinitely often as x → 0. It never settles on one value, so the limit does not exist. Enter 0."
+>
+For $\displaystyle\lim_{x\to 0}\sin(1/x)$, the table values keep bouncing between $-1$ and $+1$ no matter how far you zoom.
+
+**Does this limit exist? Enter 1 for yes, 0 for no.**
+</StepCheck>
+
+<Step title="Continuity: when the limit is just the value">
+Most of the time none of this drama happens. For a well-behaved function, the limit at $a$ is simply $f(a)$.
+
+That well-behaved property has a name. A function $f$ is **continuous at $a$** when:
+
+$$
+\lim_{x\to a} f(x) = f(a)
+$$
+
+The limit exists, the function is defined there, and the two match. Geometrically: no hole, no jump, no asymptote. You could draw the graph through $a$ without lifting your pen. The three failure modes from the last step are exactly the three ways this equation can break.
+</Step>
+
+<Step title="The rule that makes limits easy">
+Here is the payoff, and it is large.
+
+**Every parent function from the first lesson is continuous everywhere on its natural domain.** Polynomials, $\sin$, $\cos$, $e^x$, $\sqrt{x}$, $\ln x$, all of them. And continuity survives addition, multiplication, and division (as long as you do not divide by zero).
+
+So for any function built by combining catalog functions, evaluating a limit is just **plugging in**. Take:
+
+$$
+\lim_{x\to 1} \frac{\ln x + e^x}{x^2 + 3}
+$$
+
+Numerator and denominator are sums of catalog functions, and the denominator is not zero at $x = 1$. So the whole thing is continuous at 1, and the limit is just the value there: $\dfrac{\ln 1 + e^1}{1 + 3} = \dfrac{0 + e}{4} = \dfrac{e}{4}$.
+
+No factoring, no tables, no tricks. Reach for tables and zooming only when plugging in gives you $0/0$ or worse.
+</Step>
+
+<StepCheck
+  title="A plug-in limit"
+  prompt="limit = "
+  answer={0.6796}
+  tolerance={0.001}
+  hint="The function is continuous at x=1, so plug in: (ln 1 + e¹)/(1² + 3) = (0 + e)/4 = e/4 ≈ 2.71828/4 ≈ 0.6796."
+>
+The function $\dfrac{\ln x + e^x}{x^2 + 3}$ is continuous at $x = 1$, so its limit there is just its value.
+
+**Compute $\displaystyle\lim_{x\to 1}\frac{\ln x + e^x}{x^2 + 3}$** as a decimal.
+</StepCheck>
+
+<Step title="Where this shows up">
+A transformer's forward pass is one long composition of catalog functions stacked into a computation graph. Because every piece is continuous, the whole graph is continuous, and that is not a technicality. Backpropagation, the algorithm that trains the network, only works because each piece varies smoothly enough to have a slope.
+
+You now have the limit. The last lesson of this module turns it on a curve and watches a slope appear.
+</Step>

@@ -36,7 +36,7 @@ Per-module work units: one research fire, one conversion pass, one editing pass,
 | m1-pre-algebra | yes | yes | 5 | drafting |
 | m2-algebra | yes | yes | 6 | drafting |
 | m3-trigonometry | yes | yes | 5 | drafting |
-| m4-precalc | yes | MISSING | 0 | planned |
+| m4-precalc | yes | yes | 4 | drafting |
 | m5-calculus | yes | MISSING | 3 (partial) | drafting |
 | m6-multivariable | yes | yes | 5 | drafting |
 | m7-linear-algebra | yes | yes | 5 | drafting |

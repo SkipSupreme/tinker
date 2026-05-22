@@ -1,0 +1,198 @@
+---
+title: Sequences, series, and the first infinite process
+module: m4-precalc
+summary: A sequence is just a function whose inputs are 1, 2, 3, and on. A series is its running total. Add up infinitely many shrinking terms and, against intuition, you can land on a finite number. That is the on-ramp to the limit.
+estimatedMinutes: 30
+order: 2
+conceptsCovered:
+  - sequence-as-function
+  - arithmetic-geometric-sequences
+  - partial-sum-series
+  - finite-geometric-sum
+  - infinite-geometric-convergence
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import SequenceSeriesScope from '../../components/demos/SequenceSeriesScope.svelte';
+
+<Step title="A sequence is a function in disguise">
+You already know what a function is: a machine that takes an input and returns an output.
+
+A **sequence** is that exact machine with one restriction. Its only legal inputs are the counting numbers $1, 2, 3, 4, \ldots$. You feed it a position $n$ and it hands back the $n$-th term, written $a_n$.
+
+So $a_n = 3n - 2$ is a function. Feed it $n = 1, 2, 3, 4, 5$ and it returns:
+
+$$
+1, \quad 4, \quad 7, \quad 10, \quad 13
+$$
+
+Nothing new is happening. A sequence is a function with the domain trimmed down to the positive integers. The output is a list.
+</Step>
+
+<StepCheck
+  title="Evaluate a term"
+  prompt="a₅ = "
+  answer={13}
+  tolerance={0.01}
+  hint="a_n = 3n − 2 with n = 5 gives 3 · 5 − 2 = 15 − 2 = 13."
+>
+Use the sequence $a_n = 3n - 2$.
+
+**What is $a_5$, the fifth term?**
+</StepCheck>
+
+<Step title="Two families worth knowing">
+Most sequences in this course are one of two kinds.
+
+An **arithmetic** sequence adds a fixed step every time. The step is the common difference $d$:
+
+$$
+a_n = a_1 + (n-1)\,d
+$$
+
+A **geometric** sequence multiplies by a fixed factor every time. The factor is the common ratio $r$:
+
+$$
+a_n = a_1 \cdot r^{\,n-1}
+$$
+
+The widget plots the terms as a stem plot, one stalk per position. Set it to arithmetic and drag $d$.
+
+<SequenceSeriesScope client:visible />
+
+A positive $d$ tilts the stalks upward in a straight line; that is the whole personality of an arithmetic sequence. Switch to geometric later in this lesson and the stalks curve instead, because each one is the last one scaled.
+</Step>
+
+<Step title="Explicit and recursive: same sequence, two descriptions">
+There are two ways to pin down a sequence.
+
+The **explicit** rule gives $a_n$ straight from $n$. For a geometric sequence with $a_1 = 2$ and $r = 3$:
+
+$$
+a_n = 2 \cdot 3^{\,n-1}
+$$
+
+The **recursive** rule gives each term from the one before it:
+
+$$
+a_n = 3 \cdot a_{n-1}, \qquad a_1 = 2
+$$
+
+Both describe $2, 6, 18, 54, \ldots$. The explicit rule is a teleporter, jump straight to term 100. The recursive rule is a staircase, you climb one step at a time. Same sequence, and you will see both styles again: recursion is exactly how a model unrolls over a sequence of tokens.
+</Step>
+
+<StepCheck
+  title="A geometric term"
+  prompt="a₅ = "
+  answer={162}
+  tolerance={0.01}
+  hint="a_n = a_1 · r^(n−1) = 2 · 3^(5−1) = 2 · 3⁴ = 2 · 81 = 162."
+>
+A geometric sequence has first term $a_1 = 2$ and common ratio $r = 3$.
+
+**What is the fifth term $a_5$?**
+</StepCheck>
+
+<Step title="From sequence to series">
+Now add the list up as you go.
+
+A **series** is the running total of a sequence. The $n$-th **partial sum** $S_n$ is what you get after adding the first $n$ terms:
+
+$$
+S_n = a_1 + a_2 + \cdots + a_n
+$$
+
+The partial sums form their own sequence. For $a_n = (1/2)^{n-1}$, the terms are $1, \tfrac12, \tfrac14, \tfrac18, \ldots$ and the partial sums are:
+
+$$
+1, \quad 1.5, \quad 1.75, \quad 1.875, \quad 1.9375, \quad \ldots
+$$
+
+Look at that second list. Each new term is half as big as the last, so each partial sum jumps half as far as the previous jump. The running total is creeping toward something. It looks like 2.
+</Step>
+
+<Step title="A closed form for the geometric sum">
+You should not have to add a hundred terms by hand. There is a formula, and it comes from one clean trick.
+
+Write the sum, then write $r$ times the sum, and line them up:
+
+$$
+S_n = a + ar + ar^2 + \cdots + ar^{n-1}
+$$
+$$
+r\,S_n = \phantom{a + {}} ar + ar^2 + \cdots + ar^{n-1} + ar^n
+$$
+
+Subtract the second line from the first. Everything in the middle cancels, leaving only the ends:
+
+$$
+S_n - r\,S_n = a - ar^n \quad\Longrightarrow\quad S_n = a\,\frac{1 - r^n}{1 - r}
+$$
+
+That is the finite geometric sum. It works for any ratio $r$ except $r = 1$, where you would divide by zero.
+</Step>
+
+<StepCheck
+  title="Sum a doubling series"
+  prompt="1 + 2 + 4 + 8 + 16 = "
+  answer={31}
+  tolerance={0.01}
+  hint="This is geometric with a = 1, r = 2, five terms. S₅ = 1 · (1 − 2⁵)/(1 − 2) = (1 − 32)/(−1) = 31. Or just add: 1+2+4+8+16 = 31."
+>
+Add the first five powers of two: $1 + 2 + 4 + 8 + 16$.
+
+**What is the total?**
+</StepCheck>
+
+<Step title="Push n to infinity">
+Now the payoff. Switch the widget to geometric and slowly drag $r$ down: from 2, through 1, to 0.5, to $-0.5$, and on past $-1$.
+
+<SequenceSeriesScope client:visible />
+
+Watch the bottom plot, the partial sums. There is a sharp boundary at $|r| = 1$:
+
+- When $|r| < 1$, each term is smaller than the last. The partial sums **settle** onto a flat line.
+- When $|r| > 1$, each term is bigger. The partial sums **blow up**.
+- When $r = -1$, the sum lurches back and forth forever and never settles.
+
+Inside the band $|r| < 1$ something genuinely strange is true: you add infinitely many positive numbers and the total is finite.
+</Step>
+
+<Step title="The formula for the infinite sum">
+Look again at the closed form $S_n = a\dfrac{1 - r^n}{1 - r}$, and ask what happens as $n$ grows without bound.
+
+The only piece that depends on $n$ is $r^n$. If $|r| < 1$, then $r^n$ shrinks toward 0. Half, then a quarter, then an eighth of nothing. So $S_n$ settles on:
+
+$$
+S_\infty = \frac{a}{1 - r} \qquad \text{when } |r| < 1
+$$
+
+This is the headline. Here is the famous case: is $0.999\ldots$ equal to 1, or just below it?
+
+Write it as a series: $0.999\ldots = \tfrac{9}{10} + \tfrac{9}{100} + \tfrac{9}{1000} + \cdots$, geometric with $a = 9/10$ and $r = 1/10$. The formula gives:
+
+$$
+\frac{9/10}{1 - 1/10} = \frac{9/10}{9/10} = 1
+$$
+
+Not approximately 1. Exactly 1. There is no number wedged between $0.999\ldots$ and 1, so they are the same number wearing two outfits.
+</Step>
+
+<StepCheck
+  title="An infinite geometric sum"
+  prompt="sum = "
+  answer={2}
+  tolerance={0.01}
+  hint="The series 1 + 1/2 + 1/4 + 1/8 + ... is geometric with a = 1 and r = 1/2. Since |r| < 1, the sum is a/(1−r) = 1/(1 − 1/2) = 1/(1/2) = 2."
+>
+Evaluate the infinite sum $\sum_{n=0}^{\infty} (1/2)^n = 1 + \tfrac12 + \tfrac14 + \tfrac18 + \cdots$.
+
+**What finite number does it equal?**
+</StepCheck>
+
+<Step title="Where this shows up">
+You just did something that the rest of calculus only dresses up: you ran an infinite process and it landed on a finite, definite answer.
+
+That is the entire idea of a **limit**. Training a network is an infinite process in spirit, take a small step, take another, take another, hoping the loss settles. Whether a process settles, and onto what, is the question the next lesson makes precise.
+</Step>

@@ -1,0 +1,161 @@
+---
+title: The number that makes calculus clean
+module: m4-precalc
+summary: Meet e two completely different ways and watch them land on the same number. Recap the natural log. Then zoom into a smooth curve until it becomes a straight line, the single picture the next module turns into the derivative.
+estimatedMinutes: 30
+order: 4
+conceptsCovered:
+  - number-e-two-ways
+  - natural-log-recap
+  - local-linearity
+  - transformer-callback
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import EEmerges from '../../components/demos/EEmerges.svelte';
+import ZoomToStraight from '../../components/demos/ZoomToStraight.svelte';
+
+<Step title="A number that climbs out of a limit">
+Back in m2 you were told, with a promissory note, that $e$ is "the base that makes the calculus clean." Time to cash that note.
+
+Start with an expression that looks like it should be boring: $(1 + 1/n)^n$. Drive $n$ up the slider in the left panel.
+
+<EEmerges client:visible />
+
+At $n = 1$ it is just $2$. At $n = 10$ it is about $2.594$. At $n = 100$, about $2.705$. At $n = 1000$, about $2.717$. Push $n$ to a million and the dot has all but stopped moving, parked against a marker at roughly $2.71828$.
+
+This is a limit, exactly the kind from the last lesson. As $n$ runs off to infinity, $(1 + 1/n)^n$ does not blow up and does not collapse. It **settles**, onto one specific number.
+</Step>
+
+<StepCheck
+  title="Read the climb"
+  prompt="(1 + 1/n)ⁿ ≈ "
+  answer={2.7181}
+  tolerance={0.001}
+  hint="Set the slider to n = 10000. The value (1 + 1/10000)^10000 is about 2.7181, already very close to e."
+>
+Set the left slider to $n = 10{,}000$.
+
+**What value does $(1 + 1/n)^n$ show?** (To four decimals.)
+</StepCheck>
+
+<Step title="That number is e">
+The number the climb settles on is **$e$**:
+
+$$
+e = \lim_{n\to\infty} \left(1 + \frac{1}{n}\right)^n \approx 2.71828
+$$
+
+It is irrational, like $\pi$, and it is not chosen by committee. It is *forced*: it is wherever that limit happens to land. So far, though, it just looks like a curiosity. Why would anyone build a transformer's softmax out of this particular number?
+
+The answer is in the right panel.
+</Step>
+
+<Step title="The base whose slope is 1">
+The right panel draws $y = b^x$ and lets you drag the base $b$. Every one of these curves passes through $(0, 1)$, because $b^0 = 1$ for any base. What differs is how *steeply* each one leaves that point.
+
+<EEmerges client:visible />
+
+The widget draws the tangent line at $x = 0$, the straight line the curve is travelling along as it crosses the $y$-axis, and reports its slope. Drag $b$ and watch the slope readout:
+
+- Small base, say $b = 2$: the curve leaves $(0,1)$ at a gentle slope, less than 1.
+- Large base, say $b = 4$: it leaves steeply, slope more than 1.
+
+Somewhere between them is exactly one base where the curve crosses with slope **exactly 1**. The readout locks green right there. And the base where that happens is $e$.
+</Step>
+
+<StepCheck
+  title="The slope at zero"
+  prompt="slope = "
+  answer={1}
+  tolerance={0.01}
+  hint="e is defined as the base whose curve y = e^x crosses x = 0 with slope exactly 1. That is the whole point of e."
+>
+Drag $b$ to $e$ in the right panel. The tangent to $y = e^x$ at $x = 0$ locks onto a clean value.
+
+**What is the slope of $y = e^x$ at $x = 0$?**
+</StepCheck>
+
+<Step title="Why that makes calculus clean">
+Two definitions, $e$ as the limit of $(1+1/n)^n$ and $e$ as the slope-1 base, point at the same number. That is not a coincidence; it is two windows onto one object.
+
+And the slope-1 property is the whole reason $e$ matters. Because $e^x$ leaves every point travelling at a slope equal to its own height, $e^x$ turns out to be the one function that is **its own rate of change**. The next module proves that. For now, hold onto the headline: $e$ is not "about 2.7." It is the base that makes the calculus clean, and you have now seen, with your own hands, the property that earns it that title.
+</Step>
+
+<Step title="The natural log, briefly">
+If $e^x$ is a function, it has an inverse: the function that undoes it. That inverse is the **natural logarithm**, $\ln x = \log_e x$.
+
+It is defined only for $x > 0$, because $e^x$ is always positive, so positive numbers are the only things $\ln$ can be handed back. It obeys every log law from m2, now with base $e$:
+
+$$
+\ln(xy) = \ln x + \ln y, \qquad \ln(x^p) = p\,\ln x
+$$
+$$
+\ln 1 = 0, \qquad \ln e = 1, \qquad \ln(e^x) = x
+$$
+
+That last one is just "the inverse undoes the function." Whatever power you raised $e$ to, $\ln$ reads it straight back off.
+</Step>
+
+<StepCheck
+  title="Log of one"
+  prompt="ln(1) = "
+  answer={0}
+  tolerance={0.01}
+  hint="ln asks: what power of e gives this number? e⁰ = 1, so ln(1) = 0."
+>
+$\ln x$ asks: to what power must you raise $e$ to get $x$?
+
+**What is $\ln(1)$?**
+</StepCheck>
+
+<StepCheck
+  title="Log of a power"
+  prompt="ln(e³) = "
+  answer={3}
+  tolerance={0.01}
+  hint="ln undoes e^x. ln(e³) asks what power of e gives e³. The answer is right there: 3."
+>
+$\ln$ is the inverse of $e^x$, so $\ln(e^x) = x$.
+
+**What is $\ln(e^3)$?**
+</StepCheck>
+
+<Step title="The one picture under all of calculus">
+Now the idea this whole module has been building toward.
+
+Take any smooth curve. Pick a point on it. Zoom in. Then zoom in again. Then again.
+
+<ZoomToStraight client:visible />
+
+Drag the point onto $y = x^2$, then zoom: 10 times, 100 times, 1000 times. Watch what happens. The parabola, unmistakably curved at full view, flattens. By 1000x magnification it is indistinguishable from a straight line.
+
+This is **local linearity**. Up close, a smooth curve looks like a straight line. Every smooth function, everywhere, is secretly linear if you look closely enough. The curve has not changed; your window has, and at small enough scale curvature simply cannot be seen.
+
+(One caution the widget handles for you: it zooms both axes by the same factor. Stretch one axis more than the other and *any* curve flattens trivially. The flattening here is real.)
+</Step>
+
+<Step title="The line has a name, almost">
+That straight line the curve becomes has a slope. At a different point on the curve it would be a different line with a different slope.
+
+This module stops one step short on purpose. You have built the picture: zoom into a smooth curve and it becomes a line. The **next module** does the one remaining thing, it measures that line's slope and gives it a name: the **derivative**. Every parabola, every exponential, every sine has a derivative, and it is nothing more exotic than the slope of the line you just watched appear.
+</Step>
+
+<StepCheck
+  title="Zoom in somewhere else"
+  prompt="slope = "
+  answer={-2}
+  tolerance={0.05}
+  hint="Drag the point to x = −1 on y = x². At x = 1 the line had slope +2; at x = −1 the parabola tilts the other way, and by symmetry the line's slope is −2."
+>
+Drag the point to $x = -1$ on $y = x^2$ and zoom in. The curve becomes a line again, but a differently tilted one.
+
+**What slope does that line have?** (At $x = 1$ it was $+2$; use the parabola's symmetry.)
+</StepCheck>
+
+<Step title="Where this shows up: the whole arc">
+You now hold both ends of a transformer's loss machinery. **Softmax**, the layer that turns raw scores into probabilities, is $e^x$ in a costume. **Cross-entropy**, the loss that scores the prediction, is $\ln$ in a costume. The two functions this lesson made you fluent in are the first and last things a transformer touches when it grades itself.
+
+And the picture you just made, zoom into a smooth curve until it looks straight, is the entire engine of how the network learns. The next module turns that line into the derivative. The module after that runs the derivative backward through every layer, and that backward pass is training. You have built the intuition; calculus is next.
+</Step>

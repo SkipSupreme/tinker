@@ -1,0 +1,148 @@
+---
+title: The zoo of functions, and one grammar
+module: m4-precalc
+summary: There are about ten function shapes worth knowing on sight. Then there is a single shift, scale, and reflect grammar that bends any of them into the graph you need. Learn the grammar once and every parent function obeys it.
+estimatedMinutes: 30
+order: 1
+conceptsCovered:
+  - function-catalog
+  - qualitative-features
+  - vertical-shift
+  - horizontal-shift
+  - vertical-scale-reflect
+  - horizontal-scale-reflect
+  - transformation-order
+  - wave-shaping-callback
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import ParentFnDeck from '../../components/demos/ParentFnDeck.svelte';
+import TransformationLab from '../../components/demos/TransformationLab.svelte';
+
+<Step title="A small zoo, not an infinite one">
+You have met functions one at a time across the last three modules: lines, parabolas, exponentials, logarithms, sine, cosine. It can feel like an endless bestiary.
+
+It is not. Almost every function you will graph in this course is one of about ten basic shapes, the **parent functions**, possibly bent a little. Learn the ten on sight and you have the whole zoo.
+
+<ParentFnDeck client:visible />
+
+Flip through the deck. For each card, notice the same five questions getting answered:
+
+- **End behavior**: where does the curve go as $x$ runs far left and far right?
+- **Intercepts**: where does it cross the axes?
+- **Asymptotes**: is there a line the curve hugs but never touches?
+- **Periodicity**: does the shape repeat?
+- **Symmetry**: is it a mirror image across the $y$-axis (even), or does it spin onto itself through the origin (odd)?
+
+Those five questions are the vocabulary. You do not memorize graphs; you describe them.
+</Step>
+
+<StepCheck
+  title="Read the degree"
+  prompt="degree = "
+  answer={4}
+  tolerance={0.01}
+  hint="The degree of a polynomial is its highest power of x. In x⁴ − 2x² + 1 the highest power is 4."
+>
+A polynomial's **degree** is its highest power of $x$, and the degree controls its end behavior.
+
+**What is the degree of $x^4 - 2x^2 + 1$?**
+</StepCheck>
+
+<Step title="Outside and inside">
+Here is the move that turns ten shapes into all of them.
+
+Take any parent function $f$. You can change its graph in exactly two places:
+
+- **Outside** the function: $a \cdot f(x) + v$. This happens *after* $f$ has fired. It moves the output.
+- **Inside** the function: $f(k \cdot x - \text{something})$. This happens *before* $f$ fires. It moves the input.
+
+Outside changes are vertical, because the output is the $y$-value. Inside changes are horizontal, because the input is the $x$-value. That single split, outside versus inside, is the whole grammar.
+
+The full template is:
+
+$$
+g(x) = a \cdot f\big(k(x - h)\big) + v
+$$
+
+Four knobs: $h$ slides it sideways, $v$ slides it up and down, $a$ stretches it vertically, $k$ squeezes it horizontally.
+</Step>
+
+<Step title="Turn the knobs">
+Drive the four knobs yourself. The widget keeps the faint parent curve drawn so you can always see what moved.
+
+<TransformationLab client:visible />
+
+Start with the parent $x^2$. Drag the shift handle: the parabola slides, shape untouched. Drag the vertical stretch handle: it gets taller or, past zero, flips upside down. Drag the horizontal handle: it pinches inward.
+
+Watch the formula and the plain-English step list rewrite themselves as you drag. That synchronization, picture and symbols moving together, is the thing to internalize. The formula is not a separate fact to memorize; it is a readout of what your hands just did.
+</Step>
+
+<StepCheck
+  title="Slide it sideways"
+  prompt="shift right = "
+  answer={3}
+  tolerance={0.01}
+  hint="g(x) = (x − 3)² + 5 is the parent x² with h = 3 and v = 5. The h value is the rightward shift."
+>
+Consider $g(x) = (x-3)^2 + 5$, the parent $x^2$ with its knobs set.
+
+**How many units to the right is this graph shifted?**
+</StepCheck>
+
+<Step title="Inside acts backward">
+One trap, and it catches everyone.
+
+The graph of $f(x - 3)$ shifts **right** by 3, not left. The minus sign looks like it should pull the graph toward the negatives, but it does the opposite.
+
+Here is why, with no hand-waving. The new graph at $x = 3$ shows the value $f(3 - 3) = f(0)$. So whatever the parent did at its origin now happens at $x = 3$. The origin moved right. Inside operations always run backward from what the sign suggests.
+
+The same reversal hits the order of steps. Worked example: sketch $g(x) = -2(x-3)^2 + 5$.
+
+- Inside, $x - 3$: shift **right 3**.
+- Outside, the $-2$: stretch vertically by 2, then **reflect** across the $x$-axis.
+- Outside, the $+5$: shift **up 5**.
+
+Outside operations apply in the normal order of operations. Inside operations apply in reverse. Get inside-versus-outside right and the rest follows.
+</Step>
+
+<StepCheck
+  title="Period of a squeezed wave"
+  prompt="period = "
+  answer={3.14159}
+  tolerance={0.01}
+  hint="Multiplying the input by k divides the period by k. Parent sin x has period 2π, so sin(2x) has period 2π / 2 = π ≈ 3.14159."
+>
+The parent $\sin x$ repeats every $2\pi$. The inside multiplier in $\sin(2x)$ squeezes it horizontally by a factor of 2.
+
+**What is the period of $\sin(2x)$?** (As a decimal.)
+</StepCheck>
+
+<Step title="The wave was using this grammar all along">
+Switch the widget's parent to $\sin$.
+
+<TransformationLab client:visible />
+
+Look at what the knobs become. The vertical stretch $a$ is the **amplitude** you met in m3. The horizontal squeeze $k$ is the **frequency**. The vertical shift $v$ is the **midline offset**.
+
+Module 3 taught you amplitude, frequency, and offset as trigonometry vocabulary. They were never trig-specific. They are just $a \cdot f(k x) + v$ with $f$ happening to be sine. One grammar, one widget, every parent function. The wave is not a special case; it is the same machine.
+</Step>
+
+<StepCheck
+  title="Find the midline"
+  prompt="midline y = "
+  answer={-1}
+  tolerance={0.01}
+  hint="The vertical offset v sets the midline. In 3 sin(2x) − 1 the outside +(−1) drops the whole wave so it oscillates around y = −1."
+>
+Consider $y = 3\sin(2x) - 1$. The amplitude is 3, the period is $\pi$, and there is an outside shift.
+
+**The wave oscillates around the line $y = $ what?**
+</StepCheck>
+
+<Step title="Where this shows up">
+A transformer is built from layers, and almost every layer is a transformation in exactly this sense. A learned weight matrix is, geometrically, a stretch and a reflection applied to its input vector. The positional encodings that tell the model where each token sits are shifted sine waves, $\sin$ with the $h$ and $k$ knobs turned.
+
+You just learned the grammar those layers speak. Next we leave smooth curves for a moment and watch what happens when you add infinitely many numbers together.
+</Step>
