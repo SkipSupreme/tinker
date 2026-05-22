@@ -42,7 +42,7 @@
 <div class="widget">
   <header class="header">
     <p class="title">
-      <em>f</em>(<em>x</em>, <em>y</em>) = <span class="mono">{a.toFixed(1)} <em>x</em>² + {b >= 0 ? '+' : ''}{b.toFixed(1)} <em>y</em>²</span>
+      <em>f</em>(<em>x</em>, <em>y</em>) = <span class="mono">{a.toFixed(1)} <em>x</em>² {b >= 0 ? '+' : '−'} {Math.abs(b).toFixed(1)} <em>y</em>²</span>
     </p>
     <span class="badge badge-{classKind}">{classify}</span>
   </header>
