@@ -129,7 +129,7 @@ Same setup. Confirm $\dfrac{\partial L}{\partial b}$.
 </StepCheck>
 
 <Step title="Where this lands">
-You just did, by hand, what `loss.backward()` does for a network of two parameters. In Module 12 we'll build **micrograd**, a tiny scalar autograd engine that walks a computation graph and fills in `.grad` fields using exactly this procedure. Then Module 13 upgrades it to tensors, Module 15 wires it through an attention layer, and Module 18 uses all of it to train a character-level transformer in your browser.
+You just did, by hand, what `loss.backward()` does for a network of two parameters. In Module 12 we'll build **micrograd**, a tiny scalar autograd engine that walks a computation graph and fills in `.grad` fields using exactly this procedure, then vectorize it from scalars to tensors. Module 15 wires it through an attention layer, and Module 18 uses all of it to train a character-level transformer in your browser.
 
 The algorithm is already known to you. Everything else is bookkeeping at scale.
 </Step>

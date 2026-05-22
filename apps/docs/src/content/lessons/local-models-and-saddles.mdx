@@ -118,7 +118,7 @@ The sign of your answer tells you what kind of critical point it is.
 <Step title="Why saddles matter for ML">
 Intuition from one or two variables says: most flat spots are minima. Bowl, cap, occasional saddle. **In high dimensions this stops being true.** In dimensions ~millions (which is where neural-network loss functions live) saddles **dominate**. True local minima are rare; flat regions where the gradient is nearly zero but the function is actually a saddle are common.
 
-This is why plain gradient descent can feel slow: it's not stuck at a real minimum, it's crawling through a high-dimensional saddle where the gradient is small in most directions and only a tiny sub-space escapes. Modules 10 and 11 cover the tricks for dealing with this: momentum, Adam, learning-rate schedules. All of them are about detecting and escaping saddles.
+This is why plain gradient descent can feel slow: it's not stuck at a real minimum, it's crawling through a high-dimensional saddle where the gradient is small in most directions and only a tiny sub-space escapes. Module 10 covers the tricks for dealing with this: momentum, Adam, learning-rate schedules. All of them are about detecting and escaping saddles.
 
 For now the single takeaway: **$\nabla f = \mathbf{0}$ doesn't mean "you won."** It means "stop and look more carefully."
 </Step>
