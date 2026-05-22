@@ -288,7 +288,7 @@
     font-family: var(--font-body);
     font-size: 0.72rem;
     font-weight: 600;
-    color: #fff;
+    color: var(--on-color-fg);
     padding: 0.15rem 0.55rem;
     border-radius: var(--radius-pill, 999px);
     white-space: nowrap;

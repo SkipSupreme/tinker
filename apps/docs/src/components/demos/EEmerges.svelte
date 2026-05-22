@@ -85,7 +85,7 @@
             point2={[E, 0.32]}
             color="var(--ink-teal)"
             weight={2}
-            style="dashed"
+            style={"dashed"}
           />
           <Text x={E} y={0.42} latex="e" size={13} color="var(--ink-teal)" />
           <!-- the climbing value -->

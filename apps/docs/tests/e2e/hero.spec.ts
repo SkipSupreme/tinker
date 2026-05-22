@@ -28,8 +28,8 @@ test.describe("homepage hero", () => {
 
   test("hero CTAs render above the fold", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator("a.btn.primary")).toContainText("Sign up");
-    await expect(page.locator("a.btn.secondary")).toContainText("Explore the course");
+    await expect(page.locator(".hero a.btn.primary").first()).toContainText("Sign up");
+    await expect(page.locator(".hero a.btn.secondary").first()).toContainText("Explore the course");
   });
 
   test("COMING SOON cards are gone from upper fold", async ({ page }) => {

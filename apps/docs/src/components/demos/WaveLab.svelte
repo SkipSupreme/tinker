@@ -112,7 +112,7 @@
         domain={[-1, 13]}
         color="var(--ink-red)"
         weight={2.5}
-        style="solid"
+        style={"solid"}
       />
 
       <!-- optional cosine overlay: sine shifted by pi/2 -->
@@ -123,7 +123,7 @@
           color="var(--ink-sea)"
           weight={2}
           opacity={0.9}
-          style="dashed"
+          style={"dashed"}
         />
       {/if}
 
