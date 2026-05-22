@@ -1,0 +1,112 @@
+---
+title: The XOR moment
+module: m11-neural-networks
+summary: A single perceptron cannot compute XOR. That 1969 fact stalled the field for a decade, and it is the entire reason neural networks have hidden layers.
+estimatedMinutes: 18
+order: 2
+prereqs:
+  - what-a-perceptron-really-is
+conceptsCovered:
+  - xor-problem
+  - linear-separability
+  - hidden-layer
+  - feature-space-warping
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import StepChoice from '../../components/lesson/StepChoice.astro';
+import Choice from '../../components/lesson/Choice.astro';
+import PerceptronLine from '../../components/demos/PerceptronLine.svelte';
+import XorPlayground from '../../components/demos/XorPlayground.svelte';
+
+<Step title="A dataset that fights back">
+Last lesson you trained a perceptron by dragging a line until AND and OR sat cleanly split. Both gave in fast. Here is a third gate, **XOR**: output 1 when the inputs *differ*, 0 when they *match*.
+
+$$
+(0,0)\to 0 \qquad (0,1)\to 1 \qquad (1,0)\to 1 \qquad (1,1)\to 0
+$$
+
+The two class-1 points are opposite corners of the square. So are the two class-0 points. Switch the widget to **XOR** and try, honestly, to drag a line that gets all four right.
+
+<PerceptronLine client:visible />
+
+You cannot do it. The best you will manage is three out of four. This isn't you being bad at dragging. It's a wall, and it has a proof.
+</Step>
+
+<Step title="Why no line can ever work">
+A dataset is **linearly separable** when *some* straight line puts the two classes on opposite sides. XOR is the smallest dataset that is not. Here's the four-line proof, the one Minsky and Papert published in 1969.
+
+Suppose a perceptron $\text{step}(w_1x_1 + w_2x_2 + b)$ did compute XOR. Then:
+
+- From $(0,0)\to 0$: the pre-activation $b$ must be negative, so $b < 0$.
+- From $(1,0)\to 1$: $w_1 + b \ge 0$, so $w_1 \ge -b > 0$.
+- From $(0,1)\to 1$: $w_2 + b \ge 0$, so $w_2 \ge -b > 0$.
+
+Now check the last point $(1,1)$. Its pre-activation is $w_1 + w_2 + b$. Both weights are larger than $-b$, so $w_1 + w_2 + b > (-b) + (-b) + b = -b > 0$. That forces $(1,1)\to 1$. But XOR says $(1,1)\to 0$. Contradiction.
+
+No weights exist. Not "hard to find" — *nonexistent*.
+</Step>
+
+<StepCheck
+  title="Fill in the proof"
+  prompt="w₂ + b ≥ "
+  answer={0}
+  tolerance={0.01}
+  hint="The point (0,1) has pre-activation w·x + b = w₁·0 + w₂·1 + b = w₂ + b. For step() to output class 1, the pre-activation must clear the threshold at zero."
+>
+The proof leans on the point $(0,1)$, which XOR labels class **1**.
+
+Its pre-activation is $w \cdot (0,1) + b = w_2 + b$. For the perceptron to output class 1, this pre-activation has to be at least some threshold value.
+
+**What value must $w_2 + b$ be at least?**
+</StepCheck>
+
+<Step title="The smallest fix that could possibly work">
+A perceptron failed because it has exactly one line to give. The obvious question: what is the *smallest* thing you could add to fix that?
+
+Not a curved boundary — we have no machinery for curves. The fix is stranger and cheaper. Use **two** perceptrons, each drawing its own line, as a first stage. Don't ask either of them to classify XOR. Ask each only "which side of *my* line are you on?" Their two answers become a new pair of coordinates $(h_1, h_2)$ for every input point.
+
+That first stage is called a **hidden layer**. Its job is not to answer the question. Its job is to *move the points* into a new space where the question becomes easy.
+</Step>
+
+<Step title="Two spaces, side by side">
+Here is XOR in both spaces at once. On the **left**, the four points in their original input space, with two draggable lines, one per hidden neuron. On the **right**, where those same four points land in the hidden space $(h_1, h_2)$, the two coordinates the neurons produce.
+
+<XorPlayground client:visible />
+
+Drag the lines on the left and watch the right panel rearrange. The input space never changes, XOR is permanently tangled there. But the hidden space is yours to reshape. When you get the two class-1 points onto one side and the two class-0 points onto the other, the status flips to separable.
+
+Stuck? Press **load a solution** and study what those two lines do.
+</Step>
+
+<Step title="What the hidden layer actually bought you">
+Look at the right panel with a solution loaded. The four points are no longer at the corners of a square. They have been *folded* onto a shape a single straight line can split, the exact thing no line could do on the left.
+
+This is the whole idea, and it is worth saying plainly: **the network does not draw a curve around the data. It bends the space until a straight line is enough.** The two hidden neurons warped the plane; a third neuron, reading $(h_1, h_2)$, finishes the job with one more line.
+
+That third neuron plus these two hidden ones is a **multilayer perceptron**: input, a hidden layer, an output. The smallest network that beats a single perceptron.
+</Step>
+
+<StepChoice
+  title="Read the hidden space"
+  single
+  hint="With a solution loaded, the two class-1 inputs (0,1) and (1,0) are treated identically by both hidden neurons — same distance past each line — so they map to the very same hidden coordinates."
+>
+With a solution loaded in the widget, look at where the four points sit in the hidden space $(h_1, h_2)$.
+
+**What happened to the two class-1 points $(0,1)$ and $(1,0)$?**
+
+<Choice>They moved to opposite corners, as far apart as possible.</Choice>
+<Choice correct>They landed on the same spot, because both hidden neurons treat them identically.</Choice>
+<Choice>They stayed exactly where they were in the input space.</Choice>
+<Choice>One became class 0.</Choice>
+</StepChoice>
+
+<Step title="The decade this cost">
+When Minsky and Papert published that four-line proof in 1969, they were right about the perceptron and the field over-read them. Funding and interest in neural networks collapsed for over a decade, the first "AI winter," partly because the obvious fix, *stack the things*, was known but not yet trainable.
+
+Two perceptrons in a row solve XOR. You just did it by hand. But notice you placed those hidden lines *yourself*. The real question, the one that ended the winter, is how a network could *discover* good hidden lines on its own. That needs the next two modules.
+
+First, a warning about stacking. It only works if you put the right thing *between* the layers. Skip it and your deep network quietly collapses back into a single perceptron. Next lesson, you watch that happen.
+</Step>

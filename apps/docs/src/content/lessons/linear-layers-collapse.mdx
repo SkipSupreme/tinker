@@ -1,0 +1,115 @@
+---
+title: Why a stack of linear layers is just one linear layer
+module: m11-neural-networks
+summary: Without a nonlinearity between them, ten layers do exactly what one layer does. The algebra is short and brutal, and it is the reason activation functions exist.
+estimatedMinutes: 12
+order: 3
+prereqs:
+  - the-xor-moment
+conceptsCovered:
+  - linear-layer
+  - linear-composition-collapse
+  - activation-function
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import StepChoice from '../../components/lesson/StepChoice.astro';
+import Choice from '../../components/lesson/Choice.astro';
+import LinearCollapse from '../../components/demos/LinearCollapse.svelte';
+
+<Step title="Stack the layers, surely?">
+Last lesson ended with a plan: a hidden layer warps the space, an output layer finishes with a line. Two layers beat one. So depth is the lever. Add more layers, warp harder, solve more.
+
+A single layer is the **linear layer** $y = Wx + b$: a matrix multiply plus a bias vector. It is the perceptron's weighted sum, written for many outputs at once. Stacking two of them looks like the obvious move:
+
+$$
+x \;\longrightarrow\; W^{(1)}x + b^{(1)} \;\longrightarrow\; W^{(2)}\bigl(W^{(1)}x + b^{(1)}\bigr) + b^{(2)}.
+$$
+
+It feels like it must be more powerful than one layer. Multiply the algebra out and see.
+</Step>
+
+<Step title="The algebra collapses">
+Expand that second expression:
+
+$$
+W^{(2)}\bigl(W^{(1)}x + b^{(1)}\bigr) + b^{(2)}
+\;=\;
+\underbrace{\bigl(W^{(2)}W^{(1)}\bigr)}_{\text{one matrix}} x
+\;+\;
+\underbrace{\bigl(W^{(2)}b^{(1)} + b^{(2)}\bigr)}_{\text{one vector}}.
+$$
+
+Look at what you're left with: a single matrix times $x$, plus a single vector. That is the *exact shape* of one linear layer $y = Wx + b$, with $W = W^{(2)}W^{(1)}$ and $b = W^{(2)}b^{(1)} + b^{(2)}$.
+
+Two layers did not build something new. They built a different spelling of one layer. And this telescopes: ten linear layers collapse into one matrix, a hundred collapse into one. **Depth alone buys you nothing.**
+</Step>
+
+<StepCheck
+  title="Collapse it yourself"
+  prompt="f(x) = "
+  answer={5}
+  tolerance={0.01}
+  hint="First W⁽¹⁾x: [[2,0],[0,3]]·(1,1) = (2,3). Then W⁽²⁾ times that: [1,1]·(2,3) = 2 + 3."
+>
+A two-layer linear network (no biases, no activation) has
+
+$$
+W^{(1)} = \begin{pmatrix} 2 & 0 \\ 0 & 3 \end{pmatrix}, \qquad W^{(2)} = \begin{pmatrix} 1 & 1 \end{pmatrix}.
+$$
+
+The network computes $f(x) = W^{(2)}\bigl(W^{(1)}x\bigr)$.
+
+**What is $f(x)$ for the input $x = (1, 1)$?**
+</StepCheck>
+
+<Step title="Watch the grid refuse to bend">
+Here is the collapse made visual. The left panel is a square grid. The right panel is that grid after it passes through a stack of linear layers. The red line is a straight "decision boundary" carried along for reference.
+
+<LinearCollapse client:visible />
+
+Leave **ReLU between layers** unchecked and push the layer count up to 5. The output is squished, rotated, sheared, but every grid line stays *dead straight* and the red boundary stays a line. The widget even prints the single matrix all those layers collapsed into. Five layers, one matrix.
+</Step>
+
+<StepChoice
+  title="Bug, or expected?"
+  single
+  hint="Linear layers compose into a single linear map. A linear map sends straight lines to straight lines, always. No bug — this is the math working exactly as proven above."
+>
+A learner builds a 5-layer network of linear layers with **no activation functions**, trains it on a dataset that needs a curved boundary, and notices the decision boundary is stubbornly a straight line.
+
+**Is this a bug, or expected behavior?**
+
+<Choice>A bug — five layers should produce a complex boundary.</Choice>
+<Choice correct>Expected — five linear layers collapse into one linear layer, which can only ever draw a straight boundary.</Choice>
+<Choice>A bug — the learning rate is too low.</Choice>
+<Choice>Expected — but only because the dataset is too small.</Choice>
+</StepChoice>
+
+<Step title="The fix goes between the layers">
+Now check **ReLU between layers** and look again. The grid folds. The red boundary kinks. Suddenly depth is doing real work, and the deeper you go the more intricate the warp.
+
+ReLU is the nonlinearity from the XOR fix, $\max(0, z)$, applied to every entry of a layer's output before it reaches the next layer. The collapse proof above relied on one quiet fact: you can pull matrices through each other because matrix multiplication is associative. Slip a *nonlinear* function into the chain and that move is blocked. $W^{(2)}\,\phi\bigl(W^{(1)}x\bigr)$ cannot be flattened, because $\phi$ is not a matrix.
+
+That little function wedged between every pair of layers is called the **activation function**. It is not decoration. It is the one component that makes depth mean something.
+</Step>
+
+<StepChoice
+  title="What actually rescues depth?"
+  single
+  hint="The collapse happens for any linear (or, more generally, polynomial) map between layers. What breaks it is inserting a function that is not a polynomial — ReLU, sigmoid, tanh and GELU all qualify. ReLU is a common default, not the only option."
+>
+The 5-layer network collapsed because every layer was linear. **What is the smallest change that fixes it?**
+
+<Choice>Use far more layers.</Choice>
+<Choice>Use much larger weight matrices.</Choice>
+<Choice correct>Insert a non-polynomial nonlinearity (ReLU, sigmoid, tanh, GELU, ...) between the layers.</Choice>
+<Choice>Use the ReLU function specifically — nothing else can work.</Choice>
+</StepChoice>
+
+<Step title="So that's why activations exist">
+You now know the real reason every neural network diagram has those little nonlinearity boxes between the matrix multiplies. Strip them out and the whole deep stack quietly folds into a single linear layer, no better than logistic regression.
+
+The activation is what keeps depth honest. Which raises a fair question: there are several of these functions on offer, ReLU, sigmoid, tanh, GELU. Are they interchangeable? Does the choice matter? Next lesson, you meet the zoo and find out why ReLU won.
+</Step>

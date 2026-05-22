@@ -1,0 +1,125 @@
+---
+title: ReLU, and the activation zoo
+module: m11-neural-networks
+summary: Four activation functions are worth knowing. ReLU is the modern default for hidden layers, and the reason why comes down to one number, the slope of its competitor.
+estimatedMinutes: 18
+order: 4
+prereqs:
+  - linear-layers-collapse
+conceptsCovered:
+  - relu
+  - sigmoid
+  - tanh
+  - gelu
+  - dead-relu
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import StepChoice from '../../components/lesson/StepChoice.astro';
+import Choice from '../../components/lesson/Choice.astro';
+import ActivationZoo from '../../components/demos/ActivationZoo.svelte';
+
+<Step title="The one you'll use most">
+The activation that goes between hidden layers, almost always, in 2026, is **ReLU**, the rectified linear unit:
+
+$$
+\text{ReLU}(z) = \max(0, z).
+$$
+
+Negative input, output zero. Positive input, output unchanged. That is the entire function. Geometrically it is a flat floor that turns into a 45° ramp at a single corner, the **kink**.
+
+The widget below starts on ReLU. Grab the kink and drag it along the x-axis.
+
+<ActivationZoo client:visible />
+
+As you drag, the bias readout tracks you: the kink sits at $x = -b$. A ReLU neuron isn't an abstract "activation," it's a hinge, and the bias is the one number that says where the hinge folds.
+</Step>
+
+<StepCheck
+  title="Run ReLU by hand"
+  prompt="sum = "
+  answer={2.5}
+  tolerance={0.01}
+  hint="ReLU(−3): the input is negative, so the output is 0. ReLU(2.5): the input is positive, so the output is 2.5. Add them."
+>
+ReLU clamps negatives to zero and passes positives through untouched.
+
+**Compute $\text{ReLU}(-3) + \text{ReLU}(2.5)$.**
+</StepCheck>
+
+<Step title="Why ReLU won: look at its slope">
+ReLU's appeal is not its shape, it's its *derivative*. In the widget, the faint blue curve is the slope of the activation at every point. For ReLU that slope is a clean step: exactly **0** on the dead side, exactly **1** on the active side.
+
+That `1` is the whole story. When a network learns, gradients are sent backward through every layer as a long product of slopes (you'll build this in Module 12). Multiply by 1 and the gradient passes through undamped. ReLU, on its active half, is gradient-transparent.
+
+Compare that to the function ReLU replaced.
+</Step>
+
+<Step title="Sigmoid: the squash">
+Switch the widget to **sigmoid**. The function $\sigma(z) = 1/(1+e^{-z})$ takes any real number and squashes it into the open interval $(0, 1)$. Big negative input goes near 0, big positive goes near 1, and it crosses $0.5$ at the origin.
+
+$$
+\sigma(z) = \frac{1}{1 + e^{-z}}
+$$
+
+For decades this was *the* activation, the squash felt biological, an "on/off-ness." But look at its slope, the blue curve. It is a gentle bump that peaks at the origin and is near-flat everywhere else.
+</Step>
+
+<StepCheck
+  title="Evaluate the squash"
+  prompt="σ(0) = "
+  answer={0.5}
+  tolerance={0.01}
+  hint="σ(0) = 1 / (1 + e^0) = 1 / (1 + 1) = 1/2."
+>
+The sigmoid is $\sigma(z) = \dfrac{1}{1 + e^{-z}}$.
+
+**What is $\sigma(0)$?**
+</StepCheck>
+
+<Step title="The vanishing gradient">
+Read the widget's slope readout on the sigmoid tab: the steepest the sigmoid ever gets is **0.25**. Not near zero, not in the tails, *anywhere*. Its maximum slope is a quarter.
+
+Now recall that gradients travel backward as a product of slopes, one factor per layer. Stack eight sigmoid layers and the gradient reaching the first layer is multiplied by *at most*
+
+$$
+0.25^{8} \approx 0.000015.
+$$
+
+The signal is gone before it arrives. The early layers get a gradient so faint they effectively stop learning. This is the **vanishing gradient problem**, and it is why deep sigmoid networks were, for years, nearly untrainable. ReLU's slope of 1 is the fix: a product of 1s does not vanish.
+</Step>
+
+<StepChoice
+  title="Why sigmoid lost the hidden layer"
+  single
+  hint="Sigmoid's derivative never exceeds 0.25. Backpropagation multiplies one such factor per layer, so in a deep stack the gradient shrinks geometrically and the early layers stop learning."
+>
+**Why is sigmoid no longer the default activation for hidden layers in deep networks?**
+
+<Choice>It is too slow to compute.</Choice>
+<Choice correct>Its slope never exceeds 0.25, so gradients vanish exponentially as they pass back through a deep stack.</Choice>
+<Choice>It is not a smooth function.</Choice>
+<Choice>It can output negative numbers, which breaks training.</Choice>
+</StepChoice>
+
+<Step title="Two more worth knowing: tanh and GELU">
+ReLU is the default, but it is not the only animal in the zoo. Two more earn their names.
+
+**tanh** (the widget's third tab) is a sigmoid shifted to be *zero-centered*: it squashes into $(-1, 1)$ instead of $(0, 1)$, and its slope reaches 1 at the origin. Zero-centered outputs make the next layer's job a little easier. It is the activation Karpathy's micrograd uses, and you will meet it again in Module 12.
+
+**GELU** (the fourth tab) is a smooth ReLU. It looks almost identical to ReLU but lets a thin sliver of gradient leak through the negative side instead of hard-zeroing it. That sliver matters at scale: it is the activation inside the feed-forward blocks of GPT-2 and BERT. You will see exactly where in Module 16.
+</Step>
+
+<Step title="A short answer key">
+You do not need to memorize a zoo. You need four functions and the one job each is for:
+
+- **ReLU** — the default between hidden layers. Slope 1 where active, so gradients survive depth.
+- **sigmoid** — for a *binary-probability output*, where you genuinely want a number in $(0,1)$. Not for hidden layers.
+- **tanh** — zero-centered, still common in small models; the micrograd choice.
+- **GELU** — the modern default inside transformers.
+
+One caution before you go. A ReLU neuron whose input is negative for *every* training example outputs zero forever, and its slope is zero forever too, so it never learns. That is a **dead ReLU**. It is rare, fixable, and worth knowing the name of.
+
+Next lesson: you assemble these pieces, linear layers and activations, into a full network and run it end to end.
+</Step>

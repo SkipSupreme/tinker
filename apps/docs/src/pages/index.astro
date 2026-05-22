@@ -39,28 +39,30 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
 
   <section class="hero band band-onyx">
     <FloatingMath client:visible />
-    <div class="hero-grid" data-hero-region>
-      <div class="hero-mascot">
-        <Tinker client:visible size="clamp(180px, 26vw, 280px)" />
-      </div>
-      <div class="hero-copy">
-        <p class="eyebrow">🌱 Alpha · 1 course live · new modules every week</p>
-        <h1 class="hero-headline">
-          <span class="line">Learn by playing</span>
-          <span class="line">with the <span class="ink-red"><em>math.</em></span></span>
-        </h1>
-        <p class="lede">
-          Drag a letter. Watch the constellation react. That's not a
-          decoration. It's the core idea behind embeddings, the foundation
-          of every modern AI model. Tinker teaches the math underneath
-          machine learning by letting you touch it.
-        </p>
-        <div class="hero-widget">
-          <EmbeddingPluck client:load hero={true} />
+    <div class="shell">
+      <div class="hero-grid" data-hero-region>
+        <div class="hero-mascot">
+          <Tinker client:visible size="clamp(180px, 26vw, 280px)" />
         </div>
-        <div class="cta-row">
-          <a class="btn primary" href="/signup">Sign up, it's free</a>
-          <a class="btn secondary" href="/lessons">Explore the course</a>
+        <div class="hero-copy">
+          <p class="eyebrow">🌱 Alpha · 1 course live · new modules every week</p>
+          <h1 class="hero-headline">
+            <span class="line">Learn by playing</span>
+            <span class="line">with the <span class="ink-red"><em>math.</em></span></span>
+          </h1>
+          <p class="lede">
+            Drag a letter. Watch the constellation react. That's not a
+            decoration. It's the core idea behind embeddings, the foundation
+            of every modern AI model. Tinker teaches the math underneath
+            machine learning by letting you touch it.
+          </p>
+          <div class="hero-widget">
+            <EmbeddingPluck client:load hero={true} />
+          </div>
+          <div class="cta-row">
+            <a class="btn primary" href="/signup">Sign up, it's free</a>
+            <a class="btn secondary" href="/lessons">Explore the course</a>
+          </div>
         </div>
       </div>
     </div>

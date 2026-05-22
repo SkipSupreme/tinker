@@ -1,0 +1,116 @@
+---
+title: Forward pass, end to end
+module: m11-neural-networks
+summary: Assemble linear layers and activations into a full MLP, run it from input to output by hand, count its parameters, and take the universal approximation theorem exactly as seriously as it deserves.
+estimatedMinutes: 22
+order: 5
+prereqs:
+  - the-activation-zoo
+conceptsCovered:
+  - mlp
+  - forward-pass
+  - parameter-count
+  - universal-approximation
+  - mlp-as-ffn-block
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import StepChoice from '../../components/lesson/StepChoice.astro';
+import Choice from '../../components/lesson/Choice.astro';
+import ForwardPassTrace from '../../components/demos/ForwardPassTrace.svelte';
+import ParamCounter from '../../components/demos/ParamCounter.svelte';
+
+<Step title="The whole machine">
+You have every part now. A **linear layer** $Wx + b$ does a matmul and a shift. An **activation** $\phi$ bends the result so depth means something. A **multilayer perceptron** is just those two, alternating:
+
+$$
+\hat{y} = \phi\bigl(W^{(L)} \cdots \phi\bigl(W^{(2)} \phi\bigl(W^{(1)}x + b^{(1)}\bigr) + b^{(2)}\bigr) \cdots + b^{(L)}\bigr).
+$$
+
+That nested expression is intimidating only because it is written inside-out. Read it as a pipeline instead: input goes in, each layer does *matmul, add bias, apply activation*, and hands its output to the next. Running that pipeline once, input to prediction, is the **forward pass**.
+
+Let's run a real one.
+</Step>
+
+<Step title="Trace a forward pass">
+Here is a concrete 2-3-1 network: two inputs, a hidden layer of three sigmoid units, one linear output. The weights are fixed. Drag the input point and watch every intermediate vector update.
+
+<ForwardPassTrace client:visible />
+
+Step through the stages. The input is two numbers. The hidden pre-activation $z^{(1)}$ is one matmul plus a bias, three numbers out. The hidden activation $h^{(1)}$ is sigmoid applied to each. The output is a second matmul. That is the entire computation, and there is nothing in it but arithmetic.
+</Step>
+
+<StepCheck
+  title="Compute the output"
+  prompt="ŷ = "
+  answer={0.191}
+  tolerance={0.01}
+  hint="Set the input to exactly (1, 1). Step through to the last stage and read ŷ. It is about 0.19."
+>
+Put the widget's input at $x = (1, 1)$ and walk it all the way through to the output stage.
+
+**What value does the network output, $\hat{y}$, to two decimals?**
+</StepCheck>
+
+<Step title="Counting the cost">
+A network's size is its **parameter count**, the total number of learnable scalars. Every layer-to-layer connection contributes a weight matrix and a bias vector. A layer mapping $n$ inputs to $m$ outputs holds
+
+$$
+\#\text{params} = \underbrace{n \cdot m}_{\text{weights}} + \underbrace{m}_{\text{biases}}.
+$$
+
+The widget below lets you resize an MLP's layers and watch the total move. Drag the layer widths, add layers, and try the **MNIST net** preset.
+
+<ParamCounter client:visible />
+
+Notice the bar chart: the parameters are not spread evenly. They pile up in the *widest matmul*. Make the first hidden layer huge and the count is almost entirely that one layer.
+</Step>
+
+<StepCheck
+  title="Size a real network"
+  prompt="params = "
+  answer={109386}
+  tolerance={2}
+  hint="Three gaps: 784·128 + 128, then 128·64 + 64, then 64·10 + 10. Compute each (the widget's MNIST preset gets you the first three layers) and add. The total is just over 109,000."
+>
+Consider an MLP with layer sizes $784 \to 128 \to 64 \to 10$, every layer with a bias.
+
+**How many learnable parameters does it have in total?**
+</StepCheck>
+
+<Step title="Where the parameters live">
+That 784-128-64-10 network has about 109,000 parameters, and roughly 100,000 of them, over 90%, sit in the very first matrix. The reason is simple: $784 \times 128$ is by far the largest product of adjacent widths.
+
+Hold onto this fact. It returns in Module 16, where you'll see a transformer's feed-forward block deliberately expand to *four times* its width, $d \to 4d \to d$. That 4× expansion is exactly why most of a transformer's parameters live in its MLP blocks. Parameter budgeting is not bookkeeping; it is where the model's capacity is.
+</Step>
+
+<Step title="Universal approximation, taken at exactly face value">
+There is a famous theorem about MLPs, and it is famous partly for being oversold. The **universal approximation theorem** says: an MLP with a single hidden layer, wide enough, with a non-polynomial activation, can approximate *any* continuous function on a closed bounded region, to any accuracy you like.
+
+That sounds like "MLPs can do anything." It is worth knowing precisely what it does *not* say.
+
+It is an **existence** theorem. It promises a network with the right weights exists. It gives you no method to find those weights, and no promise that gradient descent will. It says nothing about *how wide* the hidden layer must be, and for most useful functions that width grows explosively with the input dimension. And "continuous on a bounded region" is a real fine-print clause.
+
+The theorem is true. It is also much weaker than its name.
+</Step>
+
+<StepChoice
+  title="What the theorem oversells"
+  hint="The universal approximation theorem is existence-only: it never tells you how to find the weights, nor whether training will. It also gives no bound on the hidden width, which can be enormous. It does not promise anything about data outside the region, or about discontinuous targets."
+>
+"Universal approximation proves a one-hidden-layer MLP can represent any continuous function to arbitrary precision." **Select every claim this oversells** (more than one is correct).
+
+<Choice correct>It is existence-only — it never tells you how to find the weights, or whether training will.</Choice>
+<Choice correct>It gives no bound on the required hidden-layer width, which can be astronomically large.</Choice>
+<Choice>It proves the function must be a polynomial.</Choice>
+<Choice>It guarantees the network outputs a probability.</Choice>
+</StepChoice>
+
+<Step title="You've built the transformer's MLP">
+Step back and see what you have. You built a neuron, hit the wall of XOR, learned why depth needs a nonlinearity between its layers, met the four activations, and ran a full network forward by hand. That is the multilayer perceptron, complete.
+
+Here is the payoff. A transformer's feed-forward block, one of the two halves of every transformer layer, *is* a 2-layer MLP: a linear layer, a GELU, a linear layer. Same matmul, same bias, same nonlinearity you just used. You are not "preparing" to understand the transformer's MLP. You have already built it.
+
+What you have *not* built is the part where the network finds its own weights, instead of you placing them by hand. That is Module 12: backpropagation. The forward pass you just traced is the structure. Next, you walk it backwards.
+</Step>

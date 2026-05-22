@@ -15,8 +15,9 @@
   type Pt = { x: number; y: number; label: 0 | 1 };
 
   // The classic 2-input logic gates. AND is the worked example in M11.1;
-  // OR is there so the learner can confirm the same line trick generalizes.
-  const DATASETS: Record<'AND' | 'OR', Pt[]> = {
+  // OR confirms the line trick generalizes; XOR is the one no line can do.
+  type Task = 'AND' | 'OR' | 'XOR';
+  const DATASETS: Record<Task, Pt[]> = {
     AND: [
       { x: 0, y: 0, label: 0 },
       { x: 0, y: 1, label: 0 },
@@ -29,9 +30,15 @@
       { x: 1, y: 0, label: 1 },
       { x: 1, y: 1, label: 1 },
     ],
+    XOR: [
+      { x: 0, y: 0, label: 0 },
+      { x: 0, y: 1, label: 1 },
+      { x: 1, y: 0, label: 1 },
+      { x: 1, y: 1, label: 0 },
+    ],
   };
 
-  let task = $state<'AND' | 'OR'>('AND');
+  let task = $state<Task>('AND');
   const points = $derived(DATASETS[task]);
 
   // Two anchors that both lie on the boundary. Dragging either one moves
@@ -150,6 +157,7 @@
       <div class="task-toggle" role="group" aria-label="Choose the gate to fit">
         <button class:on={task === 'AND'} onclick={() => (task = 'AND')}>AND</button>
         <button class:on={task === 'OR'} onclick={() => (task = 'OR')}>OR</button>
+        <button class:on={task === 'XOR'} onclick={() => (task = 'XOR')}>XOR</button>
       </div>
       <div class="score" class:solved>
         {numCorrect} / {points.length} correct
