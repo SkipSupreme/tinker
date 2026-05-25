@@ -10,5 +10,11 @@ export { seededRng, cyrb128, sfc32 } from './rng';
 export { loadTinyShakespeare, getBatch } from './data';
 export type { CorpusBundle } from './data';
 
+export {
+  writeCheckpoint, readCheckpoint, vocabHash,
+  flattenParams, unflattenParams, paramElementCount,
+} from './checkpoint';
+export type { CheckpointMeta } from './checkpoint';
+
 export * as cpu from './cpu/twins';
 export { cpuForward } from './cpu/forward';

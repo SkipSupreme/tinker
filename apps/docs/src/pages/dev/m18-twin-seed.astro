@@ -1,0 +1,103 @@
+---
+// /dev/m18-twin-seed/ -- internal-only smoke page for M18 Slice 4.
+//
+// NOT linked from nav. Runs the engine twice with a user-supplied seed string
+// and compares the resulting .bin checkpoints byte for byte. Same seed should
+// produce a byte-identical .bin; changing one character in the seed should
+// produce a different .bin. The runtime contract behind the determinism story
+// the lessons (especially the seedScrubber widget in Lesson 18.3) lean on.
+
+export const prerender = false;
+import Base from '../../layouts/Base.astro';
+import M18TwinSeedSmoke from '../../components/demos/M18TwinSeedSmoke.svelte';
+---
+
+<Base title="M18 Twin-Seed Smoke" prose>
+  <article class="dev-page">
+    <header>
+      <p class="kicker">/dev · M18 Slice 4</p>
+      <h1>Twin-seed determinism smoke</h1>
+      <p class="lede">
+        Two engines, two runs, same seed: the .bin checkpoints come out
+        byte-identical. Change one character of the seed and the .bin SHA-256s
+        diverge. The widget below runs both, computes the digests in your
+        browser, and surfaces the verdict.
+      </p>
+    </header>
+
+    <M18TwinSeedSmoke client:only="svelte" />
+
+    <section class="notes">
+      <h2>What this checks</h2>
+      <ul>
+        <li>
+          <strong>Seeded init is reproducible.</strong> The same seed string,
+          fed through <code>cyrb128 → sfc32</code> into <code>fillNormal</code>,
+          produces the same starting weights down to the bit.
+        </li>
+        <li>
+          <strong>The data loader is reproducible.</strong> <code>getBatch</code>
+          uses the same threaded PRNG, so the sequence of training batches is
+          identical across runs that share a seed.
+        </li>
+        <li>
+          <strong>The training trajectory is bit-identical within a platform.</strong>
+          WGSL's f32 reductions are implementation-defined across vendors, but
+          Apple Metal's reduction order is stable across runs on the same device.
+          Two runs in the same tab will agree to the bit.
+        </li>
+        <li>
+          <strong>Serialization is canonical.</strong> The <code>writeCheckpoint</code>
+          format pads the JSON header to exactly 512 bytes and writes the
+          <code>Float32Array</code> in a single fixed order, so equal weights
+          produce equal SHA-256s.
+        </li>
+      </ul>
+
+      <h2>What this does NOT check</h2>
+      <ul>
+        <li>
+          <strong>Cross-vendor determinism.</strong> Apple Metal vs. NVIDIA vs.
+          Intel can disagree in the last fp32 bit of any sum-reduction. This
+          smoke runs only inside the current tab; the answer to "same .bin on
+          a different machine" is "no, and that's an IEEE-754 fact, not a bug."
+        </li>
+        <li>
+          <strong>Convergence.</strong> 40 iters is enough to show determinism,
+          not enough to teach the model anything. The convergence gate lives at
+          <a href="/dev/m18-train/">/dev/m18-train/</a>.
+        </li>
+      </ul>
+    </section>
+  </article>
+</Base>
+
+<style>
+  .dev-page {
+    max-width: 760px;
+    margin: 3rem auto;
+    padding: 0 1.25rem;
+    display: flex; flex-direction: column; gap: 2rem;
+  }
+  header { display: flex; flex-direction: column; gap: 0.65rem; }
+  .kicker {
+    margin: 0; font-family: var(--font-mono); font-size: 0.78rem;
+    text-transform: uppercase; letter-spacing: 0.1em; color: var(--site-fg-muted);
+  }
+  h1 { margin: 0; font-family: var(--font-display); font-size: clamp(1.7rem, 3vw, 2.2rem); font-weight: 700; }
+  .lede { margin: 0; color: var(--site-fg-muted); line-height: 1.6; }
+
+  .notes h2 {
+    margin: 0 0 0.55rem; font-family: var(--font-display); font-weight: 700;
+    font-size: 1.1rem;
+  }
+  .notes h2 + ul { margin-bottom: 1.3rem; }
+  .notes ul { margin: 0; padding-left: 1.2rem; line-height: 1.65; color: var(--site-fg); }
+  .notes li { margin-bottom: 0.6rem; }
+  .notes code {
+    font-family: var(--font-mono); font-size: 0.85em;
+    background: color-mix(in srgb, var(--site-fg) 6%, transparent);
+    padding: 0.05rem 0.35rem; border-radius: 4px;
+  }
+  .notes a { color: var(--site-fg); }
+</style>
