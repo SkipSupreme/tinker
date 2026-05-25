@@ -1,82 +1,198 @@
 ---
-title: The Power Rule
+title: Differentiation rules
 module: m5-calculus
-summary: One line that handles the derivative of any polynomial. Derived the slow way, then you'll never go back.
-estimatedMinutes: 10
+summary: One rule for powers, one for sums, one for constants, plus the derivatives of sine, cosine, the exponential, and the logarithm. Memorize seven lines, differentiate ninety percent of the functions you will ever meet.
+estimatedMinutes: 14
 order: 3
 prereqs:
   - what-is-a-derivative
-  - the-chain-rule
+  - the-derivative-as-a-function
 conceptsCovered:
   - power-rule
-  - polynomial-derivative
+  - constant-and-sum-rules
+  - polynomial-differentiation
+  - trig-derivatives
+  - exp-derivative
+  - log-derivative
 ---
 
 import Step from '../../components/lesson/Step.astro';
 import StepCheck from '../../components/lesson/StepCheck.astro';
+import EEmerges from '../../components/demos/EEmerges.svelte';
 
-<Step title="Spot the pattern">
-Two derivatives you've already earned:
-
-$$
-\frac{d}{dx} x^2 \;=\; 2x
-\qquad
-\frac{d}{dx} x^3 \;=\; 3x^2
-$$
-
-One you haven't (yet):
+<Step title="The pattern hiding in x², x³, x⁴">
+You already have two derivatives, earned the long way through limits:
 
 $$
-\frac{d}{dx} x^4 \;=\; \;?
+\frac{d}{dx}\,x^2 \;=\; 2x \qquad \frac{d}{dx}\,x^3 \;=\; 3x^2
 $$
 
-Look at the pattern. The exponent drops by one. The old exponent comes out front as a multiplier. If that's right:
+Look at the exponents. Two becomes one. Three becomes two. The old exponent comes out the front as a multiplier. If the pattern holds, then
 
 $$
-\frac{d}{dx} x^4 \;=\; 4 x^3.
+\frac{d}{dx}\,x^4 \;=\; 4x^3 \qquad \frac{d}{dx}\,x^5 \;=\; 5x^4.
 $$
 
-It is right. And it generalizes.
+It holds. Not just for whole numbers either: it holds for $-1$, for $1/2$, for $\pi$.
+</Step>
+
+<Step title="A picture for why">
+Take the square with side $x$. Its area is $x^2$. Now grow the side by a tiny amount $dx$. The new area is $(x + dx)^2$, and the *change* in area is everything that just got added: two thin strips along the existing sides, each of size $x \cdot dx$, plus a tiny corner square of size $dx \cdot dx$.
+
+$$
+(x + dx)^2 - x^2 \;=\; 2 x\,dx \;+\; (dx)^2.
+$$
+
+Divide by $dx$ to get the rate of change of area per unit of side:
+
+$$
+\frac{(x + dx)^2 - x^2}{dx} \;=\; 2x \;+\; dx.
+$$
+
+Send $dx \to 0$. The corner square vanishes; the two strips survive. The rate is $2x$. That is $d/dx\,x^2$, derived from a *picture* instead of an algebraic limit.
+
+The same picture works in three dimensions for $x^3$: a cube grows three thin slabs of area $x^2$, giving $3 x^2$. In general, $x^n$ grows $n$ "slabs" each of size $x^{n-1}$, hence $n \cdot x^{n-1}$.
 </Step>
 
 <Step title="The power rule">
 For any real number $n$:
 
 $$
-\frac{d}{dx}\, x^n \;=\; n \cdot x^{n-1}.
+\boxed{\;\frac{d}{dx}\,x^n \;=\; n\,x^{n-1}\;}
 $$
 
-This one line handles every polynomial you'll ever meet. Combined with the fact that derivatives of sums are sums of derivatives and derivatives of scalar multiples are scaled derivatives, you can differentiate any polynomial by inspection:
+That is one line. It handles every power you will ever take, positive or negative, integer or fraction or irrational.
 
 $$
-\frac{d}{dx}\big(7x^5 - 3x^2 + 4x - 11\big) \;=\; 35x^4 - 6x + 4.
+\begin{aligned}
+\frac{d}{dx}\,\frac{1}{x} \;=\; \frac{d}{dx}\,x^{-1} \;&=\; -1 \cdot x^{-2} \;=\; -\frac{1}{x^2} \\[3pt]
+\frac{d}{dx}\,\sqrt{x} \;=\; \frac{d}{dx}\,x^{1/2} \;&=\; \tfrac{1}{2}\,x^{-1/2} \;=\; \frac{1}{2\sqrt{x}}
+\end{aligned}
 $$
 
-The constant $-11$ dies (its derivative is zero; it doesn't change with $x$). The linear term $4x$ becomes $4$. Every other term loses one exponent and picks up a coefficient.
-
-Negative and fractional exponents work too. $x^{-1} = 1/x$, so $d/dx\,(1/x) = -x^{-2} = -1/x^2$. And $\sqrt{x} = x^{1/2}$, so $d/dx\,\sqrt{x} = \tfrac{1}{2} x^{-1/2} = 1/(2\sqrt{x})$.
-</Step>
-
-<Step title="Why the pattern holds">
-We derived $d/dx\,x^2 = 2x$ by the long road in the first lesson: secant line, limit, algebra. The same argument scales.
-
-Expand $(x + h)^n$ using the binomial theorem, subtract $x^n$, divide by $h$, let $h \to 0$. The first two terms of the binomial expansion are $x^n$ and $n\,x^{n-1}\,h$; everything after has at least $h^2$ and dies in the limit. What's left is $n\,x^{n-1}$.
-
-You don't need to internalize that proof; just know the rule isn't magic. It's the same shrink-the-secant story from the first lesson, done once in general and then applied a trillion times.
+No new tricks. The same shape, every time.
 </Step>
 
 <StepCheck
-  title="Quick one"
-  prompt="d/dx [x⁷] at x = 2 = "
-  answer={448}
-  tolerance={1}
-  hint="Power rule gives d/dx [x⁷] = 7·x⁶. Plug in x = 2. 2⁶ = 64. 7·64 = 448."
+  title="Power, drilled"
+  prompt="d/dx [5x³] = "
+  answer={15}
+  tolerance={0.5}
+  hint="The constant 5 sits out. The power rule on x³ gives 3x². So 5·(3x²) = 15x². At x = 1 that is 15."
 >
-Compute $\dfrac{d}{dx}\,x^7$ at $x = 2$.
+What is $\dfrac{d}{dx}\,\bigl(5x^3\bigr)$ at $x = 1$?
 </StepCheck>
 
-<Step title="Where it shows up">
-Every neural network layer contains matrix multiplications and nonlinearities, and many of those nonlinearities are simple powers: $\mathrm{ReLU}(x) = \max(0, x)$ is a piecewise power, squared-error loss uses $x^2$, regularization penalties often use $x^2$ or $|x|$. When backpropagation computes the gradient through these, the power rule is what's running.
+<Step title="Constants and sums">
+Two rules so obvious they barely need a name. The derivative is **linear**: it slides through addition, and it slides past constant multipliers.
 
-You now have three tools: the definition of the derivative, the chain rule, and the power rule. Together they cover about 80% of the derivatives you'll take for the rest of this course. The other 20% (trig, exponentials, logs) is the next module.
+$$
+\frac{d}{dx}\bigl[c\bigr] = 0 \qquad
+\frac{d}{dx}\bigl[c \cdot f(x)\bigr] = c \cdot f'(x) \qquad
+\frac{d}{dx}\bigl[f(x) + g(x)\bigr] = f'(x) + g'(x).
+$$
+
+In words: a constant has zero slope (it never changes), a scalar multiplier passes straight through, and the derivative of a sum is the sum of the derivatives.
+
+Combine those with the power rule and you can differentiate any polynomial *by inspection*:
+
+$$
+\frac{d}{dx}\bigl(3x^4 - 5x^2 + 7\bigr) \;=\; 12 x^3 - 10 x.
+$$
+
+The $7$ dies (it is a constant). Each remaining term loses one exponent and picks up the old exponent as a coefficient.
+</Step>
+
+<StepCheck
+  title="Polynomial, by inspection"
+  prompt="value = "
+  answer={2}
+  tolerance={0.1}
+  hint="Differentiate term by term: 12x³ − 10x. At x = 1 that is 12 − 10 = 2."
+>
+Differentiate $f(x) = 3x^4 - 5x^2 + 7$ term by term, then evaluate the derivative at $x = 1$.
+
+**What is $f'(1)$?**
+</StepCheck>
+
+<Step title="Sine and cosine, derived from the unit circle">
+Two more derivatives, neither of which you can get from the power rule:
+
+$$
+\frac{d}{dx}\,\sin x \;=\; \cos x \qquad \frac{d}{dx}\,\cos x \;=\; -\sin x.
+$$
+
+You already *saw* this in the previous lesson when you swept across $\sin x$ on the tracer and the slope-curve was $\cos x$. The geometric reason: $\sin$ and $\cos$ are the height and width of a point spinning on the unit circle. A tiny rotation $dt$ moves that point by $dt$ along the circle, perpendicular to its current direction. The change in height (i.e., in $\sin$) is $\cos(\text{angle}) \cdot dt$. The change in width (in $\cos$) is $-\sin(\text{angle}) \cdot dt$. The minus sign is *the same minus sign* you see in the formula.
+
+If you want the full geometric derivation, it lives in module 3. For now the two formulas are tools to use.
+</Step>
+
+<StepCheck
+  title="The slope of cosine at the start"
+  prompt="d/dx [cos x] at x=0 = "
+  answer={0}
+  tolerance={0.05}
+  hint="d/dx[cos x] = −sin x. At x = 0, sin(0) = 0, so the slope is 0. Cosine is at its peak; the tangent there is flat."
+>
+Use the rule above.
+
+**What is the slope of $\cos x$ at $x = 0$?**
+</StepCheck>
+
+<Step title="The exponential e is the function that is its own derivative">
+There is one function in mathematics whose derivative is *itself*:
+
+$$
+\frac{d}{dx}\,e^x \;=\; e^x.
+$$
+
+That is the property that distinguishes $e \approx 2.71828\ldots$ from every other base. For any other base $b$,
+
+$$
+\frac{d}{dx}\,b^x \;=\; (\ln b) \cdot b^x.
+$$
+
+For $b = 2$, the multiplier $\ln 2 \approx 0.693$. For $b = 3$, $\ln 3 \approx 1.099$. There is exactly *one* base where the multiplier is exactly $1$, and the derivative becomes the function itself. That base is $e$.
+
+You can hunt for it by eye. Drag the base $b$ on the right panel below until the tangent at $x = 0$ has slope $1$. The left panel shows $(1 + 1/n)^n$ climbing to the same number from a completely different direction.
+
+<EEmerges client:visible />
+
+The two paths meet at $e$. That is not a coincidence. It is one constant earning its name from two definitions at once.
+</Step>
+
+<StepCheck
+  title="Find the slope-1 base"
+  prompt="b ≈ "
+  answer={2.72}
+  tolerance={0.1}
+  hint="Drag the base b on the right panel until the slope readout locks at 1. The value where this happens is e ≈ 2.718."
+>
+On the widget above, drag $b$ on the right panel until the slope of $b^x$ at $x = 0$ equals exactly $1$.
+
+**What value of $b$ makes this happen?** (Round to two decimals.)
+</StepCheck>
+
+<Step title="The logarithm">
+One more, also new:
+
+$$
+\frac{d}{dx}\,\ln x \;=\; \frac{1}{x}, \qquad x > 0.
+$$
+
+The justification will be cleanest after we have the chain rule, but the intuition is short. The natural logarithm $\ln$ is the inverse of $e^x$. Inverses reflect across the line $y = x$, which swaps "input" and "output" everywhere. If $e^x$ at the point $(0, 1)$ has slope $1$, then $\ln$ at the reflected point $(1, 0)$ also has slope $1$. Repeat at $(\ln 2, 2)$ on the exponential — slope $2$ — and at the reflected point $(2, \ln 2)$ on the logarithm — slope $1/2$. The slopes are reciprocals of each other. At $x$, $\ln$ has slope $1/x$.
+</Step>
+
+<Step title="What you have">
+Seven differentiation rules. With these, you can take the derivative of every elementary function you will meet in this course *except* those built by multiplying functions together or composing them. Those two cases — products and compositions — get their own rules next.
+
+$$
+\begin{aligned}
+\frac{d}{dx}[c] &= 0 & \frac{d}{dx}[x^n] &= n\,x^{n-1} \\[3pt]
+\frac{d}{dx}[\sin x] &= \cos x & \frac{d}{dx}[\cos x] &= -\sin x \\[3pt]
+\frac{d}{dx}[e^x] &= e^x & \frac{d}{dx}[\ln x] &= \frac{1}{x}
+\end{aligned}
+$$
+
+And the sum/scalar rules that glue them together. Most of the "differentiation" that runs inside a neural-network library is, ultimately, these seven formulas applied a trillion times.
 </Step>

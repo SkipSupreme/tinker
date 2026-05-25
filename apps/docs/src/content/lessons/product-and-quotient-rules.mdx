@@ -1,0 +1,110 @@
+---
+title: Product and quotient rules
+module: m5-calculus
+summary: The derivative of a product is not the product of the derivatives. The geometric reason why, the rule that comes out of it, and one more for division.
+estimatedMinutes: 8
+order: 4
+prereqs:
+  - what-is-a-derivative
+  - the-derivative-as-a-function
+  - the-power-rule
+conceptsCovered:
+  - product-rule
+  - quotient-rule
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import StepChoice from '../../components/lesson/StepChoice.astro';
+import Choice from '../../components/lesson/Choice.astro';
+import ProductRuleRectangle from '../../components/demos/ProductRuleRectangle.svelte';
+
+<Step title="The wrong rule, made obvious">
+The sum rule was so obliging — derivative of a sum is the sum of derivatives — that you might expect the same for products. *Surely* the derivative of a product is the product of the derivatives?
+
+It is not. The cleanest disproof is one line. Take $f(x) = x \cdot x$. The wrong rule predicts $f'(x) = 1 \cdot 1 = 1$. The right answer (you already know) is $f'(x) = 2x$.
+
+So whatever the rule for products is, it has to recover $2x$ from $x \cdot x$. We are about to derive it geometrically, and the answer will write itself.
+</Step>
+
+<Step title="Two strips plus a vanishing corner">
+A product $u \cdot v$ is the area of a rectangle with sides $u$ and $v$. Drag the parameter $t$ below. Both $u(t)$ and $v(t)$ grow a little. The new area shows up as **three** pieces, not two.
+
+<ProductRuleRectangle client:visible />
+
+- A top strip of width $u$ and height $dv$. Area: $u \cdot dv$.
+- A right strip of height $v$ and width $du$. Area: $v \cdot du$.
+- A tiny corner square of size $du \cdot dv$.
+
+Now shrink $dt$. The two strips shrink linearly with $dt$. The corner shrinks *quadratically* — it has both $du$ and $dv$ in it, each going to zero. In the limit, the corner vanishes and the two strips survive.
+</Step>
+
+<Step title="The product rule">
+Divide the change in area by $dt$ and send $dt \to 0$:
+
+$$
+\boxed{\;(uv)' \;=\; u' \, v \;+\; u \, v'\;}
+$$
+
+Read it as: *derivative of the first times the second, plus the first times the derivative of the second.* The "plus" matters. The wrong rule misses the second term entirely.
+
+Sanity-check it on $f(x) = x \cdot x$ with $u = v = x$, so $u' = v' = 1$:
+
+$$
+(x \cdot x)' \;=\; 1 \cdot x + x \cdot 1 \;=\; 2x. \quad\checkmark
+$$
+
+And on a real example, $f(x) = x^2 \sin x$:
+
+$$
+\frac{d}{dx}\bigl(x^2 \sin x\bigr) \;=\; 2x \cdot \sin x \;+\; x^2 \cdot \cos x.
+$$
+
+Both terms have to be there.
+</Step>
+
+<StepCheck
+  title="A product, at a point"
+  prompt="(x² sin x)' at x=0 = "
+  answer={0}
+  tolerance={0.01}
+  hint="(x² sin x)' = 2x·sin(x) + x²·cos(x). At x = 0, the first term is 0·0 = 0 and the second is 0·1 = 0. Total: 0."
+>
+Differentiate $f(x) = x^2 \sin x$ using the product rule.
+
+**What is $f'(0)$?**
+</StepCheck>
+
+<Step title="Quotients">
+Division is just multiplication by a reciprocal. One quick-and-dirty option is to write $f/g = f \cdot g^{-1}$ and use the product rule with the power rule (Karpathy's micrograd does exactly this and never needs a dedicated division op). But there is also a direct rule worth knowing:
+
+$$
+\left(\frac{f}{g}\right)' \;=\; \frac{f' \, g \;-\; f \, g'}{g^2}.
+$$
+
+The mnemonic is centuries old: *low d-high minus high d-low, square the bottom and away we go.* The order in the numerator matters — flip $f'g$ and $fg'$ and you get the negative of the right answer.
+</Step>
+
+<StepCheck
+  title="A quotient, at a point"
+  prompt="f'(0) = "
+  answer={-0.111}
+  tolerance={0.01}
+  hint="With f = x² + 1 and g = x − 3, numerator is (2x)(x−3) − (x²+1)(1). At x=0 that is 0·(−3) − 1·1 = −1. Denominator g² = 9. So f'(0) = −1/9 ≈ −0.111."
+>
+Let $f(x) = \dfrac{x^2 + 1}{x - 3}$.
+
+**Compute $f'(0)$ to three decimals.**
+</StepCheck>
+
+<Step title="Two more rules in the bag">
+You now have:
+
+$$
+(uv)' = u' v + u v' \qquad \left(\frac{u}{v}\right)' = \frac{u' v - u v'}{v^2}.
+$$
+
+These let you differentiate any product or ratio of the elementary functions from the previous lesson. What you cannot yet do is differentiate a **composition** — a function inside another, like $\sin(x^2)$ or $e^{-x^2}$ or the sigmoid $1/(1 + e^{-x})$ that every neural network in the world is built on.
+
+That is the chain rule, and it is the load-bearing piece of this entire module.
+</Step>

@@ -1,0 +1,112 @@
+---
+title: The derivative as a function
+module: m5-calculus
+summary: f'(a) is a number at one point. Let a slide, and the numbers join into a new function f'(x). The derivative is not a thing you compute once. It is a function in its own right.
+estimatedMinutes: 10
+order: 2
+prereqs:
+  - what-is-a-derivative
+conceptsCovered:
+  - derivative-as-function
+  - derivative-notations
+  - differentiability-implies-continuity
+  - non-differentiability
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import StepChoice from '../../components/lesson/StepChoice.astro';
+import Choice from '../../components/lesson/Choice.astro';
+import DerivativeTracer from '../../components/demos/DerivativeTracer.svelte';
+
+<Step title="One slope at a point, then another, then another">
+Last lesson you found the slope of $f(x) = x^2$ at $x = 1$. It was $2$. You found $f'(2) = 4$. You guessed $f'(3) = 6$.
+
+There is a pattern, and naming it is the whole move of this lesson. Every $x$ has its own slope. The map *from* $x$ *to the slope of $f$ at $x$* is itself a function. Call it $f'$.
+
+$$
+f'(x) \;=\; \text{the slope of } f \text{ at the point } x.
+$$
+
+For $f(x) = x^2$, the slope-function is $f'(x) = 2x$. Plug in $1$, you get $2$. Plug in $3$, you get $6$. Plug in $-7$, you get $-14$. One formula now handles every point on the curve.
+
+This sounds like bookkeeping. It is the entire reason calculus works.
+</Step>
+
+<Step title="Sweep and watch it draw itself">
+Drag the sun-yellow handle along the x-axis. The red curve is $f(x)$. The coral line is the tangent at the swept point. The **teal curve** is $f'(x)$. It paints itself in wherever you sweep.
+
+<DerivativeTracer client:visible />
+
+Try $x^2$ first. Sweep all the way across. The teal trace is a straight line through the origin with slope $2$. That straight line *is* the function $f'(x) = 2x$. You drew it by sampling slopes.
+
+Now hit **sin x**. Sweep again. The teal trace climbs from $-1$, peaks at $1$, dips back through zero. You are drawing $\cos x$, one slope at a time. Sine differentiates to cosine, full stop, no algebra required to see it.
+</Step>
+
+<StepCheck
+  title="Read the slope of sine"
+  prompt="f'(π/2) = "
+  answer={0}
+  tolerance={0.05}
+  hint="Pick sin x on the widget. Drag the handle to x ≈ 1.57 (that's π/2). Read the teal value. Or: at the top of a sine wave the curve is momentarily flat."
+>
+With $f(x) = \sin x$, the teal trace tells you the slope at every $x$.
+
+**What is $f'(\pi/2)$ — the slope of sine at the top of its first bump?**
+</StepCheck>
+
+<Step title="The same object, four ways of writing it">
+Mathematicians who agree on the math sometimes disagree on the symbols. Four notations all mean the same function:
+
+$$
+f'(x), \qquad y', \qquad \frac{dy}{dx}, \qquad \frac{d}{dx}\bigl[f(x)\bigr].
+$$
+
+**Lagrange notation** ($f'$, prime) reads cleanly when the argument is implicit: *f prime of x*. **Leibniz notation** ($dy/dx$) reads as a ratio for a deep reason we will earn in the chain rule. The $d/dx$ form is Leibniz used as a verb — *take the derivative with respect to x*.
+
+You will meet all four. They are aliases, not rivals.
+</Step>
+
+<Step title="Where it breaks: the corner of |x|">
+Differentiable functions are smooth. But "smooth" has a precise meaning, and not every function has it everywhere.
+
+Pick **|x|** on the widget. Sweep across. To the left of zero, the slope is $-1$. To the right of zero, the slope is $+1$. *At* zero, the teal trace breaks. The readout says **undefined**.
+
+The function $|x|$ is perfectly continuous at $0$ — you can draw it without lifting the pen. But it has no slope there. The secant from the left says $-1$, the secant from the right says $+1$, and there is no number both agree on. So $f'(0)$ does not exist.
+
+Now try $\sqrt[3]{x}$. Same story, different failure: at $x = 0$ the tangent is *vertical*. The slope is "infinite," which is another way of saying *no number works*. The teal trace shoots up to a spike at zero.
+</Step>
+
+<Step title="Continuous does not mean differentiable">
+The trap to dispel:
+
+> **If a function is continuous, it must have a derivative.**
+
+It does not. $|x|$ at $0$ is continuous and has no derivative. $\sqrt[3]{x}$ at $0$ is continuous and has no derivative. The standard theorem runs *one way only*:
+
+$$
+\text{differentiable at } a \;\Longrightarrow\; \text{continuous at } a.
+$$
+
+The converse is false. Continuity is the floor; differentiability is a strictly stronger condition that says *the graph has a well-defined tangent line at that point*. A corner or a vertical tangent fails the test, even though the graph never breaks.
+
+This matters for neural networks. ReLU, the most-used activation in deep learning, has exactly this kind of corner at $0$. Backprop has to make a choice there — and it does, by convention. Hold that thought; you will need it in module 12.
+</Step>
+
+<StepChoice
+  title="Which one breaks at zero?"
+  hint="Test each on the widget. A function fails to be differentiable at 0 if the slope from the left and the slope from the right disagree, OR the slope blows up to infinity."
+>
+Four functions, all continuous at $x = 0$. **Select every one that is NOT differentiable at $0$.**
+
+<Choice>$f(x) = x^2$</Choice>
+<Choice correct>$f(x) = \lvert x \rvert$</Choice>
+<Choice>$f(x) = \sin x$</Choice>
+<Choice correct>$f(x) = \sqrt[3]{x}$</Choice>
+</StepChoice>
+
+<Step title="From one slope to many, from many to all">
+Calculus was invented when Newton and Leibniz both stopped asking *"what is the slope of this curve at this one point?"* and started asking *"what is the slope-function of this whole curve?"*. Once you have $f'$ as a function, you can ask new questions: where is the slope zero (peaks and valleys), where is the slope steepest (a maximum rate of change), what is the slope of the slope (acceleration).
+
+You are one lesson from a single line that hands you $f'$ for any polynomial without doing a limit ever again. Then a second line for sines and cosines. Then a third for the exponential. By the end of the module, you compute derivatives the way you compute sums.
+</Step>

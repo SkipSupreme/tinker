@@ -1,0 +1,131 @@
+---
+title: Second derivatives and finding optima
+module: m5-calculus
+summary: f' tells you which way the curve is heading. f'' tells you whether that heading is itself speeding up or slowing down. Together they find every peak, every valley, and tee up the entire job of training a neural network.
+estimatedMinutes: 12
+order: 6
+prereqs:
+  - what-is-a-derivative
+  - the-derivative-as-a-function
+  - the-power-rule
+  - product-and-quotient-rules
+  - the-chain-rule
+conceptsCovered:
+  - higher-order-derivatives
+  - concavity-from-second-derivative
+  - critical-points
+  - first-derivative-test
+  - second-derivative-test
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import StepChoice from '../../components/lesson/StepChoice.astro';
+import Choice from '../../components/lesson/Choice.astro';
+import CriticalPointHunt from '../../components/demos/CriticalPointHunt.svelte';
+
+<Step title="The derivative of the derivative">
+$f'$ is a function. It has its own slope. The slope of $f'$ is called the **second derivative** of $f$, written $f''$ or $d^2 y / dx^2$.
+
+$$
+f''(x) \;=\; \frac{d}{dx}\bigl[f'(x)\bigr].
+$$
+
+The physical picture is the cleanest. If $f(t)$ is the **position** of a moving object at time $t$, then $f'(t)$ is its **velocity** (how fast position is changing), and $f''(t)$ is its **acceleration** (how fast velocity is changing). Position-velocity-acceleration is exactly position-first derivative-second derivative.
+
+You compute $f''$ by differentiating twice. For $f(x) = x^3$:
+
+$$
+f'(x) = 3x^2, \qquad f''(x) = 6x.
+$$
+</Step>
+
+<StepCheck
+  title="One more, twice"
+  prompt="f''(2) = "
+  answer={12}
+  tolerance={0.5}
+  hint="f(x) = x³, so f'(x) = 3x², f''(x) = 6x. At x = 2, f''(2) = 12."
+>
+With $f(x) = x^3$, **what is $f''(2)$?**
+</StepCheck>
+
+<Step title="What f'' tells you that f' doesn't">
+$f'$ tells you which way the curve is going at $x$: positive slope means up, negative means down. $f''$ tells you which way that *direction* is bending:
+
+- $f'' > 0$: the slope is *increasing*. The curve bends upward. **Concave up** — shaped like a cup.
+- $f'' < 0$: the slope is *decreasing*. The curve bends downward. **Concave down** — shaped like a cap.
+- $f'' = 0$ and changes sign: the bend itself flips. That point is called an **inflection point**.
+
+For $f(x) = x^2$, $f''(x) = 2 > 0$ everywhere — always concave up, always a cup. For $f(x) = -x^2$, $f''(x) = -2 < 0$ everywhere — always a cap. For $f(x) = x^3$, $f''(x) = 6x$ flips sign at $0$: concave down for $x < 0$, concave up for $x > 0$, with $0$ as the inflection point.
+</Step>
+
+<Step title="Critical points: where the slope is zero">
+A **critical point** of $f$ is a value $x$ where $f'(x) = 0$ (or where $f'$ does not exist). Geometrically these are the points where the tangent is horizontal — the candidates for peaks and valleys.
+
+Drag the marker below. The widget shows $f$ in red, $f'$ in faint teal, and the marker turns green when you land on a critical point. Hunt for all of them on each function.
+
+<CriticalPointHunt client:visible />
+
+For $x^3 - 3x$: two critical points at $x = \pm 1$. For $x^4 - 4x^2$: three, at $x = 0, \pm\sqrt{2}$. For $x^3$: just one, at $0$ — and the verdict will tell you something interesting.
+
+That last one is the warning. A critical point is *not the same as* an extremum. $f(x) = x^3$ has $f'(0) = 0$, but $x = 0$ is neither a max nor a min — the curve is just briefly flat as it passes through. You need more than $f' = 0$ to classify what the point actually is.
+</Step>
+
+<Step title="Two tests, one job">
+Given a critical point $c$ (so $f'(c) = 0$), how do you tell whether it is a max, a min, or neither?
+
+**The first-derivative test.** Look at $f'$ on either side of $c$.
+
+- $f'$ goes from $+$ to $-$ as $x$ crosses $c$ → **local maximum** (climbing, then descending).
+- $f'$ goes from $-$ to $+$ → **local minimum** (descending, then climbing).
+- $f'$ keeps the same sign on both sides → **neither** (the curve flattens briefly and continues).
+
+**The second-derivative test.** Compute $f''(c)$.
+
+- $f''(c) > 0$ → concave up at $c$ → **local minimum**.
+- $f''(c) < 0$ → concave down at $c$ → **local maximum**.
+- $f''(c) = 0$ → inconclusive. Fall back to the first-derivative test.
+
+The two agree when they both apply, and the second is usually faster. The widget runs the second-derivative test for you each time you land.
+</Step>
+
+<StepCheck
+  title="Classify a critical point"
+  prompt="f''(1) = "
+  answer={6}
+  tolerance={0.5}
+  hint="f(x) = x³ − 3x, so f'(x) = 3x² − 3 and f''(x) = 6x. At x = 1, f''(1) = 6 > 0, so x = 1 is a local minimum."
+>
+For $f(x) = x^3 - 3x$, you already know that $x = 1$ is a critical point ($f'(1) = 0$).
+
+**Compute $f''(1)$.** The sign of this number tells you whether $x = 1$ is a local max, min, or inflection.
+</StepCheck>
+
+<StepChoice
+  title="Read the verdict"
+  hint="f''(1) = 6 > 0 means the curve is concave up at x = 1. Concave up at a critical point = local minimum."
+>
+You just computed $f''(1) = 6$ for $f(x) = x^3 - 3x$. **What kind of critical point is $x = 1$?**
+
+<Choice>local maximum</Choice>
+<Choice correct>local minimum</Choice>
+<Choice>inflection point</Choice>
+<Choice>not a critical point at all</Choice>
+</StepChoice>
+
+<Step title="Why any of this matters: minimization is training">
+Take a single sentence and read it slowly:
+
+> Training a neural network is finding the values of its weights that minimize a loss function.
+
+That sentence is a calculus problem. The "loss function" is a function from millions of inputs (the weights) to a single output (a number measuring how badly the network is performing). "Minimize" means: find the critical point where the gradient — the multi-dimensional cousin of $f'$ — is zero, and use the multi-dimensional cousin of $f''$ to confirm it is a minimum and not a saddle.
+
+Module 10 will make this picture quantitative. Module 12 will give you the algorithm for computing the gradient through any function you can write down — that is backpropagation. Both of them are this lesson, generalized to many variables.
+</Step>
+
+<Step title="One module, end to end">
+You started with secant slopes and ended with the test that classifies critical points of any function. Six lessons. Seven differentiation rules. Two more for products and quotients. One chain rule. And one job — minimizing a function — that this entire module was secretly setting up.
+
+The chain rule, applied across a computational graph, is backpropagation. That is what makes module 12 the keystone of this course. You are now exactly one module away from running it backwards.
+</Step>
