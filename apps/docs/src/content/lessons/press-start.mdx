@@ -1,0 +1,119 @@
+---
+title: Press start
+module: m18-capstone
+summary: Boot the engine. Watch the first iteration take three seconds because every WGSL shader compiles on first dispatch. Then watch the rest take eighty milliseconds. The training loop you wrote in M17 is now running on the GPU you own.
+estimatedMinutes: 15
+order: 1
+prereqs:
+  - how-distributions-become-text
+conceptsCovered:
+  - webgpu-init
+  - kernel-dispatch-count
+  - shader-warmup-anomaly
+  - press-start
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import RunnerPanel from '../../components/demos/RunnerPanel.svelte';
+
+<Step title="Everything is on this page">
+You built every part. M5 gave you the derivative. M7 gave you matmul. M10 gave you AdamW. M12 gave you backprop. M13 gave you layer-norm. M15 gave you attention. M16 stacked it into a block. M17 wrapped it in a training loop. M18 is the same pieces, all at once, in your tab.
+
+The widget below is the runner. It loads the same tiny-shakespeare corpus nanoGPT uses (about 1.1 million characters, 65 unique characters), instantiates a transformer, and trains it for 2,000 steps. Don't press anything yet. Just look at it.
+
+<RunnerPanel client:visible />
+
+A few things to be honest about first.
+
+This model is **about 209,000 parameters**. ChatGPT is something like 1.7 trillion. The point of this page is not the model. It is what you understand about it. By the end of the module you can read every line of code that runs when you press Start, because you wrote every line of code that runs when you press Start.
+
+The runtime is not a library. We wrote about 400 lines of WGSL ourselves, one shader per operation: an embedding gather, a layer-norm, a tiled matmul, a causal scaled-dot-product attention, a GELU, an AdamW step. That decision is one sentence in this lesson, on purpose. The shaders are not the lesson. The fact that they exist is.
+</Step>
+
+<Step title="What a forward pass actually dispatches">
+Open the widget and look at the architecture line in the caption: 4 layers, 4 heads, d_model=64, T=64, vocab=65. Each transformer block runs **ten kernel dispatches** when you push a batch through it:
+
+1. LN<sub>1</sub>
+2. QKV matmul (one fused linear that produces queries, keys, and values together)
+3. Causal scaled-dot-product attention
+4. Attention-output matmul
+5. Residual add
+6. LN<sub>2</sub>
+7. FFN matmul 1 (expand to 4× width)
+8. GELU
+9. FFN matmul 2 (project back to width)
+10. Residual add
+
+Around the four blocks, three more dispatches run at the boundary: an embedding gather at the very start, a final layer-norm, and the unembedding matmul that turns the residual stream back into logits over the 65 characters.
+</Step>
+
+<StepCheck
+  title="Count the kernels"
+  prompt="dispatches = "
+  answer={43}
+  tolerance={1}
+  hint="Ten per block, four blocks, plus three boundary dispatches (embedding gather, final LN, unembed). 10 × 4 + 3."
+>
+The model has four blocks. Each block runs ten kernel dispatches. Plus three more at the boundary (embed, final LN, unembed).
+
+**How many kernel dispatches does one forward pass through this model run?**
+</StepCheck>
+
+<Step title="How the GPU got here">
+The three lines that turn a browser tab into a GPU compute target:
+
+```ts
+if (!navigator.gpu) throw new Error('no WebGPU');
+const adapter = await navigator.gpu.requestAdapter();
+const device  = await adapter.requestDevice();
+```
+
+That's it. The adapter is the physical thing the browser sees (your M-series Mac's Apple GPU, your laptop's Intel iGPU, whatever you have). The device is the logical handle you create pipelines and buffers against. WebGPU only guarantees `f32` portably; we use `f32` end-to-end on purpose. (Half-precision exists as an opt-in feature flag and is still missing on most Linux drivers and every Qualcomm Android chip as of 2026, so we don't touch it.)
+
+Past those three lines, every kernel is just a `@compute @workgroup_size(...)` function reading and writing `array<f32>` buffers. The matmuls, the layer-norms, the attention; all the same shape. A kernel is a function with a dispatch grid wrapped around it.
+</Step>
+
+<Step title="What ships with the page">
+Two static assets fly across the wire when the runner loads:
+
+- `/m18/tinyshakespeare.txt` — about 1 MB of Shakespeare's complete works. Loaded as text once, encoded to a 65-character vocabulary in JavaScript, split 90/10 into train and validation. This is the same `input.txt` nanoGPT trains on.
+- The reference checkpoint for lesson 18.4 (not loaded until then). About 840 KB of `Float32Array` weights plus a 512-byte JSON header. We'll meet it when we need it.
+
+The model itself is not a file. The 209,000 weights are initialized in the browser from your seed string the moment you press Start. No download. The whole architecture lives in the code shipped with this page.
+</Step>
+
+<StepCheck
+  title="Read the sampler"
+  prompt="cumulative_p stops at "
+  answer={0.9}
+  tolerance={0.001}
+  hint="Top-p sampling truncates the sorted distribution at the smallest prefix whose cumulative probability reaches the threshold you set. The threshold is the parameter."
+>
+You set up the sampler in M17 already. Top-p (nucleus) sampling sorts the next-token distribution from most to least likely, walks down the list, and stops adding tokens once the cumulative probability passes a threshold.
+
+**At what cumulative probability does top-p = 0.9 stop adding tokens?**
+</StepCheck>
+
+<Step title="Press start">
+Type a seed string (anything works; *hamlet* is fine). Pick a max learning rate (the default 3e-4 is the same one nanoGPT uses for this model size). Pick a batch (32 is fine). Press **start**.
+
+What you'll see, in order:
+
+1. *Loading corpus.* The 1 MB text file streams in, gets tokenized.
+2. *Requesting GPU adapter.* Three lines of JavaScript, one round-trip to the OS.
+3. *Compiling shaders.* This takes one to three seconds. **It is the only part of the run where iters per second is meaningless.** The browser is translating our WGSL into Metal (on a Mac), D3D12 (on Windows), or Vulkan/SPIR-V (on Linux) and caching the compiled pipeline. Iter 0 pays this cost. Iter 1 doesn't, because the cache hits. The iters per second readout deliberately doesn't start until after the warmup pass, so you see the real, steady-state speed.
+4. *Training.* The curve starts at $\ln(65) \approx 4.17$, the dashed baseline on the canvas. That number is the cross-entropy of a model that hasn't learned anything yet, the entropy of a uniform distribution over 65 characters. **It is the correct loss for a freshly initialized model.** If your run starts there, the optimizer hasn't broken; it just hasn't learned anything yet.
+
+After a few hundred iterations the loss will fall through ~3.0 (English character bigram statistics roughly captured), then through ~2.5 (word shapes), and bottom out somewhere around 1.6 to 1.8 if you let the full 2,000 run. That is the moment the validation curve diverges from the training curve and the model starts overfitting tiny-shakespeare, which is the right behavior at this scale.
+
+You don't have to wait for the whole thing. The point of this lesson is just the first few seconds: the moment the page becomes a GPU compiler and a transformer that wasn't there before now exists.
+</Step>
+
+<Step title="What you just did">
+You loaded a corpus, asked the browser for a GPU adapter, sent 43 kernel dispatches per training step at it, and watched a transformer's loss start at $\ln(65)$ and begin to fall. The widget is still running (or paused, if you hit pause). The 209,000 weights are sitting in GPU memory right now. They will still be there if you walk away and come back.
+
+In the next lesson, **Watch it learn**, we leave the model training for real. You'll get a live sample stream printing what the model generates every few hundred iterations, a side-by-side gallery of canonical broken loss curves to compare yours against, and the long-run controls (cosine learning-rate readout, a badge that lights up when the browser pauses you for being in a background tab).
+
+For now, leave the widget where it is. Press start again with a different seed if you want. The model isn't memorized; it's reseeded from scratch every time.
+</Step>
