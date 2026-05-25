@@ -4,8 +4,8 @@ arc: arc-2-ml-foundations
 order: 12
 title: Backpropagation from Scratch
 summary: The keystone module of the course. Build micrograd node by node. Computational graph editor. Watch gradients flow backward through a tanh.
-status: planned
-estimatedMinutes: 240
+status: drafting
+estimatedMinutes: 96
 prereqs:
   - m5-calculus
   - m6-multivariable

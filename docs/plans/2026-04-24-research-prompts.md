@@ -37,14 +37,14 @@ Per-module work units: one research fire, one conversion pass, one editing pass,
 | m2-algebra | yes | yes | 6 | drafting |
 | m3-trigonometry | yes | yes | 5 | drafting |
 | m4-precalc | yes | yes | 4 | drafting |
-| m5-calculus | yes | yes | 3 (partial) | drafting |
+| m5-calculus | yes | yes | 6 | drafting |
 | m6-multivariable | yes | yes | 5 | drafting |
 | m7-linear-algebra | yes | yes | 5 | drafting |
 | m8-probability | yes | yes | 5 | drafting |
 | m9-information-theory | yes | yes | 4 | drafting |
 | m10-optimization | yes | yes | 5 | drafting |
 | m11-neural-networks | yes | yes | 5 | drafting |
-| m12-backpropagation | yes | yes | 0 | planned |
+| m12-backpropagation | yes | yes | 5 | drafting |
 | m13-training-dynamics | yes | yes | 5 | drafting |
 | m14-sequence-models | yes | yes | 6 | shipped |
 | m15-attention | yes | yes | 6 | shipped |
@@ -52,13 +52,14 @@ Per-module work units: one research fire, one conversion pass, one editing pass,
 | m17-tokenization-sampling | yes | yes | 5 | shipped |
 | m18-capstone | yes | yes | 0 | planned |
 
-**Next research prompt to fire:** none — every module now has a research brief. Next pipeline step is building modules whose lessons are MISSING or partial: m5-calculus (reconcile 3 partial lessons), m11, m12, m18.
+**Next research prompt to fire:** none — every module now has a research brief. Next pipeline step is building modules whose lessons are MISSING or partial: m18-capstone.
 
 **Known state, so it does not surprise the next session:**
-- **m5-calculus** now has a research brief (`docs/research/m5-calculus.md`). It has 3 lessons (`what-is-a-derivative`, `the-power-rule`, `the-chain-rule`) that were built before the brief existed. Section 6 of the brief calls for reconciling those 3 against a 6-lesson decomposition (split `what-is-a-derivative` into definition + derivative-as-function; expand `the-power-rule` into a full differentiation-rules lesson; add a product/quotient bridging lesson and a second-derivatives/optima lesson). Reconcile, do not assume a clean slate.
+- **m5-calculus** has been reconciled against `docs/research/m5-calculus.md` §6. All 6 lessons landed: `what-is-a-derivative` (order 1, untouched), `the-derivative-as-a-function` (order 2, NEW + DerivativeTracer widget), `the-power-rule` → renamed/expanded to "Differentiation rules" (order 3, with EEmerges for the e moment), `product-and-quotient-rules` (order 4, NEW + ProductRuleRectangle widget), `the-chain-rule` (order 5, renumbered from order 2), `second-derivatives-and-finding-optima` (order 6, NEW + CriticalPointHunt widget).
 - The m5 brief was saved with ~21 paste-transmission artifacts reconstructed from context (dropped mid-word characters, two merged concept-graph entries). All reconstructed; widget 6's lost attribution was recovered (3Blue1Brown, Essence of Calculus ch. 5).
 - **m11-neural-networks** is in `drafting` with all 5 lessons landed: `what-a-perceptron-really-is`, `the-xor-moment`, `linear-layers-collapse`, `the-activation-zoo`, `forward-pass-end-to-end`. New widgets: PerceptronLine, XorPlayground, LinearCollapse, ActivationZoo, ForwardPassTrace, ParamCounter. The brief's section-4 named seven widgets; `decisionBoundarySculptor` was folded out as redundant (XorPlayground already carries the "neurons draw lines, the network combines them" payload) and `forwardPassScrubber`/`activationDiff` were realized as ForwardPassTrace/ActivationZoo + LinearCollapse.
-- **m12, m18** have research briefs but zero lessons. They are ready to build now with no new research. m12-backpropagation is the keystone module.
+- **m12-backpropagation** is in `drafting` with all 5 lessons landed: `draw-the-graph`, `walk-it-backward`, `build-the-value-class`, `from-scalars-to-tensors`, `check-it-break-it-fix-it`. New widgets: GraphForgeBackprop (with edgeInspector folded in), TopoSortWalkthrough, ValueClassBuilder (Pyodide-driven, lazy-loads ~10 MB), BroadcastReducer, GradientCheckBench, ForwardVsReverseRaceTrack. The brief named seven widgets in §4; the 7→6 collapse was deliberate — `edgeInspector` was implemented as a click-an-edge mode of `GraphForgeBackprop` rather than a separate component.
+- **m18-capstone** still has a research brief but zero lessons. It is the last greenfield module.
 - **m14 through m17** are fully shipped. The course was built from both ends toward the middle, which is why the foundation arc still has gaps.
 
 ---

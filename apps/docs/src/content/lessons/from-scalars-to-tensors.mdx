@@ -1,0 +1,161 @@
+---
+title: From scalars to tensors
+module: m12-backpropagation
+summary: Stack 64 scalars into a vector, stack 768 vectors into a matrix, and the same chain rule still works. The forward is faster. The backward gradients are now matrices. The bookkeeping (broadcasting, axis-sums, the famous softmax+CE collapse) is what this lesson teaches.
+estimatedMinutes: 18
+order: 4
+prereqs:
+  - build-the-value-class
+conceptsCovered:
+  - scalar-to-tensor-vectorization
+  - matmul-backward
+  - elementwise-nonlinearity-backward
+  - broadcasting-gradient
+  - softmax-ce-fused-backward
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import BroadcastReducer from '../../components/demos/BroadcastReducer.svelte';
+
+<Step title="Why scalars do not scale">
+A linear layer that maps 768 inputs to 64 outputs holds $768 \times 64 = 49{,}152$ weights, plus 64 biases. With micrograd, that is roughly fifty thousand separate `Value` objects, each with their own `_backward` closure, evaluated one at a time.
+
+That is fine for teaching. It is catastrophic for actually running anything. The fix is to repackage *all* of those scalars into one matrix and do the entire layer's worth of arithmetic in a single matmul. The same chain rule applies — but now the gradients on the edges are matrices, not scalars, and the closures have to handle that.
+
+The good news: the rules don't change. Local derivative times upstream, summed across paths. Only the *types* of the things being multiplied changed.
+</Step>
+
+<Step title="Matmul backward, by shape-check">
+For a single linear layer, the forward is
+
+$$
+Y = X W, \qquad X \in \mathbb{R}^{N \times D}, \; W \in \mathbb{R}^{D \times M}, \; Y \in \mathbb{R}^{N \times M}.
+$$
+
+The chain rule says we need $\partial L / \partial X$ and $\partial L / \partial W$ in terms of $\partial L / \partial Y$ (which we know, because it was deposited by everything downstream). You can derive these from the scalar rule plus index sums, but here is the cheap trick: **shape-check**.
+
+We want $\partial L / \partial X$ to have the same shape as $X$, which is $(N, D)$. We have $\partial L / \partial Y$ with shape $(N, M)$ and $W$ with shape $(D, M)$. The *only* matmul that produces $(N, D)$ from those two is $\partial L / \partial Y \cdot W^\top$, since $W^\top$ has shape $(M, D)$.
+
+$$
+\boxed{\;\frac{\partial L}{\partial X} = \frac{\partial L}{\partial Y} \, W^\top\;}
+$$
+
+The same argument forces $\partial L / \partial W = X^\top \cdot \partial L / \partial Y$, which has the right shape $(D, M)$.
+
+$$
+\boxed{\;\frac{\partial L}{\partial W} = X^\top \, \frac{\partial L}{\partial Y}\;}
+$$
+
+You can derive these from first principles by writing $Y_{ij} = \sum_k X_{ik} W_{kj}$ and computing $\partial L / \partial X_{ik}$ via the chain rule. The shape-check argument arrives at the same answer in five seconds.
+</Step>
+
+<StepCheck
+  title="Shape of dW"
+  prompt="dW has shape (?, ?). Type the second number."
+  answer={10}
+  tolerance={0}
+  hint="dW = X.T @ dY. X.T is (100, 32), dY is (32, 10). The matmul gives (100, 10). dW must have the same shape as W = (100, 10). The second number is 10."
+>
+With $X.\text{shape} = (32, 100)$, $W.\text{shape} = (100, 10)$, and $dY.\text{shape} = (32, 10)$:
+
+**What is the second dimension of $dW = X^\top dY$?**
+
+(The shape will be `(100, ?)`. Type the second number.)
+</StepCheck>
+
+<Step title="Elementwise nonlinearities, unchanged">
+For an elementwise operation like $Y = \phi(X)$ — `relu`, `tanh`, `sigmoid` applied to every entry — the backward is also elementwise. The chain rule per entry, written in tensor form:
+
+$$
+\frac{\partial L}{\partial X} = \frac{\partial L}{\partial Y} \odot \phi'(X),
+$$
+
+where $\odot$ is the elementwise (Hadamard) product. No matmul, no shape acrobatics — just pointwise multiplication by the local derivative. `tanh'(x) = 1 - tanh²(x)`, `sigmoid'(x) = σ(x)(1 - σ(x))`, `relu'(x) = [x > 0]`. The scalar formulas you already wrote in lesson 12.3, applied per entry.
+</Step>
+
+<Step title="Broadcasting: forward replicates, backward sums">
+Bias vectors expose the trickiest tensor case. The forward is straightforward:
+
+$$
+Y = X W + b, \qquad b \in \mathbb{R}^M.
+$$
+
+The bias has shape $(M,)$ but $XW$ has shape $(N, M)$. PyTorch "broadcasts" $b$ across the batch — it is conceptually replicated $N$ times so each row of $XW$ gets the same bias.
+
+What is $\partial L / \partial b$? You have $\partial L / \partial Y$ with shape $(N, M)$. You need something of shape $(M,)$ to match $b$.
+
+The rule, which generalizes across every tensor library and every broadcast pattern:
+
+> **Every axis that was broadcast in the forward must be reduce-summed in the backward.**
+
+For bias broadcast across the batch axis, the gradient is `dY.sum(axis=0)`. Try it.
+
+<BroadcastReducer client:visible />
+
+Pick the wrong axis and the result has the wrong shape; the widget tells you. Pick axis 0 and you get the right $(M,)$ shape.
+</Step>
+
+<StepCheck
+  title="The bias backward"
+  prompt="db shape's only entry = "
+  answer={64}
+  tolerance={0}
+  hint="db = dY.sum(axis=0). dY has shape (32, 64); summing over axis 0 collapses the batch dimension and leaves shape (64,). The only entry of the shape tuple is 64."
+>
+Forward: $Y = X + b$ with $X$ shape $(32, 64)$ and $b$ shape $(64,)$.
+
+You have $dY$ with shape $(32, 64)$. **What is the only number in the shape of $db$?**
+</StepCheck>
+
+<Step title="The softmax + cross-entropy collapse">
+The output layer of every classifier in deep learning looks the same: a linear layer produces logits $z \in \mathbb{R}^K$, softmax turns those into probabilities $p$, cross-entropy with a one-hot target $y$ produces a scalar loss $L$:
+
+$$
+p_i = \frac{e^{z_i}}{\sum_k e^{z_k}}, \qquad L = -\sum_i y_i \log p_i.
+$$
+
+A naive autograd implementation runs the backward through both functions: first the gradient of $L$ w.r.t. $p$ (which is $-y/p$ component-wise), then the Jacobian of softmax (a full $K \times K$ matrix), multiply them.
+
+The algebra collapses miraculously. Working through the chain rule:
+
+$$
+\frac{\partial L}{\partial z_j} = -\sum_i \frac{y_i}{p_i} \cdot p_i (\delta_{ij} - p_j) = -y_j + p_j \sum_i y_i = p_j - y_j,
+$$
+
+using $\sum_i y_i = 1$ for a one-hot target. The whole ugly Jacobian-times-gradient stack reduces to:
+
+$$
+\boxed{\;\frac{\partial L}{\partial z} = p - y\;}
+$$
+
+The "gradient of softmax-cross-entropy with respect to the logits is the prediction error." Every classifier in deep learning trains using this one identity. PyTorch's `nn.CrossEntropyLoss` is a single fused op specifically so that this collapse is exploited and so numerical stability (log-sum-exp) is handled in one place.
+</Step>
+
+<StepCheck
+  title="One backward pass through the classifier head"
+  prompt="middle entry of p − y ≈ "
+  answer={0.242}
+  tolerance={0.01}
+  hint="Softmax of [2.0, 1.0, 0.1]: exponentials are [7.389, 2.718, 1.105], sum 11.212. p = [0.659, 0.242, 0.099]. y = [1, 0, 0]. p − y = [-0.341, 0.242, 0.099]. The middle entry is 0.242."
+>
+Logits $z = [2.0, 1.0, 0.1]$, target $y = [1, 0, 0]$ (one-hot, class 0).
+
+Compute $p = \text{softmax}(z)$ and then $p - y$.
+
+**What is the middle entry of $p - y$, to three decimals?**
+</StepCheck>
+
+<Step title="Three identities, one engine">
+You now have the three tensor identities that show up in every neural network's backward pass:
+
+$$
+\frac{\partial L}{\partial X} = \frac{\partial L}{\partial Y} W^\top, \qquad \frac{\partial L}{\partial W} = X^\top \frac{\partial L}{\partial Y}, \qquad \frac{\partial L}{\partial b} = \text{unbroadcast}\!\left(\frac{\partial L}{\partial Y}\right).
+$$
+
+Plus the elementwise rule for nonlinearities, plus the softmax+CE collapse. That is the *entire* tensor backward toolkit for a modern feed-forward network. A transformer layer adds a few more shapes (multi-head reshape, layer norm) but every individual op uses one of these patterns.
+
+PyTorch and JAX hide all of this behind a tape that records ops as you run them. But the tape's *contents* — the rules for each op — are exactly what you just learned. There is no other secret.
+
+One lesson left: the four classic backprop bugs and the test that catches all of them. After that, you have shipped m12.
+</Step>

@@ -1,0 +1,183 @@
+---
+title: Walk it backward
+module: m12-backpropagation
+summary: The backward pass is the forward pass in reverse. Seed the root with grad 1, walk the graph upstream, and use each edge's local derivative to distribute one number per node. The order matters more than anyone tells you.
+estimatedMinutes: 16
+order: 2
+prereqs:
+  - draw-the-graph
+conceptsCovered:
+  - chain-rule-on-a-graph
+  - upstream-vs-local-gradient
+  - gradient-accumulation
+  - topological-sort
+  - reverse-mode-autodiff
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import GraphForgeBackprop from '../../components/demos/GraphForgeBackprop.svelte';
+import TopoSortWalkthrough from '../../components/demos/TopoSortWalkthrough.svelte';
+
+<Step title="Seed the root with grad 1">
+The forward pass filled in <code>.data</code> at every node. The backward pass fills in <code>.grad</code> at every node — where <code>.grad</code> at a node means *the partial derivative of the final output with respect to that node*.
+
+Start at the root. The root's gradient with respect to itself is, by definition, $1$:
+
+$$
+\frac{\partial L}{\partial L} = 1.
+$$
+
+That is the seed. Now walk the graph in reverse. At each node, you have an *upstream* gradient (the grad of the loss w.r.t. this node, which downstream nodes have already deposited). You use the *local* derivative on each incoming edge to push a contribution back to that parent:
+
+$$
+\boxed{\;\text{grad}_{\text{parent}} \mathrel{+}= \text{grad}_{\text{this}} \cdot \frac{\partial \text{this}}{\partial \text{parent}}\;}
+$$
+
+The `+=` is not a typo. We will see why in two minutes.
+</Step>
+
+<Step title="Run it on the (a+b)·c graph">
+Below is the same widget from the previous lesson. Make sure you are on the **(a + b) · c** preset and click **step forward** four times until every node has a <code>.data</code> value. Then click **start backward** and step through.
+
+<GraphForgeBackprop client:visible />
+
+The backward sweep visits nodes in *reverse* topological order: $f$ first, then $c$ and $e$, then $a$ and $b$.
+
+- Seed: $\text{grad}[f] = 1$.
+- Visit $f$ (which is $e \cdot c$). Edge to $e$ has local derivative $c = 10$, so $\text{grad}[e] \mathrel{+}= 1 \cdot 10 = 10$. Edge to $c$ has local derivative $e = -1$, so $\text{grad}[c] \mathrel{+}= 1 \cdot (-1) = -1$.
+- Visit $e$ (which is $a + b$). Both incoming edges have local derivative $1$. So $\text{grad}[a] \mathrel{+}= 10 \cdot 1 = 10$ and $\text{grad}[b] \mathrel{+}= 10 \cdot 1 = 10$.
+
+Read the final grads off the widget. They are the partial derivatives of $f$ with respect to each input.
+</Step>
+
+<StepCheck
+  title="Pick a leaf"
+  prompt="∂f/∂a = "
+  answer={10}
+  tolerance={0.01}
+  hint="Run the backward pass. The grad on node `a` tells you ∂f/∂a directly. With c = 10, the chain rule gives ∂f/∂a = ∂f/∂e · ∂e/∂a = 10 · 1 = 10."
+>
+With $a = 2, b = -3, c = 10$, run the backward pass.
+
+**What is $\partial f / \partial a$?**
+</StepCheck>
+
+<StepCheck
+  title="And the sibling"
+  prompt="∂f/∂b = "
+  answer={10}
+  tolerance={0.01}
+  hint="Same logic: ∂f/∂b = ∂f/∂e · ∂e/∂b = 10 · 1 = 10. Addition copies the upstream gradient to both inputs equally."
+>
+**What is $\partial f / \partial b$?**
+
+Read it off the widget, or compute it the same way.
+</StepCheck>
+
+<Step title="The pattern, in one phrase">
+Two patterns you should now feel in your fingers, because they will repeat at every node of every backward pass for the rest of this course:
+
+- An **addition** node copies the upstream gradient to all of its inputs unchanged.
+- A **multiplication** node *swaps and scales*: the gradient that flows back to $x$ is *upstream times the value of the other parent*. (Read that twice.)
+
+That is half of all the cases in micrograd. The other half ($\text{tanh}$, $\exp$, $\text{relu}$, power) all follow the same template: $\text{upstream} \cdot \text{local}$, where the local is something you can compute from the parent's data.
+</Step>
+
+<Step title="Run a neuron backward">
+Switch the widget to the **neuron** preset above. Step all the way forward, then all the way backward. At the end, every leaf carries its own gradient.
+
+The interesting one is $w_1$. With $x_2 = 0$, the bottom branch contributes nothing, so the backward pass through the upper branch alone determines $\partial o / \partial w_1$. The math (which the widget agrees with):
+
+$$
+\frac{\partial o}{\partial n} = 1 - \tanh^2(n) = 1 - 0.5 = 0.5.
+$$
+
+Then $\partial o / \partial(x_1 w_1) = 0.5$ (addition copies). Then $\partial o / \partial w_1 = 0.5 \cdot x_1 = 0.5 \cdot 2 = 1.0$ (multiplication swaps).
+
+Karpathy chose the bias $b \approx 6.8814$ specifically so that $n \approx 0.8814$ and $\tanh(n) \approx 0.7071$, which makes $1 - \tanh^2(n) = 0.5$ exactly. Tidy numbers in service of clean intuition.
+</Step>
+
+<StepCheck
+  title="Read one neuron-leaf grad"
+  prompt="∂o/∂w₁ = "
+  answer={1}
+  tolerance={0.05}
+  hint="∂o/∂w₁ = (1 − tanh²(n)) · x₁ · 1 = 0.5 · 2 = 1.0. Run the backward pass in the widget to confirm."
+>
+For the one-neuron preset, **what is $\partial o / \partial w_1$?**
+</StepCheck>
+
+<Step title="When one node is used twice: the diamond">
+Switch to the **a · a** preset and step forward. With $a = 3$, the result is $9$. Easy.
+
+Now step backward. Seed $\text{grad}[f] = 1$. Visit $f$ (which is $a \cdot a$). The edge from $a$ as "left parent" gets local derivative *right parent's data* $= a = 3$. The edge from $a$ as "right parent" gets *left parent's data* $= a = 3$. Both contributions go to **the same node** $a$.
+
+If we wrote `a.grad = upstream * other.data` (i.e., overwrote), the second contribution would clobber the first and we would get $\text{grad}[a] = 3$. That is wrong: $f(a) = a^2$, so $\partial f / \partial a = 2a = 6$.
+
+The `+=` saves the day. Both contributions add, and we get the correct $\text{grad}[a] = 3 + 3 = 6$. This is the entire reason `_backward` is written with `+=` and not `=` inside the engine. Every reused node, every weight-tied layer, every diamond graph: same fix.
+</Step>
+
+<Step title="When the visit order is wrong: the diamond, dramatized">
+The `+=` only works if everyone *gets a chance to contribute*. That requires each node to be visited *after* every child that pushes gradient into it. The right order is the **reverse topological order**: root first, every parent after all its children.
+
+The widget below has a richer diamond:
+
+$$
+a = 2, \quad b = a + 1, \quad c = a \cdot 3, \quad d = b \cdot c.
+$$
+
+So $b = 3$, $c = 6$, $d = 18$. The correct $\partial d / \partial a = 15$ (you can derive this in your head: $d = (a+1)(3a) = 3a^2 + 3a$, so $d' = 6a + 3 = 15$ at $a = 2$).
+
+<TopoSortWalkthrough client:visible />
+
+Place the visit order in any order you like and click **run all**. If you place $a$ before $b$ or $c$, watch what happens — the widget will tell you which path's contribution got lost and why. Then try the right order ($d$ first, then $b$ and $c$ in either order, then $a$ last) and watch grad[a] hit $15$.
+</Step>
+
+<Step title="Topological sort">
+The fix is a single piece of bookkeeping: before you start the backward pass, sort the nodes so each node comes after all of its descendants. That ordering is called a **topological sort**, and it is what every autograd library — micrograd, PyTorch, JAX — runs in some form before reverse-mode autodiff.
+
+The standard recipe is depth-first search from the root with a visited set:
+
+```python
+def build_topo(root):
+    order, visited = [], set()
+    def visit(v):
+        if v in visited: return
+        visited.add(v)
+        for p in v._prev: visit(p)
+        order.append(v)
+    visit(root)
+    return order
+```
+
+Then `backward()` is:
+
+```python
+def backward(root):
+    order = build_topo(root)
+    root.grad = 1.0
+    for v in reversed(order):
+        v._backward()  # pushes contributions to parents using +=
+```
+
+Two lines of machinery and the diamond gives 15 every time. The next lesson is writing exactly this.
+</Step>
+
+<StepCheck
+  title="Sanity-check the diamond"
+  prompt="∂d/∂a = "
+  answer={15}
+  tolerance={0.05}
+  hint="Place d first, then b and c, then a last. Click run all. The grad on a comes out to 15. The math: d = (a+1)·(3a) = 3a² + 3a, so ∂d/∂a = 6a + 3 = 15 at a = 2."
+>
+For the diamond graph above, in the correct visit order, **what is $\partial d / \partial a$?**
+</StepCheck>
+
+<Step title="What you now know how to do">
+You have walked three graphs backward by hand: a small product, a full neuron, and the diamond that exposes the `+=` and topological-sort bookkeeping.
+
+That walk has a name: **reverse-mode automatic differentiation**. The chain rule, factored across a graph, computed in one sweep, accumulating sums along shared subexpressions. It is what every deep learning library calls `backward()`. It is the algorithm that puts the rest of this course on the hot path.
+
+The next lesson stops walking by hand. You write the code that does the walk — the `Value` class, the per-op `_backward` closures, the topo sort — and test it against PyTorch.
+</Step>

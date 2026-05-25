@@ -1,0 +1,98 @@
+---
+title: Draw the graph
+module: m12-backpropagation
+summary: Every formula you can write down is also a picture. Nodes hold values, edges hold operations, and every edge has a local derivative. This is the picture backprop walks.
+estimatedMinutes: 14
+order: 1
+prereqs:
+  - the-chain-rule
+  - second-derivatives-and-finding-optima
+conceptsCovered:
+  - computational-graph
+  - forward-pass-as-graph-eval
+  - local-derivative
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import GraphForgeBackprop from '../../components/demos/GraphForgeBackprop.svelte';
+
+<Step title="A formula is also a picture">
+Take a small expression: $f = (a + b) \cdot c$. You evaluate it by combining smaller pieces. Add $a$ and $b$ first. Call that intermediate value $e$. Then multiply $e$ by $c$.
+
+Draw that as a picture. Two leaves on the left ($a, b$) feed an **addition node** $e$. Another leaf ($c$) and $e$ both feed a **multiplication node** $f$. The lines connecting them are **edges**. The boxes are **nodes**. The whole structure is a **directed acyclic graph** — *directed* (the edges flow one way), *acyclic* (no loops).
+
+Click **start forward** below. Watch the value at each node fill in, one at a time, in the order forced by the graph: leaves first, then $e$, then $f$ at the very end. This is the **forward pass**: walk the graph from leaves to root, computing each node from its parents.
+
+<GraphForgeBackprop client:visible />
+</Step>
+
+<StepCheck
+  title="Run it in your head"
+  prompt="f = "
+  answer={-10}
+  tolerance={0.01}
+  hint="e = a + b = 2 + (-3) = -1. f = e · c = -1 · 10 = -10. The widget will tell you the same if you step forward."
+>
+With $a = 2$, $b = -3$, $c = 10$, walk the graph yourself.
+
+**What is $f$?**
+</StepCheck>
+
+<Step title="Edges carry local derivatives">
+Every edge in the graph carries one more piece of information besides "this value flows here." Each edge has a **local derivative**: the partial derivative of the child node's output with respect to *this particular parent*, expressible from the operation alone.
+
+For an **addition** node $z = x + y$, the local derivative on each incoming edge is $1$. (A small bump in either parent shows up as the same bump in the sum.)
+
+For a **multiplication** node $z = x \cdot y$, the local derivative on the edge from $x$ is *the other parent's value*, $y$. And the local derivative on the edge from $y$ is $x$. (A small bump in one parent is amplified by the other.)
+
+That is the entire rule. Every elementary operation has a local derivative formula, expressible without needing to know what is downstream.
+
+Click any edge in the widget above to see its local derivative. Try the edge from $e$ to $f$ — since $f = e \cdot c$, the local derivative there is $c$.
+</Step>
+
+<StepCheck
+  title="Read one local derivative"
+  prompt="∂f/∂e = "
+  answer={10}
+  tolerance={0.01}
+  hint="f = e · c, so ∂f/∂e = c. With c = 10, the answer is 10. Click the edge from e to f in the widget to confirm."
+>
+For $f = e \cdot c$ with $c = 10$, **what is $\partial f / \partial e$?**
+
+(That is the local derivative on the edge from $e$ to $f$.)
+</StepCheck>
+
+<Step title="Why this picture matters">
+The chain rule, written in the abstract, says: *if you change one input by a tiny amount, multiply the local derivatives along the path to the output to find out how much the output changes.*
+
+In a graph picture, "the path to the output" is something you can literally trace with your finger. And when there are multiple paths (because one node feeds into more than one place downstream), the chain rule says: *sum the contributions over all paths.*
+
+For a small graph this is fine. But neural networks have graphs with millions of nodes and billions of paths. Computing the output's sensitivity to every input by enumerating paths would take longer than the age of the universe.
+
+The whole trick of backpropagation, which we will build in the next two lessons, is to compute every input's sensitivity in *one* sweep across the graph — not one sweep per input. The graph is the data structure that makes that trick possible.
+</Step>
+
+<Step title="One more, by hand">
+Switch the widget to the **neuron** preset above. The graph is bigger now: five leaves ($x_1, w_1, x_2, w_2, b$), three internal nodes (two multiplications and two additions), and a final $\tanh$ at the root.
+
+Karpathy picked these specific leaf values so the math is friendly:
+
+$$
+x_1 = 2,\; w_1 = -3,\; x_2 = 0,\; w_2 = 1,\; b \approx 6.8814.
+$$
+
+Step forward through it. The two multiplications give $-6$ and $0$. The sum is $-6$. Adding the bias gives $\approx 0.8814$. And $\tanh(0.8814) \approx 0.7071$. That is the output of one neuron, computed as a forward pass over its computational graph.
+
+You just *evaluated* a neuron without anyone telling you the formula for "a neuron." You walked a graph.
+</Step>
+
+<Step title="What you have, what is next">
+Three things from this lesson:
+
+1. Any expression you can write down can be drawn as a directed acyclic graph: nodes hold values, edges hold operations.
+2. The **forward pass** evaluates the graph in topological order, leaves to root.
+3. Every edge has a **local derivative** that depends only on the operation, not on what is downstream.
+
+That is enough structure for the **backward pass**. In the next lesson you walk the same graph in reverse, distributing one number — the gradient of the loss with respect to *each node* — using only these local derivatives. That walk has a name: **reverse-mode autodiff**. Karpathy named his implementation of it after the small thing that does it. Micrograd.
+</Step>

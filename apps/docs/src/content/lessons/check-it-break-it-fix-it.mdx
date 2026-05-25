@@ -1,0 +1,142 @@
+---
+title: Check it, break it, fix it
+module: m12-backpropagation
+summary: Every autodiff bug is caught by a gradient check or diagnosed by recognizing one of the four classic footguns. And one slide on why deep learning picked reverse-mode in the first place.
+estimatedMinutes: 18
+order: 5
+prereqs:
+  - from-scalars-to-tensors
+conceptsCovered:
+  - gradient-checking
+  - common-backprop-bugs
+  - why-reverse-mode-for-dl
+  - autograd-as-tape
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import StepChoice from '../../components/lesson/StepChoice.astro';
+import Choice from '../../components/lesson/Choice.astro';
+import GradientCheckBench from '../../components/demos/GradientCheckBench.svelte';
+import ForwardVsReverseRaceTrack from '../../components/demos/ForwardVsReverseRaceTrack.svelte';
+
+<Step title="Subtly wrong backprop still trains">
+Here is a fact that makes serious autograd implementers paranoid: a backward pass that is *almost* correct will often appear to work. The loss goes down. Training looks fine. The model might even reach decent accuracy. And the whole time, every gradient your engine is producing is off by, say, 0.1%, because you wrote `1 - tanh(x)**2` instead of `1 - out.data**2` in one closure.
+
+The reason: gradient descent is robust. Approximately-correct gradients still point downhill. So nothing crashes. The model just trains slower than it could, or to a slightly worse minimum, and you would never know.
+
+The fix is a **gradient check**: build a numerical estimate of the gradient using finite differences, and compare it to your analytical gradient. If they agree to seven decimal places, your backward is correct. If they do not, you have a bug.
+</Step>
+
+<Step title="The centered finite difference">
+The naïve finite difference is
+
+$$
+\tilde{g} \;\approx\; \frac{f(\theta + \varepsilon) - f(\theta)}{\varepsilon}.
+$$
+
+It works, but its truncation error is $O(\varepsilon)$. The **centered** version is much better:
+
+$$
+\tilde{g} \;\approx\; \frac{f(\theta + \varepsilon) - f(\theta - \varepsilon)}{2\varepsilon}.
+$$
+
+Its truncation error is $O(\varepsilon^2)$. With small enough $\varepsilon$ you can get a numerical gradient that agrees with the true one to seven digits, which is enough to catch every analytical bug except the most pathological.
+
+Then compute the relative error:
+
+$$
+\text{relerr} = \frac{|g_\text{analytical} - \tilde{g}|}{|g_\text{analytical}| + |\tilde{g}|}.
+$$
+
+If relerr $< 10^{-7}$, you are fine. Larger than that, something is wrong.
+</Step>
+
+<Step title="The U-curve">
+You might think *make ε tiny and the numerical gradient gets arbitrarily accurate*. It does not, and the reason is floating point.
+
+Try it.
+
+<GradientCheckBench client:visible />
+
+Pick any function and scrub $\varepsilon$ across the full range. At large $\varepsilon$, the finite difference is a polynomial approximation of a derivative — truncation error dominates, and it grows as $\varepsilon^2$. At tiny $\varepsilon$, the subtraction in the numerator $f(\theta + \varepsilon) - f(\theta - \varepsilon)$ has *almost-equal* numbers, and floating-point cancellation wipes out the significant digits. The minimum sits somewhere in the middle — around $\varepsilon \approx 10^{-5}$ for centered differences in float64.
+
+Pick $\varepsilon$ in the green band. Use centered differences. Compare with relative error. Every analytical backward in your autograd engine should pass a check like this.
+</Step>
+
+<StepCheck
+  title="Where the U bottoms out"
+  prompt="optimal log₁₀(ε) ≈ "
+  answer={-5}
+  tolerance={1}
+  hint="The minimum of the U-curve sits at roughly ε ≈ 10⁻⁵ for centered finite differences in float64 — that is √(machine epsilon) ≈ 10⁻⁸ taken to a higher power because centered differences have O(ε²) truncation."
+>
+On the widget, find the sweet spot where the relative error is smallest.
+
+**What is log₁₀(ε) at the minimum?** (To the nearest integer.)
+</StepCheck>
+
+<Step title="The hall of shame: four bugs that catch everyone">
+**1. Forgot `.zero_grad()`.** Gradients accumulate across iterations because `_backward` is `+=`. The training loop diverges after a few steps because the effective step size keeps growing. *Symptom:* loss looks fine for a few iterations, then explodes.
+
+**2. `=` instead of `+=` inside `_backward`.** Trivial graphs work, but any time a node is used twice (which is almost every weight in a real network), some contributions get clobbered. *Symptom:* gradients quietly half-correct; training still moves but slowly.
+
+**3. `.detach()` or `.data` accidentally severing the graph.** PyTorch's `.detach()` returns a tensor that shares storage but is *not* part of the autograd graph. Use it inside your forward, and the gradient flow stops at the detach boundary. *Symptom:* upstream parameters' `.grad` is silently zero forever.
+
+**4. Wrong operand order in tensor backward.** `dW = dY @ X.T` looks symmetric with the right answer `X.T @ dY`. When `N = D` the shapes accidentally match, so it does not even error — it silently produces wrong gradients. *Symptom:* gradient check fails with 100% relative error.
+
+Most production bugs are one of these four. A gradient check on any new layer catches all of them.
+</Step>
+
+<StepChoice
+  title="Spot the bug"
+  hint="Look at the shape rule from the previous lesson: dW = X.T @ dY. Here it's written backwards. The shapes only happen to be compatible because the problem uses N=D."
+>
+A learner writes the matmul backward as:
+
+```python
+dW = dY @ X.T
+```
+
+The gradient check fails with 100% relative error. **What is the bug?**
+
+<Choice>The wrong choice of ε in the gradient check.</Choice>
+<Choice correct>Matmul is not commutative — the correct formula is <code>dW = X.T @ dY</code>. The shapes happen to be compatible because the test case uses N = D, so it does not throw an error.</Choice>
+<Choice>The chain rule does not apply to matrix operations.</Choice>
+<Choice>X needs to be detached first.</Choice>
+</StepChoice>
+
+<Step title="Why deep learning picked reverse-mode">
+The chain rule does not care which direction you traverse the graph. Two algorithms exist:
+
+- **Forward-mode autodiff:** seed one input with $1$, propagate forward through every operation. Costs one forward pass per *input*. For a function with $n$ inputs and $m$ outputs, that is $n$ passes.
+- **Reverse-mode autodiff:** seed one output with $1$, propagate backward through every operation. Costs one backward pass per *output*. That is $m$ passes.
+
+Both compute the same Jacobian. They differ only in which direction the sweep goes.
+
+For a neural-network loss function, $m = 1$ (one scalar loss) and $n$ is in the millions or billions (every parameter). Reverse-mode wins by a factor of $n$.
+
+<ForwardVsReverseRaceTrack client:visible />
+
+Toggle **loss-function mode** and watch reverse-mode flat-line while forward-mode blows up with $n$. That single asymmetry — neural networks have *many parameters* and *one loss* — is the reason every framework, every paper, every implementation in deep learning runs reverse-mode autodiff and not forward-mode.
+</Step>
+
+<Step title="Autograd is a tape, not symbolic math">
+A persistent confusion worth killing before you ship: PyTorch (and JAX, and your micrograd) do NOT do symbolic differentiation. They do not look at your code and produce algebraic formulas for the derivatives.
+
+What they do is build a **tape**: as you run the forward pass, every operation records itself plus enough information to undo itself. When you call `.backward()`, the framework replays that tape in reverse, calling each recorded op's `_backward`. The tape can contain any Python control flow — `if` branches, `while` loops, recursion — because all the tape records is *which ops actually ran*.
+
+This is why micrograd's design works at all. The `_backward` closures, captured by Python closure, *are* the tape. The topological sort decides the replay order. There is no symbolic algebra anywhere.
+
+PyTorch is the same idea, with one tape per `requires_grad=True` tensor instead of one closure per `Value`. JAX flips this: it traces a function once, lowers it to an intermediate representation, and JIT-compiles a vectorized backward. Same algorithm, different implementation. The thing under the hood is reverse-mode autodiff on a recorded tape — the thing you just wrote.
+</Step>
+
+<Step title="What you built">
+Every neural network on earth — every GPT, every diffusion model, every AlphaFold — is trained by the algorithm you just implemented in about 100 lines of Python. The rest is efficiency.
+
+You walked the graph forward. You walked it backward. You wrote the closures. You handled the diamond, the topo sort, the broadcasting, the matmul shapes, the softmax+CE collapse. You learned the four classic bugs and the gradient check that catches all of them.
+
+The next module is **training dynamics** — what actually happens when you run this engine in a loop for ten thousand steps. After that, sequence modeling, attention, and the transformer block. By module 18 you train a tiny GPT, and the only call into someone else's code is the matmul kernel. The autograd engine, the optimizer, the layers — all of them are your code.
+
+`loss.backward()` is no longer magic. It is what you just wrote.
+</Step>

@@ -1,0 +1,173 @@
+---
+title: Build the Value class
+module: m12-backpropagation
+summary: Stop walking by hand. Write the code that does the walk. Each closure you fill in becomes one line of the engine that trains every neural network on earth.
+estimatedMinutes: 30
+order: 3
+prereqs:
+  - walk-it-backward
+conceptsCovered:
+  - value-class
+  - per-op-backward-closures
+  - topological-sort
+  - backward-pass-implementation
+  - gradient-accumulation
+  - parameter-update-and-zero-grad
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import StepChoice from '../../components/lesson/StepChoice.astro';
+import Choice from '../../components/lesson/Choice.astro';
+import ValueClassBuilder from '../../components/demos/ValueClassBuilder.svelte';
+
+<Step title="What a Value is">
+A `Value` is a Python object that wraps one number with everything an autograd engine needs to know about it. There are five fields:
+
+| field        | what it holds                                                  |
+|---           |---                                                              |
+| `.data`      | the scalar value                                                |
+| `.grad`      | the gradient of the loss w.r.t. this node, initialized to `0.0` |
+| `._prev`     | the set of parent `Value`s that produced this one               |
+| `._op`       | a short string tag like `'+'` or `'tanh'` (for debugging)       |
+| `._backward` | a *closure* that knows how to push this node's `.grad` into its parents |
+
+When you write `c = a + b` in Python, `__add__` constructs a fresh `Value` for `c`, records `(a, b)` as `._prev`, and stashes a `_backward` closure on `c`. The closure remembers, by closure capture, that *I am the output of an addition, and my parents are `self` and `other`*. When called, it pushes the right contribution from `out.grad` back into `self.grad` and `other.grad`.
+
+You will now write those closures, one at a time. Pyodide (the Python runtime in your browser) runs your code and checks each grad to seven decimals. The first run downloads about 10 MB.
+</Step>
+
+<Step title="Start with addition">
+The simplest case. For `out = self + other`, the local derivative on each incoming edge is `1`. So the closure is just *push `out.grad` into both parents*.
+
+Fill in the `__add__._backward` slot below. Then click **run test**. The widget builds a tiny graph (`c = a + b` with `a=2, b=3`), calls `c.backward()`, and reports the resulting grads.
+
+<ValueClassBuilder client:visible />
+
+If you wrote `+=` instead of `=`, your test passes. Keep that habit; the next op is where it really matters.
+</Step>
+
+<Step title="Then multiplication">
+For `out = self * other`, the local derivative on the edge from `self` is `other.data`, and vice versa. The chain rule says each parent's grad gets the upstream times the local. So:
+
+```python
+self.grad  += other.data * out.grad
+other.grad += self.data  * out.grad
+```
+
+Switch to the `__mul__` tab in the widget and try it. Notice the test has **two** parts. The first part is just `c = a * b`. The second is the diamond:
+
+```python
+x = Value(3.0)
+y = x * x           # same Value used twice
+y.backward()
+print('x.grad', x.grad)
+```
+
+You expect `x.grad = 2x = 6`. If you wrote `=` instead of `+=`, the second multiplication contribution clobbers the first and you get `3`. The test will fail and tell you exactly which value was wrong.
+
+This is the bug Karpathy fixes on camera. He writes `_backward` with `=`, the test class on multiplications passes, then a `*` of one node with itself returns the wrong answer. He goes back, changes `=` to `+=`, and every test passes from then on.
+</Step>
+
+<StepChoice
+  title="Why += and not ="
+  hint="The diamond test fails with `=` because the second contribution overwrites the first. Any time a node has more than one outgoing edge, both paths' contributions must add — which is the chain rule's 'sum over paths' rule."
+>
+**Pick the best explanation for why each `_backward` closure must use `+=` instead of `=`.**
+
+<Choice>It's a Python style preference — both work mathematically.</Choice>
+<Choice correct>A node can be used multiple times. Each use deposits its own contribution to the parent's `.grad`. `+=` accumulates them; `=` overwrites and loses all but the last.</Choice>
+<Choice>`+=` is faster than `=` in Python's bytecode.</Choice>
+<Choice>It's only needed when the graph has cycles.</Choice>
+</StepChoice>
+
+<Step title="Three more closures">
+Three left. Each follows the same recipe — `parent.grad += local · out.grad` — with a different local derivative:
+
+- `__pow__` with constant exponent `n`: local derivative is `n · self.data^(n-1)`.
+- `tanh`: local derivative is `1 - tanh²(self.data)`. But `out.data` is already `tanh(self.data)`, so this simplifies to `1 - out.data²`.
+- `exp`: local derivative is `e^(self.data)`. And `out.data` is exactly that. So the local derivative *is* `out.data`.
+
+That last one is a small piece of pedagogical elegance: exponential is the function whose derivative is itself, and that means its backward closure references the output value rather than the input value. Same number, but the code is shorter.
+
+Walk through the `__pow__`, `tanh`, and `exp` tabs and write each closure. Each test runs in a fraction of a second now that Pyodide is loaded.
+</Step>
+
+<Step title="The top-level backward()">
+Look at the bottom of the scaffold (click "show full Value class" on any tab). The `.backward()` method has three pieces:
+
+```python
+def backward(self):
+    topo, visited = [], set()
+    def build(v):
+        if id(v) in visited: return
+        visited.add(id(v))
+        for c in v._prev: build(c)
+        topo.append(v)
+    build(self)
+    self.grad = 1.0
+    for v in reversed(topo):
+        v._backward()
+```
+
+1. **Build the topological order** via DFS, starting from this node (the root). Each node lands in `topo` *after* all its parents.
+2. **Seed `self.grad = 1.0`** — the gradient of the loss with respect to itself.
+3. **Iterate `topo` in reverse**, calling each node's `_backward`. Each call pushes contributions to that node's parents using `+=`.
+
+This is the entire engine. Three loops, plus the per-op closures you just wrote.
+</Step>
+
+<Step title="The full diamond test">
+Switch to the **diamond** tab and click **run test**. This runs the full class on the graph from the previous lesson:
+
+```python
+a = Value(2.0)
+b = a + 1
+c = a * 3
+d = b * c
+d.backward()
+```
+
+Expected: `a.grad = 15`. You should see green. Every part of the engine you have written so far runs together for the first time: the topo sort orders the visit, the `__mul__` and `__add__` closures push contributions, the `+=` accumulates both paths through `a`, and the diamond reconciles to the right answer.
+
+You just built micrograd. Karpathy's original is in [karpathy/micrograd](https://github.com/karpathy/micrograd), about 100 lines of MIT-licensed Python, structurally identical to what you have running in your browser tab right now.
+</Step>
+
+<Step title="One more bookkeeping detail: zeroing the grad">
+A neural network is trained by running this in a loop:
+
+```python
+for step in range(num_steps):
+    loss = model(x, y)        # forward pass
+    loss.backward()           # backward pass
+    for p in model.parameters():
+        p.data -= lr * p.grad # parameter update
+```
+
+There is a bug. After one iteration, every parameter's `.grad` holds the gradient from this step. On the next iteration, when `loss.backward()` runs again, every `_backward` does `+=`, which means the new contributions *add* to the old ones. After 10 iterations, `.grad` is the sum of all ten gradients, ten times too large.
+
+The fix is one line, called once per iteration before the backward:
+
+```python
+for p in model.parameters():
+    p.grad = 0.0
+```
+
+This is `optimizer.zero_grad()` in PyTorch. It exists because the same `+=` that makes the diamond give 15 forces you to explicitly reset between iterations. Every framework has this method; every framework's tutorial repeats the warning.
+</Step>
+
+<StepCheck
+  title="The forgotten zero_grad"
+  prompt="approximate ratio = "
+  answer={3}
+  tolerance={0.1}
+  hint="Without zero_grad, after 3 iterations the gradient is the sum of all 3 forward passes' contributions — roughly 3 times the per-step gradient."
+>
+You forget to zero the grad. After 3 iterations of an otherwise-correct training loop, your computed `.grad` is approximately what multiple of the correct (single-step) gradient?
+</StepCheck>
+
+<Step title="What you just built">
+You just built micrograd. Every deep-learning framework on earth — PyTorch, JAX, TensorFlow — is a faster, GPU-aware, tensor-typed version of what you just wrote by hand. `loss.backward()` is no longer magic; it is your code.
+
+Two more lessons stretch this engine in the directions that matter for real models: tensors (next), and the debugging skills that catch the four classic backprop bugs (after that). But the algorithm itself, the thing the rest of deep learning rests on — you have built.
+</Step>
