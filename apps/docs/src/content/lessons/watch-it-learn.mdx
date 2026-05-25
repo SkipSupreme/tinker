@@ -1,0 +1,89 @@
+---
+title: Watch it learn
+module: m18-capstone
+summary: Same model, longer run. Live samples appear every two hundred iterations so you can watch gibberish turn into bigrams turn into Shakespeare-flavored prose. Then six preset buttons that retrain under known pathologies so you recognize what broken training looks like in your own engine.
+estimatedMinutes: 25
+order: 2
+prereqs:
+  - press-start
+conceptsCovered:
+  - autoregressive-sampling
+  - training-phase-transitions
+  - loss-curve-pathologies
+  - entropy-floor
+  - page-visibility-api
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import RunnerPanel from '../../components/demos/RunnerPanel.svelte';
+import PathologyZoo from '../../components/demos/PathologyZoo.svelte';
+
+<Step title="Press start, and watch what it says">
+Same runner as 18.1. The new panel underneath it is a **live sample stream**. Every two hundred iterations, training pauses for about a second, the model generates eighty characters from a fixed prompt (the first thirty-two characters of the validation set), and the result gets stamped into the log with a label telling you what training phase you're in.
+
+The point of pressing start now is not the loss curve. It is what shows up under the curve.
+
+<RunnerPanel client:visible showSamples />
+
+A 2,000-iter run takes about nine minutes on a desktop. You don't need to wait for the whole thing for this lesson. The interesting story happens in the first three samples (iters 0, 200, 400), which is roughly three minutes.
+</Step>
+
+<Step title="The four phases of a tiny transformer">
+Roughly what you should see, in order:
+
+**Iter 0 — random init, uniform output.** The weights are normal-distributed with $\sigma = 0.02$. The output distribution is essentially uniform across 65 characters. The sample looks like `kxQ@!je e f`. This is not a bug. A freshly initialized model has zero information and produces samples drawn from a flat distribution.
+
+**Iter ~200 — character-frequency phase.** The model has noticed that some characters are more common than others. Newlines, spaces, lowercase `e` and `t` start dominating. Samples look like word-shaped runs of common letters: `tre teee ho the n`. Real bigrams are starting to form.
+
+**Iter ~500–1000 — short-word phase.** Two-letter and three-letter English words appear. `the`, `and`, `to`, `a`. Sentence shape starts to emerge: capital letter, lowercase run, period, space, repeat. The model is reproducing the statistical surface of English text without "meaning" any of it.
+
+**Iter ~1500–2000 — Shakespeare-flavored.** Names appear (`HENRY`, `ROMEO`, `KING`). The dialog format from Shakespeare's plays (NAME colon newline then text) becomes a recognizable shape. The words are still mostly real, but the sentences are nonsense — beautifully period-styled nonsense.
+
+This is the moment Karpathy's char-rnn blog post made famous. A 209,000-parameter model trained on 1 MB of text *cannot* understand Shakespeare. It can reproduce the statistical surface of Shakespeare to a degree that is shocking the first time you watch it happen. The fact that it shocks you, while you knew the whole architecture going in, is the lesson.
+</Step>
+
+<Step title="When training breaks">
+You've seen one kind of run: healthy. Five of the six buttons below retrain the same model with one hyperparameter deliberately wrong, so you see what each pathology *looks like* in your engine, not in a synthetic curve from a textbook. The faint dashed shape behind each live curve is the canonical version of that pathology from Module 13's "Loss Curve Doctor," for visual reference.
+
+<PathologyZoo client:visible />
+
+Click each in turn. The two diverge presets are the most visceral — `lr=10` produces NaN within a handful of iters, `lr=1e-2` looks healthy for the first twenty steps and then unwinds. The dead curve is humbling: the optimizer is running, AdamW is taking steps, the gradients are flowing, and the model never moves off `ln(65) ≈ 4.17`. The "overfit a tiny corpus" preset is what overfitting looks like at the extreme: train loss falls toward zero, because there is nothing to generalize *to*.
+
+When you go back to the runner above and your real training run is at iter 800 with a smooth, slightly noisy curve sitting around 2.3, the comparison gives you a name for what you're looking at: this is **clean**.
+</Step>
+
+<Step title="Switching tabs is a feature, not a bug">
+Open a new tab and leave the runner tab in the background for 30 seconds. Come back. The runner's status badge says **paused (tab in background)**. The iter counter has not moved. The elapsed time has not moved.
+
+The three lines that do this:
+
+```ts
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) pauseTrainingLoop();
+  else                 resumeTrainingLoop();
+});
+```
+
+The browser pauses `requestAnimationFrame` and throttles background-tab JavaScript to roughly 1 Hz to save battery. If we didn't react to that, the iters-per-second readout would crash to garbage values and the loop would compute a few iters under throttled conditions for no reason. Instead, we use the Page Visibility API to cleanly pause when hidden and resume from the exact iter when visible. The 209,000 weights live in GPU memory; they are still there when you come back.
+
+(Per the M18 plan: the loop *does* keep training on resume, exactly where it left off. It does not "catch up" or skip iters. There is no missed work because there was no work to miss — the loop was paused.)
+</Step>
+
+<StepCheck
+  title="The floor the loss can't fall through"
+  prompt="minimum val NLL ≈ "
+  answer={1.0}
+  tolerance={0.3}
+  hint="Shannon estimated the entropy of English text at the character level somewhere around 1.0 to 1.3 nats per character. A model trained on Shakespeare can approach that floor but cannot go below it without overfitting; the floor is a property of the language, not the model."
+>
+A trained character-level language model cannot reduce its validation loss below the **entropy floor** of the language it was trained on. Shannon's classic 1951 estimate puts the entropy of English text, measured per character, somewhere around 1.0 to 1.3 nats.
+
+**Roughly what is the minimum val NLL this model can ever reach, in nats per character?**
+</StepCheck>
+
+<Step title="What you just did">
+You started a real training run, watched it talk to you every two hundred iterations as the loss came down, ran five pathological versions of the same training loop to see what broken looks like, and learned that pausing your tab does not lose you any state. The runner above is probably still going.
+
+In the next lesson, **Your checkpoint**, we make the 209,000 weights into a file. You download an 800 KB `.bin`, drop it into the runner on a fresh page load, and it picks up exactly where it left off. We also introduce a twin-seed view: two runs with the same seed string produce byte-identical weight files, and two runs with seeds differing by one character diverge in the first few iters. The 18.1 "determinism" idea, made concrete and downloadable.
+</Step>
