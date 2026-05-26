@@ -76,6 +76,18 @@ describe("<Coordinates.Cartesian>", () => {
       const yCount = inferLabels(-1, 1).length;
       expect(grid.querySelectorAll("line").length).toBe(xCount + yCount);
     });
+
+    it("applies vector-effect=non-scaling-stroke on every grid line", () => {
+      // vector-effect is NOT inheritable in SVG. Setting it on the parent <g>
+      // does nothing; each <line> needs it directly. Without it, stroke-width=1
+      // is interpreted in user units and the grid renders as a checkerboard.
+      const svg = mount({ viewBox: { x: [-5, 5], y: [-5, 5] } });
+      const lines = svg.querySelectorAll("[data-mafs-grid] line");
+      expect(lines.length).toBeGreaterThan(0);
+      for (const line of lines) {
+        expect(line.getAttribute("vector-effect")).toBe("non-scaling-stroke");
+      }
+    });
   });
 
   describe("labels", () => {

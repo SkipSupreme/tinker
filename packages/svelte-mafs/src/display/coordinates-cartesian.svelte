@@ -39,14 +39,13 @@
       data-mafs-grid
       stroke="var(--mafs-grid-color, #e5e5e5)"
       stroke-width="1"
-      vector-effect="non-scaling-stroke"
       fill="none"
     >
       {#each xTicks as x (`gx-${x}`)}
-        <line x1={x} y1={vb.yMin} x2={x} y2={vb.yMax} />
+        <line x1={x} y1={vb.yMin} x2={x} y2={vb.yMax} vector-effect="non-scaling-stroke" />
       {/each}
       {#each yTicks as y (`gy-${y}`)}
-        <line x1={vb.xMin} y1={y} x2={vb.xMax} y2={y} />
+        <line x1={vb.xMin} y1={y} x2={vb.xMax} y2={y} vector-effect="non-scaling-stroke" />
       {/each}
     </g>
   {/if}
