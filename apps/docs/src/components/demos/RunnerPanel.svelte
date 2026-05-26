@@ -84,6 +84,12 @@
   let promptIds: Int32Array | null = null;
   let visHandler: (() => void) | null = null;
   let cancelToken: { cancelled: boolean } = { cancelled: false };
+  // Outer promise of the currently-running runLoop(). Awaited by anything that
+  // mutates engine state (resume, reset, file load) so a still-resolving
+  // trainStep from a prior loop can't race against a new loop or against a
+  // disposeParams/initTraining call. Without this, rapid pause→resume or
+  // pause→load could put two trainStep() calls in flight on the same engine.
+  let runningLoop: Promise<void> | null = null;
   let ewmaTrain: number | null = null;
   let lastEvalT = 0;
   let lastEvalIter = 0;
@@ -287,6 +293,13 @@
     loadBusy = true;
     errorMsg = '';
     cancelToken.cancelled = true;
+    // Drain any in-flight trainStep before disposeParams / loadParameters
+    // races with it. Without this, the loaded weights can land mid-step
+    // and trigger WebGPU validation errors (or silently corrupt the run).
+    if (runningLoop) {
+      try { await runningLoop; } catch { /* loop is being torn down */ }
+      runningLoop = null;
+    }
     try {
       const buf = await file.arrayBuffer();
       const { meta, params } = readCheckpoint(buf, cfg);
@@ -342,6 +355,13 @@
   async function start(): Promise<void> {
     if (phase === 'training') return;
     if (phase === 'paused') {
+      // Wait for the previous loop's in-flight trainStep to fully resolve
+      // before kicking off a new loop. Otherwise two trainStep() calls race
+      // on the same Engine and corrupt weights + readback buffers.
+      if (runningLoop) {
+        try { await runningLoop; } catch { /* old loop error already surfaced */ }
+        runningLoop = null;
+      }
       pausedByVisibility = false;
       phase = 'training';
       cancelToken = { cancelled: false };
@@ -350,7 +370,8 @@
       // Resuming from a Load → startedAt was never set; start the elapsed
       // clock now so the readout reflects this session, not Unix-epoch math.
       if (startedAt === 0) startedAt = performance.now();
-      void runLoop();
+      runningLoop = runLoop();
+      void runningLoop;
       return;
     }
     errorMsg = '';
@@ -368,7 +389,8 @@
       cancelToken = { cancelled: false };
       // Iter 0 sample (the uniform-distribution baseline) before training starts.
       if (showSamples) await emitSampleFor(0);
-      void runLoop();
+      runningLoop = runLoop();
+      void runningLoop;
     } catch (e) {
       phase = 'error';
       errorMsg = e instanceof Error ? e.message : String(e);
@@ -380,10 +402,18 @@
     if (phase !== 'training') return;
     cancelToken.cancelled = true;
     phase = 'paused';
+    // runningLoop resolves on its own once the in-flight trainStep finishes
+    // and the post-await cancel check fires. We deliberately do not clear
+    // it here — resume()/reset()/onFileSelected() await it before mutating
+    // engine state.
   }
 
-  function reset(): void {
+  async function reset(): Promise<void> {
     cancelToken.cancelled = true;
+    if (runningLoop) {
+      try { await runningLoop; } catch { /* ignore — loop is being torn down */ }
+      runningLoop = null;
+    }
     pausedByVisibility = false;
     phase = 'idle';
     trainCurve.length = 0; valCurve.length = 0; samples.length = 0;
@@ -398,6 +428,8 @@
   async function runLoop(): Promise<void> {
     if (!engine || !corpus || !trainRng || !valRng) return;
     const localToken = cancelToken;
+    const loopToken = localToken;  // captured so the finally only clears its own slot
+    try {
     while (currentIter < TOTAL_ITERS && !localToken.cancelled) {
       const lr = cosineLR(currentIter, WARMUP, TOTAL_ITERS, lrMax, LR_MIN);
       currentLr = lr;
@@ -441,6 +473,11 @@
       phase = 'done';
       // Final sample at the end so the closing log line is the trained-model output.
       if (showSamples) await emitSampleFor(TOTAL_ITERS);
+    }
+    } finally {
+      // Only clear runningLoop if a newer loop hasn't already claimed the
+      // slot (compare via cancelToken identity).
+      if (cancelToken === loopToken) runningLoop = null;
     }
   }
 

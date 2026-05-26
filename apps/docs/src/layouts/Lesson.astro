@@ -3,6 +3,7 @@ import Base from './Base.astro';
 import TinkerHop from '../components/celebrate/TinkerHop.svelte';
 import SrAnnouncer from '../components/lesson/SrAnnouncer.svelte';
 import StuckHint from '../components/lesson/StuckHint.svelte';
+import ProgressBeacon from '../components/lesson/ProgressBeacon.svelte';
 import 'katex/dist/katex.min.css';
 
 interface Props {
@@ -15,6 +16,10 @@ interface Props {
 }
 const { slug, title, summary, estimatedMinutes, module, moduleHref } = Astro.props;
 const moduleLabel = module.replace(/-/g, ' ');
+// Tinker currently ships a single course; every lesson lives under it. When
+// additional courses launch, thread course slug through the lesson frontmatter
+// and ['lessons']/[slug].astro alongside `module`.
+const courseSlug = 'ml-math';
 ---
 
 <Base title={title} description={summary} fullWidth>
@@ -62,6 +67,7 @@ const moduleLabel = module.replace(/-/g, ' ');
 
     <SrAnnouncer client:idle />
     <StuckHint client:idle />
+    <ProgressBeacon client:idle lessonSlug={slug} courseSlug={courseSlug} moduleSlug={module} />
   </div>
 </Base>
 
@@ -473,6 +479,7 @@ const moduleLabel = module.replace(/-/g, ' ');
   import { celebrateCorrect, celebrateLesson, celebrateWrong } from '../lib/celebrate';
   import { TINKER_EVENT } from '../lib/events';
   import { lessonUnlockedKey, lessonCompletedKey } from '../lib/storage-keys';
+  import { getCsrf } from '../lib/csrf-client';
 
   type CheckData = { answer: number; tolerance: number };
 
@@ -524,6 +531,24 @@ const moduleLabel = module.replace(/-/g, ' ');
       if (unlocked < total || total === 0) return;
       lessonCompleteFired = true;
       try { localStorage.setItem(completionKey, '1'); } catch { /* ignore */ }
+      // Persist completion server-side for signed-in users. Fire-and-forget:
+      // localStorage already records local completion, so a network failure
+      // or 401 (anon visitor) is silently ignored. The CSRF cookie is only
+      // present when Better Auth has minted a session; getCsrf() returns ''
+      // for anon users, which the server rejects with 403 — that's fine.
+      const csrf = getCsrf();
+      if (csrf) {
+        void fetch('/api/progress/complete', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'content-type': 'application/json',
+            'x-tinker-csrf': csrf,
+          },
+          body: JSON.stringify({ lesson_slug: slug }),
+          keepalive: true,
+        }).catch(() => { /* network failures are fine; anon flow already wrote localStorage */ });
+      }
       // Route the entire endgame through the orchestrator: spring fill +
       // math-symbol burst + XP tween + TinkerHop event + chime + vibrate +
       // sweep-green class + aria-live announce. One call, one tuned chain.

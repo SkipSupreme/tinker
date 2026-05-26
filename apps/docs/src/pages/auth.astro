@@ -8,7 +8,12 @@ const url = new URL(Astro.request.url);
 const params = url.searchParams;
 const errorMessage = resolveAuthError(params);
 const mode = params.get('mode') === 'signup' ? 'signup' : 'signin';
-const callbackURL = params.get('callbackURL') ?? '/welcome';
+// Only accept same-origin relative paths. Block protocol-relative URLs (//evil),
+// backslash tricks (/\evil), and any absolute URL. Anything else falls back to
+// the safe default. Without this, an attacker can craft /auth?callbackURL=
+// https://attacker.example and steal users after sign-in via location.assign().
+const rawCallback = params.get('callbackURL') ?? '/welcome';
+const callbackURL = /^\/(?![\\/])/.test(rawCallback) ? rawCallback : '/welcome';
 const title = mode === 'signup' ? 'Sign up' : 'Sign in';
 ---
 

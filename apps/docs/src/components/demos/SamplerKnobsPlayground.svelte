@@ -15,6 +15,7 @@
   import { onMount, onDestroy } from 'svelte';
   import {
     Engine, M18_CONFIG, readCheckpoint, loadTinyShakespeare, seededRng,
+    vocabHash as computeVocabHash,
     type CorpusBundle,
   } from '../../lib/m18/engine';
 
@@ -56,6 +57,7 @@
   // Non-reactive engine + corpus refs (created once per mount).
   let engine: Engine | null = null;
   let corpus: CorpusBundle | null = null;
+  let vocabHashCache: string = '';
   let cancelToken: { cancelled: boolean } = { cancelled: false };
   // Cached final-step logits — used by the histogram so slider drags re-render
   // the distribution without re-running the model.
@@ -267,7 +269,15 @@
 
   async function loadFromBuffer(buf: ArrayBuffer, displayName: string): Promise<void> {
     if (!engine) throw new Error('engine not initialized');
+    if (!corpus) throw new Error('corpus not initialized');
     const { meta, params } = readCheckpoint(buf, cfg);
+    // Reject same-shape checkpoints trained against a different tokenizer.
+    // Without this, a swapped vocab silently maps the model's argmax onto
+    // the wrong characters and the histogram + samples become nonsense.
+    if (!vocabHashCache) vocabHashCache = await computeVocabHash(corpus.vocab);
+    if (meta.vocabHash !== vocabHashCache) {
+      throw new Error('Checkpoint was trained on a different vocabulary. Refusing to load.');
+    }
     engine.loadParameters(params);
     // The sampler does not run training; we still need the GPU adapter pipeline
     // for forward() to work. initTraining is not needed for forward-only.

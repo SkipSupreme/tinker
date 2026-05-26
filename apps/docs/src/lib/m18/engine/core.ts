@@ -93,6 +93,11 @@ export class EngineCore {
   readonly cfg: ModelConfig;
   readonly pipelines: Pipelines;
   params!: ModelParams;
+  // Temporary buffers (uniforms, readbacks, scratch tokBufs) created during a
+  // single forward / trainStep / valLoss call. They cannot be destroyed until
+  // queue.submit() + every readback await have resolved, after which the call
+  // site invokes destroyTemps() to keep WebGPU memory bounded across long runs.
+  private temps: GPUBuffer[] = [];
 
   constructor(device: GPUDevice, cfg: ModelConfig, sources: KernelSources) {
     this.device = device; this.cfg = cfg;
@@ -183,6 +188,10 @@ export class EngineCore {
   }
 
   loadParameters(weights: ModelParamData): void {
+    // Free the previous parameter graph (if any) before allocating the new one.
+    // Without this, every reset / preset reload / checkpoint load leaks the
+    // prior model weights for the lifetime of the device.
+    this.disposeParams();
     const cfg = this.cfg;
     const wte = this.alloc([cfg.vocabSize, cfg.dModel]); this.upload(wte, weights.wte);
     const wpe = this.alloc([cfg.contextLen, cfg.dModel]); this.upload(wpe, weights.wpe);
@@ -262,6 +271,7 @@ export class EngineCore {
     [tokBuf, x.buffer, tmp.buffer, lnOut.buffer, qkv.buffer, attn.buffer,
      proj.buffer, ffn1.buffer, ffn1A.buffer, ffn2.buffer, logits.buffer, readback]
       .forEach((b) => { try { b.destroy(); } catch { /* ok */ } });
+    this.destroyTemps();
 
     return out;
   }
@@ -273,7 +283,17 @@ export class EngineCore {
     const arr = new Uint32Array(4);
     for (let i = 0; i < 4; i++) arr[i] = values[i] ?? 0;
     this.device.queue.writeBuffer(buf, 0, arr.buffer);
+    this.temps.push(buf);
     return buf;
+  }
+
+  /** Destroy every temp buffer collected during the current step. Safe to
+   *  call multiple times; idempotent on already-destroyed handles. */
+  private destroyTemps(): void {
+    for (const b of this.temps) {
+      try { b.destroy(); } catch { /* already destroyed */ }
+    }
+    this.temps.length = 0;
   }
 
   private bg(pipeline: GPUComputePipeline, entries: Array<{ binding: number; resource: GPUBuffer }>): GPUBindGroup {
@@ -372,8 +392,79 @@ export class EngineCore {
 
   private trainCtx: TrainContext | null = null;
 
+  private destroyTensor(t: Tensor | undefined | null): void {
+    if (!t) return;
+    try { t.buffer.destroy(); } catch { /* already destroyed */ }
+  }
+
+  private disposeBlockParams(b: BlockParams): void {
+    this.destroyTensor(b.ln1Gamma); this.destroyTensor(b.ln1Beta);
+    this.destroyTensor(b.wQKV);     this.destroyTensor(b.wAttnOut);
+    this.destroyTensor(b.ln2Gamma); this.destroyTensor(b.ln2Beta);
+    this.destroyTensor(b.wFFN1);    this.destroyTensor(b.wFFN2);
+  }
+
+  private disposeModelParams(p: ModelParams | undefined): void {
+    if (!p) return;
+    this.destroyTensor(p.wte);
+    this.destroyTensor(p.wpe);
+    for (const b of p.blocks) this.disposeBlockParams(b);
+    this.destroyTensor(p.lnFGamma);
+    this.destroyTensor(p.lnFBeta);
+  }
+
+  /** Free GPU buffers for the current parameter graph. Idempotent; safe to
+   *  call before loadParameters() has ever run. */
+  disposeParams(): void {
+    if (!this.params) return;
+    this.disposeModelParams(this.params);
+    this.params = undefined as unknown as ModelParams;
+  }
+
+  /** Free GPU buffers for the current training context (activations, grads,
+   *  AdamW state, readbacks). Does NOT touch this.params — those are owned
+   *  by loadParameters / disposeParams. Idempotent. */
+  disposeTrainCtx(): void {
+    const c = this.trainCtx;
+    if (!c) return;
+    try { c.acts.tok.destroy(); } catch { /* ok */ }
+    try { c.acts.tgt.destroy(); } catch { /* ok */ }
+    this.destroyTensor(c.acts.emb);
+    for (const b of c.acts.blocks) {
+      this.destroyTensor(b.xIn);     this.destroyTensor(b.ln1Out);
+      this.destroyTensor(b.qkv);     this.destroyTensor(b.attnOut);
+      this.destroyTensor(b.projOut); this.destroyTensor(b.xMid);
+      this.destroyTensor(b.ln2Out);  this.destroyTensor(b.ffn1Pre);
+      this.destroyTensor(b.ffn1Act); this.destroyTensor(b.ffn2Out);
+      this.destroyTensor(b.xOut);
+    }
+    this.destroyTensor(c.acts.lnFIn); this.destroyTensor(c.acts.lnFOut);
+    this.destroyTensor(c.acts.logits);
+    const bk = c.back;
+    this.destroyTensor(bk.dlogits); this.destroyTensor(bk.lossPer);
+    this.destroyTensor(bk.dRes);    this.destroyTensor(bk.dXIn);
+    this.destroyTensor(bk.dProj);   this.destroyTensor(bk.dAttn);
+    this.destroyTensor(bk.dQkv);    this.destroyTensor(bk.dLn1);
+    this.destroyTensor(bk.dLn2);    this.destroyTensor(bk.dFfn2);
+    this.destroyTensor(bk.dFfn1A);  this.destroyTensor(bk.dFfn1P);
+    this.destroyTensor(bk.dLnF);    this.destroyTensor(bk.dEmb);
+    this.destroyTensor(bk.dResAcc);
+    // Per-parameter grad / m / v buffers — owned by trainCtx, not params.
+    this.disposeModelParams(c.grads);
+    this.disposeModelParams(c.optM);
+    this.disposeModelParams(c.optV);
+    try { c.normBuf.destroy(); }      catch { /* ok */ }
+    try { c.normReadback.destroy(); } catch { /* ok */ }
+    try { c.lossReadback.destroy(); } catch { /* ok */ }
+    this.trainCtx = null;
+  }
+
   /** Allocate persistent training buffers + grads + AdamW state. */
   initTraining(batch: number): void {
+    // Free the previous training context (if any) before allocating a new one.
+    // Without this, every reset / preset reload / checkpoint load leaks the
+    // prior activation cache, gradient buffers, and AdamW (m, v) state.
+    this.disposeTrainCtx();
     const cfg = this.cfg; const T = cfg.contextLen; const d = cfg.dModel;
     const B = batch; const N = B * T;
 
@@ -542,6 +633,7 @@ export class EngineCore {
     pass2.end();
     this.device.queue.submit([enc2.finish()]);
 
+    this.destroyTemps();
     return loss;
   }
 
@@ -569,6 +661,7 @@ export class EngineCore {
     const losses = new Float32Array(ctx.lossReadback.getMappedRange()).slice();
     ctx.lossReadback.unmap();
     let s = 0; for (let i = 0; i < N; i++) s += losses[i];
+    this.destroyTemps();
     return s / N;
   }
 
@@ -713,6 +806,7 @@ export class EngineCore {
     const arr = new Float32Array(4);
     for (let i = 0; i < 4; i++) arr[i] = values[i] ?? 0;
     this.device.queue.writeBuffer(buf, 0, arr.buffer);
+    this.temps.push(buf);
     return buf;
   }
 
@@ -722,6 +816,7 @@ export class EngineCore {
     arr[0] = p.lr; arr[1] = p.b1; arr[2] = p.b2; arr[3] = p.eps;
     arr[4] = p.lam; arr[5] = p.bc1; arr[6] = p.bc2; arr[7] = 0;
     this.device.queue.writeBuffer(buf, 0, arr.buffer);
+    this.temps.push(buf);
     return buf;
   }
 

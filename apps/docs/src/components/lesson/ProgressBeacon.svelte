@@ -1,12 +1,19 @@
 <script lang="ts">
   import { getCsrf } from '../../lib/csrf-client';
 
-  let { lessonSlug, courseSlug, moduleSlug, isAuthed } = $props<{
+  let { lessonSlug, courseSlug, moduleSlug } = $props<{
     lessonSlug: string;
     courseSlug: string;
     moduleSlug: string;
-    isAuthed: boolean;
   }>();
+
+  // Lesson pages are prerendered statically — the server can't tell us whether
+  // the visitor is signed in. Use the CSRF cookie's presence as a proxy: it
+  // only gets set when Better Auth has minted a session, and Tinker's auth UX
+  // never leaves a stale CSRF cookie around after sign-out.
+  function isAuthed(): boolean {
+    return getCsrf() !== '';
+  }
 
   async function postAuthed() {
     try {
@@ -68,7 +75,7 @@
   }
 
   function emit() {
-    if (isAuthed) postAuthed();
+    if (isAuthed()) postAuthed();
     else recordAnon();
   }
 
