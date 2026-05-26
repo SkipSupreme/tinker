@@ -1,0 +1,49 @@
+---
+title: The credits roll
+module: m18-capstone
+summary: Six files. About four hundred lines of code. Every line is something you wrote, and something you understand. The model is still talking above the scroll. Read the code.
+estimatedMinutes: 18
+order: 5
+prereqs:
+  - now-make-it-talk
+conceptsCovered:
+  - the-engine-is-the-course
+  - reading-as-comprehension
+  - the-endgame
+  - where-to-next
+---
+
+import Step from '../../components/lesson/Step.astro';
+import CreditsRollPanel from '../../components/demos/CreditsRollPanel.svelte';
+
+<Step title="Read the code">
+The next four minutes are not new content.
+
+<CreditsRollPanel client:visible />
+
+The model above is sampling from the reference checkpoint, one character every three hundred and fifty milliseconds, while six pedagogically dense source files scroll past below. The model and the code are not separate things. The model *is* the code (plus 206,016 floats). The code is what runs every time anyone presses Start on any page in this module.
+
+Scroll, or let it scroll itself. Pause whenever you want to read something twice.
+</Step>
+
+<Step title="The endgame">
+This is the entire course.
+
+You started in M5 with $f(x) = x^2$ and a single derivative. You finish here with a transformer you trained yourself, on hardware you own, with weights you can save, in roughly the time it takes to brew coffee.
+
+There is no module after this one. There is the model, the artifact, and the next thing you decide to learn.
+
+Push the button again. Watch it learn. Then close this tab and go read a paper.
+</Step>
+
+<Step title="Where to next">
+Three honest pointers, none of them about Tinker.
+
+**Read GPT-2 in nanoGPT.** Karpathy's nanoGPT is about 600 lines of PyTorch. You can read every line. The architecture is identical to what you just trained. The differences are scale (12 layers, d_model 768, vocab 50,257), and that someone trained it for a few hundred hours on a few hundred GPUs instead of five minutes on your laptop. The code is the same shape.
+
+**Scale up your own checkpoint.** Same code, swap `tinyshakespeare.txt` for a 30 MB corpus you care about. Bump `nLayer` to 6, `dModel` to 128. Train for thirty minutes instead of five. The .bin will be larger. The sampler will be the same. Nothing else needs to change.
+
+**Mechanistic interpretability.** Anthropic publishes a research line called transformer-circuits that tries to understand, line by line, what individual attention heads and individual neurons are *for* in a trained transformer. The residual-stream framing you read in M16 maps directly onto the model you trained here. The smallest interesting subject in mech-interp is a model of about your scale. Your `.bin` is enough to start reading.
+
+That's the end. Thank you for working through it.
+</Step>
