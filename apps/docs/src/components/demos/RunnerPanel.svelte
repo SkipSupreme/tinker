@@ -123,18 +123,31 @@
     if (!engine || !corpus || !promptIds || !sampleRng) return '';
     const T = cfg.contextLen;
     const ctx = new Int32Array(T);
-    // Place prompt at the END of the context window (autoregressive convention).
-    const startPad = T - promptIds.length;
-    for (let i = 0; i < promptIds.length; i++) ctx[startPad + i] = promptIds[i];
+    // Left-align the prompt and track a frontier position. Sampling reads logits
+    // at the frontier (the last token actually present). The window only starts
+    // sliding once the frontier reaches T-1 — that way we never feed the model
+    // a long run of pad newlines it never saw during training.
+    let frontier: number;
+    if (promptIds.length >= T) {
+      ctx.set(promptIds.subarray(promptIds.length - T));
+      frontier = T - 1;
+    } else {
+      ctx.set(promptIds, 0);
+      frontier = Math.max(0, promptIds.length - 1);
+    }
     const generated: number[] = [];
     for (let n = 0; n < SAMPLE_CHARS; n++) {
       const logits = await engine.forward(ctx, 1);  // [T, V]
-      const last = logits.subarray((T - 1) * cfg.vocabSize, T * cfg.vocabSize);
+      const last = logits.subarray(frontier * cfg.vocabSize, (frontier + 1) * cfg.vocabSize);
       const id = sampleFromLogits(last, SAMPLE_TEMP, sampleRng);
       generated.push(id);
-      // slide window one to the left
-      for (let i = 0; i < T - 1; i++) ctx[i] = ctx[i + 1];
-      ctx[T - 1] = id;
+      if (frontier < T - 1) {
+        frontier++;
+        ctx[frontier] = id;
+      } else {
+        for (let i = 0; i < T - 1; i++) ctx[i] = ctx[i + 1];
+        ctx[T - 1] = id;
+      }
     }
     return generated.map((id) => corpus!.vocab[id]).join('');
   }

@@ -33,7 +33,7 @@ Notice what happens. The two curves do not "diverge slowly." They diverge at ite
 This is what *deterministic* means in practice. It does not mean "the model trains the same way on average." It means **two runs of the same code with the same seed produce literally byte-identical output**. The hashes match. The download is the same file. The whole training run is a function of one string.
 </Step>
 
-<Step title="What 209,000 weights actually look like">
+<Step title="What 206,016 weights actually look like">
 The transformer you've been training has six tensors per block (two layer-norms, one fused QKV linear, one attention-out linear, two FFN linears), plus three at the boundary (the embedding table, the learned positional table, and a final layer-norm). All `f32`. All in one big buffer on the GPU.
 
 When you press save, every one of those tensors gets read back to the CPU, concatenated into a single `Float32Array` in nanoGPT's canonical order, and pushed at the end of a tiny binary file. The first 512 bytes of that file are an ASCII JSON header that records the config, the seed string, the iter, the validation loss, the SHA-256 of the vocab, and a timestamp. Padded with spaces to exactly 512 bytes so a hex-editor view always starts the float data at offset 512.
@@ -44,6 +44,8 @@ So a saved checkpoint has two parts:
 2. **Tail:** exactly `206,016 floats × 4 bytes = 824,064 bytes` of weight data.
 
 That second number is the architecture talking. Four blocks × `12·d²` (the nanoGPT counting rule) gives 196,608 weights inside the transformer blocks. Embedding + positional + four layer-norms add another 9,408. Total 206,016 trainable f32 weights, every one of them initialized from your seed, every one of them updated by AdamW.
+
+(If the press-start lesson said "about 209,000 parameters," it was rounding off a smaller technicality: that number counts the embedding matrix twice — once as the input embedding, once as the output projection. We use a *tied* unembedding, so the same 4,160-element matrix plays both roles and only ships once. 206,016 is the honest on-disk count; 209,000 is the round-number version that ignores the tie.)
 </Step>
 
 <StepCheck

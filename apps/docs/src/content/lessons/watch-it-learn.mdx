@@ -67,7 +67,7 @@ document.addEventListener('visibilitychange', () => {
 
 The browser pauses `requestAnimationFrame` and throttles background-tab JavaScript to roughly 1 Hz to save battery. If we didn't react to that, the iters-per-second readout would crash to garbage values and the loop would compute a few iters under throttled conditions for no reason. Instead, we use the Page Visibility API to cleanly pause when hidden and resume from the exact iter when visible. The 209,000 weights live in GPU memory; they are still there when you come back.
 
-(Per the M18 plan: the loop *does* keep training on resume, exactly where it left off. It does not "catch up" or skip iters. There is no missed work because there was no work to miss — the loop was paused.)
+The loop keeps training on resume, exactly where it left off. It does not "catch up" or skip iters, because there is no missed work to catch up on — the loop was paused.
 </Step>
 
 <StepCheck
@@ -85,5 +85,5 @@ A trained character-level language model cannot reduce its validation loss below
 <Step title="What you just did">
 You started a real training run, watched it talk to you every two hundred iterations as the loss came down, ran five pathological versions of the same training loop to see what broken looks like, and learned that pausing your tab does not lose you any state. The runner above is probably still going.
 
-In the next lesson, **Your checkpoint**, we make the 209,000 weights into a file. You download an 800 KB `.bin`, drop it into the runner on a fresh page load, and it picks up exactly where it left off. We also introduce a twin-seed view: two runs with the same seed string produce byte-identical weight files, and two runs with seeds differing by one character diverge in the first few iters. The 18.1 "determinism" idea, made concrete and downloadable.
+In the next lesson, **Your checkpoint**, we make the 209,000 weights into a file. You download an 825 KB `.bin`, drop it back into the runner, and it picks up exactly where it left off. We also introduce a twin-seed view: two runs with the same seed string produce byte-identical weight files, and two runs with seeds differing by one character diverge in the first few iters. The 18.1 "determinism" idea, made concrete and downloadable.
 </Step>

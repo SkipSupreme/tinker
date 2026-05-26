@@ -201,8 +201,9 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
         <em class="closing-em">You can touch it.</em>
       </h2>
       <p class="closing-sub">
-        Tinker is alpha. New modules every week. The first course is live
-        and free.
+        Eighteen modules, four arcs, free in your browser. From
+        <code class="closing-code">f(x) = x²</code> to a transformer you
+        train yourself on the GPU in your laptop.
       </p>
       <div class="cta-row closing-cta-row">
         <a class="btn primary" href="/signup">Sign up, it's free</a>
@@ -757,6 +758,15 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
     line-height: 1.55;
     color: color-mix(in srgb, var(--band-dark-fg) 75%, transparent);
     max-width: 44ch;
+  }
+  .closing-code {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    padding: 0.05em 0.4em;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--band-dark-fg) 10%, transparent);
+    color: var(--band-dark-fg);
+    white-space: nowrap;
   }
   .closing-cta-row {
     justify-content: center;

@@ -78,7 +78,7 @@ Past those three lines, every kernel is just a `@compute @workgroup_size(...)` f
 Two static assets fly across the wire when the runner loads:
 
 - `/m18/tinyshakespeare.txt` — about 1 MB of Shakespeare's complete works. Loaded as text once, encoded to a 65-character vocabulary in JavaScript, split 90/10 into train and validation. This is the same `input.txt` nanoGPT trains on.
-- The reference checkpoint for lesson 18.4 (not loaded until then). About 840 KB of `Float32Array` weights plus a 512-byte JSON header. We'll meet it when we need it.
+- The reference checkpoint for lesson 18.4 (not loaded until then). About 825 KB total: a 512-byte JSON header followed by 206,016 `f32` weights. We'll meet it when we need it.
 
 The model itself is not a file. The 209,000 weights are initialized in the browser from your seed string the moment you press Start. No download. The whole architecture lives in the code shipped with this page.
 </Step>
@@ -105,7 +105,7 @@ What you'll see, in order:
 3. *Compiling shaders.* This takes one to three seconds. **It is the only part of the run where iters per second is meaningless.** The browser is translating our WGSL into Metal (on a Mac), D3D12 (on Windows), or Vulkan/SPIR-V (on Linux) and caching the compiled pipeline. Iter 0 pays this cost. Iter 1 doesn't, because the cache hits. The iters per second readout deliberately doesn't start until after the warmup pass, so you see the real, steady-state speed.
 4. *Training.* The curve starts at $\ln(65) \approx 4.17$, the dashed baseline on the canvas. That number is the cross-entropy of a model that hasn't learned anything yet, the entropy of a uniform distribution over 65 characters. **It is the correct loss for a freshly initialized model.** If your run starts there, the optimizer hasn't broken; it just hasn't learned anything yet.
 
-After a few hundred iterations the loss will fall through ~3.0 (English character bigram statistics roughly captured), then through ~2.5 (word shapes), and bottom out somewhere around 1.6 to 1.8 if you let the full 2,000 run. That is the moment the validation curve diverges from the training curve and the model starts overfitting tiny-shakespeare, which is the right behavior at this scale.
+After a few hundred iterations the loss will fall through ~3.0 (English character bigram statistics roughly captured), then through ~2.5 (word shapes), and settle around 2.2 by iter 2,000 with the default hyperparameters. The reference checkpoint shipped with this module ends at val NLL ≈ 2.18 — the entropy floor of English at the character level is around 1.0 to 1.3 nats, so this model is still about a nat above what's physically possible on the language. Going lower from there would mean either a bigger model, more data, or longer training.
 
 You don't have to wait for the whole thing. The point of this lesson is just the first few seconds: the moment the page becomes a GPU compiler and a transformer that wasn't there before now exists.
 </Step>

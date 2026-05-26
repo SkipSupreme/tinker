@@ -50,17 +50,17 @@ Per-module work units: one research fire, one conversion pass, one editing pass,
 | m15-attention | yes | yes | 6 | shipped |
 | m16-transformer-block | yes | yes | 5 | shipped |
 | m17-tokenization-sampling | yes | yes | 5 | shipped |
-| m18-capstone | yes | yes | 0 | planned |
+| m18-capstone | yes | yes | 5 | shipped |
 
-**Next research prompt to fire:** none — every module now has a research brief. Next pipeline step is building modules whose lessons are MISSING or partial: m18-capstone.
+**Next research prompt to fire:** none — every module now has a research brief. **Every module also has its lessons shipped.** The pipeline is complete; the course is live.
 
 **Known state, so it does not surprise the next session:**
 - **m5-calculus** has been reconciled against `docs/research/m5-calculus.md` §6. All 6 lessons landed: `what-is-a-derivative` (order 1, untouched), `the-derivative-as-a-function` (order 2, NEW + DerivativeTracer widget), `the-power-rule` → renamed/expanded to "Differentiation rules" (order 3, with EEmerges for the e moment), `product-and-quotient-rules` (order 4, NEW + ProductRuleRectangle widget), `the-chain-rule` (order 5, renumbered from order 2), `second-derivatives-and-finding-optima` (order 6, NEW + CriticalPointHunt widget).
 - The m5 brief was saved with ~21 paste-transmission artifacts reconstructed from context (dropped mid-word characters, two merged concept-graph entries). All reconstructed; widget 6's lost attribution was recovered (3Blue1Brown, Essence of Calculus ch. 5).
 - **m11-neural-networks** is in `drafting` with all 5 lessons landed: `what-a-perceptron-really-is`, `the-xor-moment`, `linear-layers-collapse`, `the-activation-zoo`, `forward-pass-end-to-end`. New widgets: PerceptronLine, XorPlayground, LinearCollapse, ActivationZoo, ForwardPassTrace, ParamCounter. The brief's section-4 named seven widgets; `decisionBoundarySculptor` was folded out as redundant (XorPlayground already carries the "neurons draw lines, the network combines them" payload) and `forwardPassScrubber`/`activationDiff` were realized as ForwardPassTrace/ActivationZoo + LinearCollapse.
 - **m12-backpropagation** is in `drafting` with all 5 lessons landed: `draw-the-graph`, `walk-it-backward`, `build-the-value-class`, `from-scalars-to-tensors`, `check-it-break-it-fix-it`. New widgets: GraphForgeBackprop (with edgeInspector folded in), TopoSortWalkthrough, ValueClassBuilder (Pyodide-driven, lazy-loads ~10 MB), BroadcastReducer, GradientCheckBench, ForwardVsReverseRaceTrack. The brief named seven widgets in §4; the 7→6 collapse was deliberate — `edgeInspector` was implemented as a click-an-edge mode of `GraphForgeBackprop` rather than a separate component.
-- **m18-capstone** still has a research brief but zero lessons. It is the last greenfield module.
-- **m14 through m17** are fully shipped. The course was built from both ends toward the middle, which is why the foundation arc still has gaps.
+- **m18-capstone** shipped in five slices over 2026-04-29 to 2026-05-26 (commits 8541ddb through 31d2314). Five lessons (press-start, watch-it-learn, your-checkpoint, now-make-it-talk, the-credits-roll), five widgets (runnerPanel, pathologyZoo, seedScrubber, samplerKnobsPlayground, creditsRollPanel), and the reference checkpoint at `apps/docs/public/m18/reference.bin` (seed `hamlet`, 2000 iters, val NLL 2.178). The course closes on itself per design.
+- **m14 through m18** are fully shipped. The course was built from both ends toward the middle, which is why the foundation arc (m1–m13) still has gaps that read as "drafting" in this table.
 
 ---
 
