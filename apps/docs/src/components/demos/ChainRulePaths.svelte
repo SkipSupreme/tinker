@@ -18,10 +18,13 @@
    */
 
   type EdgeId = 'xu' | 'yu' | 'xv' | 'yv' | 'uz' | 'vz';
-  const edges: { id: EdgeId; from: [number, number]; to: [number, number]; label: string }[] = [
+  // labelT: where along the edge to place the label (0 = at from, 1 = at to).
+  // xv and yu cross at the midpoint and their labels collide if both sit at t=0.5;
+  // pull each toward its source node so they fan out instead of stacking.
+  const edges: { id: EdgeId; from: [number, number]; to: [number, number]; label: string; labelT?: number }[] = [
     { id: 'xu', from: [80, 60], to: [180, 180], label: '∂u/∂x' },
-    { id: 'yu', from: [320, 60], to: [180, 180], label: '∂u/∂y' },
-    { id: 'xv', from: [80, 60], to: [380, 180], label: '∂v/∂x' },
+    { id: 'yu', from: [320, 60], to: [180, 180], label: '∂u/∂y', labelT: 0.3 },
+    { id: 'xv', from: [80, 60], to: [380, 180], label: '∂v/∂x', labelT: 0.3 },
     { id: 'yv', from: [320, 60], to: [380, 180], label: '∂v/∂y' },
     { id: 'uz', from: [180, 180], to: [280, 300], label: '∂z/∂u' },
     { id: 'vz', from: [380, 180], to: [280, 300], label: '∂z/∂v' },
@@ -74,6 +77,7 @@
   <div class="stage">
     <svg viewBox="0 0 460 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Chain-rule DAG: x and y feed u and v, both feed z">
       {#each edges as e}
+        {@const t = e.labelT ?? 0.5}
         <g class="edge" class:on={active.has(e.id)}>
           <line
             x1={e.from[0]} y1={e.from[1]}
@@ -85,8 +89,8 @@
             onkeydown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggle(e.id); } }}
           />
           <text
-            x={(e.from[0] + e.to[0]) / 2 + 8}
-            y={(e.from[1] + e.to[1]) / 2 - 4}
+            x={e.from[0] + (e.to[0] - e.from[0]) * t + 8}
+            y={e.from[1] + (e.to[1] - e.from[1]) * t - 4}
             class="edge-label"
           >{e.label}</text>
         </g>
