@@ -203,21 +203,25 @@
       <!-- radius vector -->
       <Vector tail={[0, 0]} tip={[cosVal, sinVal]} color="var(--ink-red)" weight={2.5} />
 
-      <!-- value labels -->
-      <Text
-        x={cosVal / 2}
-        y={sinVal >= 0 ? -0.16 : 0.16}
-        latex={`\\cos\\theta=${cosVal.toFixed(3)}`}
-        size={12}
-        color="var(--ink-sea)"
-      />
-      <Text
-        x={cosVal + (cosVal >= 0 ? 0.34 : -0.34)}
-        y={sinVal / 2}
-        latex={`\\sin\\theta=${sinVal.toFixed(3)}`}
-        size={12}
-        color="var(--ink-red)"
-      />
+      <!-- value labels: hide each when its leg collapses (would crowd the handle) -->
+      {#if Math.abs(cosVal) > 0.18}
+        <Text
+          x={cosVal / 2}
+          y={sinVal >= 0 ? -0.16 : 0.16}
+          latex={`\\cos\\theta=${cosVal.toFixed(3)}`}
+          size={12}
+          color="var(--ink-sea)"
+        />
+      {/if}
+      {#if Math.abs(sinVal) > 0.18}
+        <Text
+          x={cosVal + (cosVal >= 0 ? 0.34 : -0.34)}
+          y={sinVal / 2}
+          latex={`\\sin\\theta=${sinVal.toFixed(3)}`}
+          size={12}
+          color="var(--ink-red)"
+        />
+      {/if}
 
       <!-- draggable handle on the circle -->
       <MovablePoint bind:x={px} bind:y={py} color="var(--ink-coral)" {constrain} label="angle on the unit circle" />
