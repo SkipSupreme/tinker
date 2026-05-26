@@ -1,0 +1,116 @@
+---
+title: Your checkpoint
+module: m18-capstone
+summary: A seed string is the whole identity of a training run. Type the same seed twice, you get byte-identical weights. Save the weights. They land on your disk as one tiny binary file. That file is yours.
+estimatedMinutes: 15
+order: 3
+prereqs:
+  - watch-it-learn
+conceptsCovered:
+  - seeded-determinism
+  - byte-identical-reproducibility
+  - checkpoint-file-format
+  - weights-versus-optimizer-state
+  - the-artifact
+---
+
+import Step from '../../components/lesson/Step.astro';
+import StepCheck from '../../components/lesson/StepCheck.astro';
+import RunnerPanel from '../../components/demos/RunnerPanel.svelte';
+import SeedScrubber from '../../components/demos/SeedScrubber.svelte';
+
+<Step title="A seed is the whole identity of the run">
+The training loop you've been pressing start on for the last two lessons has exactly one source of randomness: the seed string you typed in. Everything else is deterministic. Same seed in, same numbers out, every time.
+
+The widget below runs the model twice, side by side, for forty iterations each, with a seed string for each pane. Press **run twin**. Both panes start at `hamlet`. Both curves should fall on top of each other. Both `.bin` files should hash to the same SHA-256.
+
+<SeedScrubber client:visible />
+
+Now change *one character* in either seed (try `hamllet` on one side). Press re-run.
+
+Notice what happens. The two curves do not "diverge slowly." They diverge at iter 0. The very first loss number is different. That is because the seed feeds into three places: the random sampler that drew the initial weights from $\mathcal{N}(0, 0.02)$, the random sampler that picks which slice of Shakespeare goes into the first batch, and the random sampler that would have controlled dropout (we use 0.0 dropout here, but the wiring is the same). Change a character of the seed and all three pull different numbers.
+
+This is what *deterministic* means in practice. It does not mean "the model trains the same way on average." It means **two runs of the same code with the same seed produce literally byte-identical output**. The hashes match. The download is the same file. The whole training run is a function of one string.
+</Step>
+
+<Step title="What 209,000 weights actually look like">
+The transformer you've been training has six tensors per block (two layer-norms, one fused QKV linear, one attention-out linear, two FFN linears), plus three at the boundary (the embedding table, the learned positional table, and a final layer-norm). All `f32`. All in one big buffer on the GPU.
+
+When you press save, every one of those tensors gets read back to the CPU, concatenated into a single `Float32Array` in nanoGPT's canonical order, and pushed at the end of a tiny binary file. The first 512 bytes of that file are an ASCII JSON header that records the config, the seed string, the iter, the validation loss, the SHA-256 of the vocab, and a timestamp. Padded with spaces to exactly 512 bytes so a hex-editor view always starts the float data at offset 512.
+
+So a saved checkpoint has two parts:
+
+1. **Header:** exactly 512 bytes of human-readable JSON.
+2. **Tail:** exactly `206,016 floats × 4 bytes = 824,064 bytes` of weight data.
+
+That second number is the architecture talking. Four blocks × `12·d²` (the nanoGPT counting rule) gives 196,608 weights inside the transformer blocks. Embedding + positional + four layer-norms add another 9,408. Total 206,016 trainable f32 weights, every one of them initialized from your seed, every one of them updated by AdamW.
+</Step>
+
+<StepCheck
+  title="Size of the .bin file"
+  prompt=".bin bytes = "
+  answer={824576}
+  tolerance={100}
+  hint="The file is the header plus the tail. The header is 512 bytes (it does not depend on d_model). The tail is 206,016 weights times 4 bytes per f32."
+>
+A checkpoint file = the 512-byte JSON header + the `Float32Array` of weights.
+
+The model has 206,016 trainable parameters. Each one is stored as a 32-bit float (four bytes).
+
+**How many bytes is the saved .bin file?**
+</StepCheck>
+
+<Step title="Press save">
+The widget below is the same runner from the last two lessons, with two new buttons in the action row: **save weights** and **load weights**.
+
+Press start. Let it train for a couple of hundred iters (so the saved checkpoint is more interesting than the random initialization). Press pause. Press **save weights**.
+
+<RunnerPanel client:visible showCheckpointIO />
+
+Your browser downloads a file named `tinker-shakespeare-{seed}-iter{N}.bin`. If you trained on the default seed for 200 iters, that's `tinker-shakespeare-hamlet-iter200.bin`. About 825 KB.
+
+If you have a hex viewer handy (any text editor that shows raw bytes is fine; `xxd` on macOS / Linux, `Get-Content -Raw` plus a hex helper on Windows), open the file and look at the first 512 bytes. You'll see something like:
+
+```text
+{"format":"tinker-m18-v1","config":{"vocabSize":65,...,"dFF":256},"seed":"hamlet","vocabHash":"3a17...","iter":200,"valLoss":2.81,"createdAt":"2026-05-25T..."}     [spaces to 512]
+```
+
+Then the bytes go quiet. From byte 512 to the end of the file, it's a long stream of little-endian `f32`. That is your model. Every weight you have been watching the loss curve change for the last several thousand iters lives in those bytes.
+</Step>
+
+<Step title="Bring it back">
+Press **load weights**. Pick the file you just downloaded. (If you reset the runner first, that's fine; the load button will lazy-boot the engine for you. The "compiling shaders" badge will flash briefly.)
+
+A small chip appears under the controls naming the file you loaded. The iter counter snaps to whatever iter the saved file was at. The seed field updates to match the loaded checkpoint. Press **resume**. Training continues from there, with the same cosine learning-rate schedule.
+
+One honest caveat. The `.bin` file stores **weights**. It does not store the AdamW optimizer's running averages of gradient and gradient-squared (the `m` and `v` buffers). It also does not store the data-loader's RNG position. When you press resume, AdamW restarts with zero momentum and the data loader starts feeding fresh batches from the seed's iter-0 ordering.
+
+What this means in practice: the resumed run is not bit-identical to "the run if you had never paused." It is the same architecture, with the same weights you stopped at, learning from there with a fresh optimizer state. For sampling and inspection, this is fine. For research checkpointing where you want exact resume, you would also save `m`, `v`, the data-loader RNG, the AMP/grad-scaler state, and the LR-scheduler step. We do not, because the lesson is the artifact, not the resume.
+</Step>
+
+<Step title="Why not just put it in a URL?">
+A reasonable next thought is to skip the file download and stash the whole model in a URL hash so a learner could share their checkpoint with a friend over Slack. Run the math.
+
+Start with 825 KB of `f32`. Gzip compresses neural-network weights at roughly 2.5:1, so 825 KB becomes about 330 KB. URLs cannot hold arbitrary bytes, so base64-encode it: that's another `4/3` expansion, so 330 KB becomes about 440 KB. Add URL-safe percent encoding for stray `+` and `/` characters and you land near 450 KB.
+
+Chrome's URL cap is 2 MB, so a 450 KB hash *technically* fits in the browser's address bar. The problem is the network of places people paste URLs:
+
+- **Slack** truncates the URL part of a message past about 4 KB.
+- **Discord** truncates around 2 KB.
+- **Twitter / X** never gave you more than 280 characters of message body in the first place.
+- **Most email clients** drop the URL into the body and clip line lengths.
+
+A 450 KB URL works exactly once: when you copy it from one of your own tabs and paste it into another tab in the same browser. It does not survive the first hop of being shared. So we ship the file instead. The `.bin` you just downloaded is the canonical artifact. Email it, upload it, drop it on a USB stick. It travels.
+
+(There is a real version of this idea: gzip+base64 the smallest possible piece of state — like only the seed string, the iter count, and the validation loss — into a URL fragment. That is small enough to share, and reproducing the weights is a `seededInitWeights` call away because everything is deterministic. We do not build it in this lesson, but the seed-as-identity story we just told is the thing that would make it work.)
+</Step>
+
+<Step title="This checkpoint is yours">
+You have a file on your disk. It is about 825 KB. It is the entire model.
+
+Not "a model trained on your data." Not "the model you queried through an API." The model. The 206,016 specific `f32` numbers that, when you multiply them in the right order against a context window of tokens, predict the next character of Shakespeare reasonably well. Those numbers exist nowhere on Earth other than the GPU you wrote the kernels for and the file you just downloaded.
+
+In the next lesson, **Now make it talk**, we load a different checkpoint (a fully trained one, shipped with the page) into a sampler playground and turn the knobs (temperature, top-k, top-p) on the next-token distribution. That lesson works whether or not you finished training your own. But the file you just saved is the one that's yours.
+
+The lesson after that is the credits roll.
+</Step>

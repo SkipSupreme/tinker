@@ -21,14 +21,16 @@
   import {
     Engine, M18_CONFIG, seededInitWeights, cosineLR,
     loadTinyShakespeare, getBatch, seededRng,
-    type CorpusBundle,
+    writeCheckpoint, readCheckpoint, vocabHash as computeVocabHash,
+    type CorpusBundle, type CheckpointMeta,
   } from '../../lib/m18/engine';
 
   interface Props {
     showSamples?: boolean;
+    showCheckpointIO?: boolean;
   }
 
-  const { showSamples = false }: Props = $props();
+  const { showSamples = false, showCheckpointIO = false }: Props = $props();
 
   const cfg = M18_CONFIG;
   const TOTAL_ITERS = 2000;
@@ -66,10 +68,16 @@
   let canvas: HTMLCanvasElement | undefined = $state();
   let sampleLog: HTMLElement | undefined = $state();
 
+  let saveBusy: boolean = $state(false);
+  let loadBusy: boolean = $state(false);
+  let loadedFromName: string = $state('');
+  let fileInput: HTMLInputElement | undefined = $state();
+
   // Non-reactive refs. Engine and corpus survive Reset to avoid paying
   // shader-compile cost again.
   let engine: Engine | null = null;
   let corpus: CorpusBundle | null = null;
+  let vocabHashCache: string = '';
   let trainRng: (() => number) | null = null;
   let valRng: (() => number) | null = null;
   let sampleRng: (() => number) | null = null;
@@ -171,7 +179,151 @@
     // model was trained on. Same prompt every sample → improvement is visible.
     promptIds = corpus.valIds.slice(0, PROMPT_LEN);
     ewmaTrain = null;
+    if (!vocabHashCache) vocabHashCache = await computeVocabHash(corpus.vocab);
     bootMsg = '';
+  }
+
+  // Engine + corpus only. Used by Load Weights so the file dropper can lazy-
+  // boot from an idle phase without paying the full seeded-init / warmup path
+  // (the loaded checkpoint replaces those weights anyway).
+  async function bootEngineOnly(): Promise<void> {
+    if (!('gpu' in navigator)) {
+      throw new Error('WebGPU is not available. Try Chrome, Edge, or Firefox 141+ on desktop.');
+    }
+    bootMsg = 'loading corpus…';
+    if (!corpus) corpus = await loadTinyShakespeare();
+    bootMsg = 'requesting GPU adapter…';
+    if (!engine) engine = await Engine.create(cfg);
+    bootMsg = 'compiling shaders…';
+    // Warm the WGSL pipeline cache so the first user-driven step after Load
+    // doesn't stall for 1–3 s when they press resume. trainStep needs both
+    // parameters loaded and AdamW state initialized first; the Load handler
+    // will overwrite both immediately after this.
+    engine.loadParameters(seededInitWeights(cfg, 'warm'));
+    engine.initTraining(batchSize);
+    const warmRng = seededRng('warm');
+    const w = getBatch(corpus.trainIds, batchSize, cfg.contextLen, warmRng);
+    await engine.trainStep(w.x, w.y, 0, 1, HP);
+    if (!vocabHashCache) vocabHashCache = await computeVocabHash(corpus.vocab);
+    bootMsg = '';
+  }
+
+  async function saveCheckpoint(): Promise<void> {
+    if (!engine || !corpus) {
+      errorMsg = 'Press start first — there are no weights to save yet.';
+      return;
+    }
+    saveBusy = true;
+    errorMsg = '';
+    try {
+      if (!vocabHashCache) vocabHashCache = await computeVocabHash(corpus.vocab);
+      const p = engine.params;
+      const readBlock = async (i: number) => ({
+        ln1Gamma: await engine.readTensor(p.blocks[i].ln1Gamma),
+        ln1Beta:  await engine.readTensor(p.blocks[i].ln1Beta),
+        wQKV:     await engine.readTensor(p.blocks[i].wQKV),
+        wAttnOut: await engine.readTensor(p.blocks[i].wAttnOut),
+        ln2Gamma: await engine.readTensor(p.blocks[i].ln2Gamma),
+        ln2Beta:  await engine.readTensor(p.blocks[i].ln2Beta),
+        wFFN1:    await engine.readTensor(p.blocks[i].wFFN1),
+        wFFN2:    await engine.readTensor(p.blocks[i].wFFN2),
+      });
+      const params = {
+        wte: await engine.readTensor(p.wte),
+        wpe: await engine.readTensor(p.wpe),
+        blocks: await Promise.all(Array.from({ length: cfg.nLayer }, (_, i) => readBlock(i))),
+        lnFGamma: await engine.readTensor(p.lnFGamma),
+        lnFBeta:  await engine.readTensor(p.lnFBeta),
+      };
+      const meta: CheckpointMeta = {
+        format: 'tinker-m18-v1',
+        config: cfg,
+        seed,
+        vocabHash: vocabHashCache,
+        iter: currentIter,
+        valLoss: valNll || trainNll || 0,
+        createdAt: new Date().toISOString(),
+      };
+      const blob = writeCheckpoint(params, meta);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const safeSeed = (seed || 'seed').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 32);
+      a.href = url;
+      a.download = `tinker-shakespeare-${safeSeed}-iter${currentIter}.bin`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      // Free the blob URL on the next tick so the download dialog has time to grab it.
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) {
+      errorMsg = e instanceof Error ? e.message : String(e);
+    } finally {
+      saveBusy = false;
+    }
+  }
+
+  function triggerLoad(): void {
+    if (loadBusy) return;
+    fileInput?.click();
+  }
+
+  async function onFileSelected(event: Event): Promise<void> {
+    const input = event.currentTarget as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    loadBusy = true;
+    errorMsg = '';
+    cancelToken.cancelled = true;
+    try {
+      const buf = await file.arrayBuffer();
+      const { meta, params } = readCheckpoint(buf, cfg);
+
+      // Lazy-boot engine + corpus if the user hasn't pressed start yet.
+      if (!engine || !corpus) {
+        phase = 'booting';
+        await bootEngineOnly();
+      }
+      if (!engine || !corpus) throw new Error('engine init failed');
+
+      if (!vocabHashCache) vocabHashCache = await computeVocabHash(corpus.vocab);
+      if (meta.vocabHash !== vocabHashCache) {
+        throw new Error('Checkpoint was trained on a different vocabulary. Refusing to load.');
+      }
+
+      engine.loadParameters(params);
+      engine.initTraining(batchSize);
+
+      // Reset RNGs and curves for the resumed run. The cosine LR schedule will
+      // pick up at meta.iter (correct). The data-sampling RNG starts fresh from
+      // the loaded seed — the .bin captures weights, not the dataloader state,
+      // so a resumed trajectory branches from the original.
+      trainCurve.length = 0; valCurve.length = 0; samples.length = 0;
+      trainRng = seededRng(meta.seed);
+      valRng = seededRng(meta.seed + ':val');
+      sampleRng = seededRng(meta.seed + ':sample');
+      promptIds = corpus.valIds.slice(0, PROMPT_LEN);
+      ewmaTrain = null;
+
+      seed = meta.seed;
+      currentIter = meta.iter;
+      valNll = meta.valLoss;
+      trainNll = meta.valLoss;
+      currentLr = 0;
+      itersPerSec = 0;
+      elapsedSec = 0;
+      startedAt = 0; // resume path will set a fresh start time.
+      loadedFromName = file.name;
+      pausedByVisibility = false;
+      phase = 'paused';
+      drawCurve();
+    } catch (e) {
+      errorMsg = e instanceof Error ? e.message : String(e);
+      phase = 'error';
+    } finally {
+      loadBusy = false;
+      // Allow re-selecting the same file (browsers suppress change otherwise).
+      if (input) input.value = '';
+    }
   }
 
   async function start(): Promise<void> {
@@ -182,6 +334,9 @@
       cancelToken = { cancelled: false };
       lastEvalT = performance.now();
       lastEvalIter = currentIter;
+      // Resuming from a Load → startedAt was never set; start the elapsed
+      // clock now so the readout reflects this session, not Unix-epoch math.
+      if (startedAt === 0) startedAt = performance.now();
       void runLoop();
       return;
     }
@@ -221,6 +376,8 @@
     trainCurve.length = 0; valCurve.length = 0; samples.length = 0;
     currentIter = 0; trainNll = 0; valNll = 0; currentLr = 0;
     itersPerSec = 0; elapsedSec = 0;
+    startedAt = 0;
+    loadedFromName = '';
     errorMsg = ''; bootMsg = '';
     drawCurve();
   }
@@ -377,6 +534,12 @@
   } as const)[phase]);
 
   const controlsDisabled = $derived(phase === 'booting' || phase === 'training' || phase === 'paused');
+  const saveDisabled = $derived(
+    phase === 'idle' || phase === 'booting' || phase === 'training' || saveBusy || loadBusy
+  );
+  const loadDisabled = $derived(
+    phase === 'booting' || phase === 'training' || saveBusy || loadBusy
+  );
 
   function fmt(x: number, p: number): string { return x.toFixed(p); }
   function sciSmall(x: number): string {
@@ -408,8 +571,50 @@
         </button>
       {/if}
       <button type="button" class="btn btn-ghost" onclick={reset} disabled={phase === 'booting'}>reset</button>
+      {#if showCheckpointIO}
+        <span class="action-sep" aria-hidden="true"></span>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          onclick={saveCheckpoint}
+          disabled={saveDisabled}
+          title="Download a .bin of the current weights"
+        >
+          {saveBusy ? 'saving…' : 'save weights'}
+        </button>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          onclick={triggerLoad}
+          disabled={loadDisabled}
+          title="Restore weights from a .bin file"
+        >
+          {loadBusy ? 'loading…' : 'load weights'}
+        </button>
+        <input
+          bind:this={fileInput}
+          type="file"
+          accept=".bin,application/octet-stream"
+          onchange={onFileSelected}
+          style="display:none"
+          aria-hidden="true"
+          tabindex="-1"
+        />
+      {/if}
     </div>
   </header>
+
+  {#if showCheckpointIO && loadedFromName && phase !== 'training'}
+    <p class="loadedFrom">
+      <span class="loadedFromLabel">loaded</span>
+      <span class="loadedFromName">{loadedFromName}</span>
+      {#if phase === 'paused'}
+        <span class="loadedFromHint">· press resume to continue from iter {currentIter}</span>
+      {:else if phase === 'done'}
+        <span class="loadedFromHint">· training finished</span>
+      {/if}
+    </p>
+  {/if}
 
   <div class="controls">
     <label class="ctl">
@@ -529,7 +734,35 @@
     color: var(--site-fg-muted);
   }
 
-  .actions { display: inline-flex; gap: 0.4rem; }
+  .actions { display: inline-flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; }
+  .action-sep {
+    display: inline-block;
+    width: 1px; height: 1.2rem;
+    background: color-mix(in srgb, var(--site-fg) 18%, transparent);
+    margin: 0 0.2rem;
+  }
+
+  .loadedFrom {
+    margin: 0;
+    display: inline-flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
+    padding: 0.45rem 0.7rem;
+    background: color-mix(in srgb, var(--ink-sea) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--ink-sea) 25%, transparent);
+    border-radius: 10px;
+    font-size: 0.82rem;
+    color: var(--site-fg);
+  }
+  .loadedFromLabel {
+    font-family: var(--font-mono); font-size: 0.7rem;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--ink-sea); font-weight: 600;
+  }
+  .loadedFromName {
+    font-family: var(--font-mono); font-size: 0.84rem;
+    color: var(--site-fg);
+    word-break: break-all;
+  }
+  .loadedFromHint { color: var(--site-fg-muted); font-size: 0.78rem; }
   .btn {
     cursor: pointer;
     font-family: var(--font-body); font-size: 0.88rem; font-weight: 600;
