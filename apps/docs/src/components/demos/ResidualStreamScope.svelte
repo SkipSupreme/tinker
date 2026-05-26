@@ -87,8 +87,8 @@
     return { streams, attnDeltas, ffnDeltas };
   }
 
-  const state = buildState();
-  const streams = state.streams; // length 2N+1 = 9
+  const model = buildState();
+  const streams = model.streams; // length 2N+1 = 9
   const STATE_LABELS: { name: string; kind: 'init' | 'attn' | 'ffn'; block?: number }[] = [
     { name: 'h₀ (embed)', kind: 'init' },
     ...Array.from({ length: N }, (_, l) => [
@@ -125,7 +125,7 @@
         name: `attn ${l + 1}`,
         kind: 'attn',
         block: l + 1,
-        values: state.attnDeltas[l][selectedCol].slice(),
+        values: model.attnDeltas[l][selectedCol].slice(),
       });
       stateIdx++;
       if (stateIdx > selectedRow) break;
@@ -133,7 +133,7 @@
         name: `ffn ${l + 1}`,
         kind: 'ffn',
         block: l + 1,
-        values: state.ffnDeltas[l][selectedCol].slice(),
+        values: model.ffnDeltas[l][selectedCol].slice(),
       });
       stateIdx++;
     }
