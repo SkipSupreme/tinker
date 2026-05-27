@@ -210,11 +210,11 @@
       <Plot.OfX y={g} color="var(--ink-red)" weight={3} />
 
       <!-- handle labels -->
-      <Text x={h + 0.35} y={v + a} latex="a" size={13} color="var(--ink-sun)" />
-      <Text x={h + k} y={v - 0.45} latex="k" size={13} color="var(--ink-teal)" />
+      <Text x={h + 0.5} y={v + a + 0.1} latex="a" size={13} color="var(--ink-sun)" />
+      <Text x={h + k + 0.4} y={v - 0.45} latex="k" size={13} color="var(--ink-teal)" />
       <Text
-        x={h + 0.35}
-        y={v + 0.35}
+        x={h - 0.6}
+        y={v + 0.55}
         latex="(h, v)"
         size={13}
         color="var(--ink-coral)"
