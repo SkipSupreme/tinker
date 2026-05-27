@@ -2,7 +2,7 @@
 // `?raw` query so they ship as inlined source in the bundle.
 
 import type { ModelConfig } from './config';
-import { EngineCore, type F32, type ModelParamData, type KernelSources } from './core';
+import { EngineCore, type ModelParamData, type KernelSources } from './core';
 import { seededRng, fillNormal } from './rng';
 
 import embeddingGatherWgsl from './kernels/embeddingGather.wgsl?raw';

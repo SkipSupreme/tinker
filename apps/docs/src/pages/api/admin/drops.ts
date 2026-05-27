@@ -25,7 +25,7 @@ interface AudienceRow {
   email: string;
 }
 
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async ({ request }) => {
   const env = getEnv();
   const csrf = requireCsrf(request);
   if (csrf) return csrf;

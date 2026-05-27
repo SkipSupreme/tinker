@@ -46,7 +46,7 @@ const PERMISSIONS = [
   'interest-cohort=()',
 ].join(', ');
 
-export const onRequest = defineMiddleware(async (context, next) => {
+export const onRequest = defineMiddleware(async (_context, next) => {
   const response = await next();
 
   // Don't clobber asset caching/etag responses, but everything else gets the

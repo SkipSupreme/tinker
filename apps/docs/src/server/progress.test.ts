@@ -38,7 +38,7 @@ describe('recordView', () => {
       moduleSlug: 'm5',
       lessonSlug: 'derivative',
     });
-    const rows = await db.client.select().from(lessonView).all();
+    const rows = db.client.select().from(lessonView).all();
     expect(rows).toHaveLength(1);
     expect(rows[0].viewCount).toBe(1);
   });
@@ -49,7 +49,7 @@ describe('recordView', () => {
       moduleSlug: 'm5',
       lessonSlug: 'derivative',
     });
-    const first = await db.client
+    const first = db.client
       .select()
       .from(lessonView)
       .where(and(eq(lessonView.userId, USER), eq(lessonView.lessonSlug, 'derivative')))
@@ -62,7 +62,7 @@ describe('recordView', () => {
       moduleSlug: 'm5',
       lessonSlug: 'derivative',
     });
-    const second = await db.client
+    const second = db.client
       .select()
       .from(lessonView)
       .where(and(eq(lessonView.userId, USER), eq(lessonView.lessonSlug, 'derivative')))
@@ -93,7 +93,7 @@ describe('recordView', () => {
       moduleSlug: 'm5',
       lessonSlug: 'derivative',
     });
-    const rows = await db.client.select().from(lessonView).all();
+    const rows = db.client.select().from(lessonView).all();
     expect(rows).toHaveLength(2);
   });
 });
@@ -106,7 +106,7 @@ describe('recordCompletion', () => {
       lessonSlug: 'derivative',
     });
     await recordCompletion(db.client, USER, 'derivative');
-    const row = await db.client
+    const row = db.client
       .select()
       .from(lessonView)
       .where(and(eq(lessonView.userId, USER), eq(lessonView.lessonSlug, 'derivative')))
@@ -121,7 +121,7 @@ describe('recordCompletion', () => {
       lessonSlug: 'derivative',
     });
     await recordCompletion(db.client, USER, 'derivative');
-    const first = await db.client
+    const first = db.client
       .select()
       .from(lessonView)
       .where(and(eq(lessonView.userId, USER), eq(lessonView.lessonSlug, 'derivative')))
@@ -129,7 +129,7 @@ describe('recordCompletion', () => {
 
     await new Promise((r) => setTimeout(r, 10));
     await recordCompletion(db.client, USER, 'derivative');
-    const second = await db.client
+    const second = db.client
       .select()
       .from(lessonView)
       .where(and(eq(lessonView.userId, USER), eq(lessonView.lessonSlug, 'derivative')))
@@ -139,7 +139,7 @@ describe('recordCompletion', () => {
 
   it('creates a row when completing a never-viewed lesson', async () => {
     await recordCompletion(db.client, USER, 'lesson-x');
-    const row = await db.client
+    const row = db.client
       .select()
       .from(lessonView)
       .where(and(eq(lessonView.userId, USER), eq(lessonView.lessonSlug, 'lesson-x')))
@@ -191,7 +191,7 @@ describe('mergeAnonProgress', () => {
       },
     ]);
 
-    const row = await db.client
+    const row = db.client
       .select()
       .from(lessonView)
       .where(and(eq(lessonView.userId, USER), eq(lessonView.lessonSlug, 'derivative')))
@@ -205,7 +205,7 @@ describe('mergeAnonProgress', () => {
       moduleSlug: 'm5',
       lessonSlug: 'derivative',
     });
-    const original = await db.client
+    const original = db.client
       .select()
       .from(lessonView)
       .where(and(eq(lessonView.userId, USER), eq(lessonView.lessonSlug, 'derivative')))
@@ -222,7 +222,7 @@ describe('mergeAnonProgress', () => {
       },
     ]);
 
-    const merged = await db.client
+    const merged = db.client
       .select()
       .from(lessonView)
       .where(and(eq(lessonView.userId, USER), eq(lessonView.lessonSlug, 'derivative')))

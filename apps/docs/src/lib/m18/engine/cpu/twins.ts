@@ -8,7 +8,7 @@ export type F32 = Float32Array;
 
 // 1. embeddingGather: tokIds [B*T] + posIds [T] + wte [V,d] + wpe [T,d] → out [B*T,d]
 export function embeddingGather(
-  tokIds: Int32Array, T: number, wte: F32, wpe: F32, V: number, d: number,
+  tokIds: Int32Array, T: number, wte: F32, wpe: F32, _V: number, d: number,
 ): F32 {
   const N = tokIds.length;
   const out = new Float32Array(N * d);

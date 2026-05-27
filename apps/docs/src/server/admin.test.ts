@@ -5,7 +5,7 @@ import { user as userTbl } from './schema';
 
 // Test the role-check logic directly (bypass Better Auth session creation)
 async function isAdmin(db: TestDb['client'], userId: string): Promise<boolean> {
-  const u = await db.select().from(userTbl).where(eq(userTbl.id, userId)).get();
+  const u = db.select().from(userTbl).where(eq(userTbl.id, userId)).get();
   return u?.role === 'admin';
 }
 

@@ -76,11 +76,11 @@ describe('magic link flow', () => {
     const verifyRes = await auth.handler(new Request(sent[0].url));
     expect(verifyRes.status).toBeLessThan(400);
 
-    const users = await db.client.select().from(userTbl).all();
+    const users = db.client.select().from(userTbl).all();
     expect(users).toHaveLength(1);
     expect(users[0].email).toBe('a@b.co');
 
-    const sessions = await db.client.select().from(sessionTbl).all();
+    const sessions = db.client.select().from(sessionTbl).all();
     expect(sessions.length).toBeGreaterThan(0);
     expect(sessions[0].userId).toBe(users[0].id);
   });
@@ -89,14 +89,14 @@ describe('magic link flow', () => {
     await requestMagicLink('a@b.co');
     const url = sent[0].url;
     await auth.handler(new Request(url));
-    const sessionsAfterFirst = await db.client.select().from(sessionTbl).all();
+    const sessionsAfterFirst = db.client.select().from(sessionTbl).all();
     expect(sessionsAfterFirst).toHaveLength(1);
 
     const second = await auth.handler(new Request(url));
     // Better Auth redirects with ?error=... rather than returning 4xx;
     // assert no NEW session was created.
     const location = second.headers.get('Location') ?? '';
-    const sessionsAfterSecond = await db.client.select().from(sessionTbl).all();
+    const sessionsAfterSecond = db.client.select().from(sessionTbl).all();
     expect(sessionsAfterSecond).toHaveLength(1);
     expect(location).toMatch(/error/i);
   });
@@ -109,7 +109,7 @@ describe('magic link flow', () => {
     vi.setSystemTime(new Date('2026-01-01T12:16:00Z')); // 16 minutes later
     const res = await auth.handler(new Request(url));
     const location = res.headers.get('Location') ?? '';
-    const sessions = await db.client.select().from(sessionTbl).all();
+    const sessions = db.client.select().from(sessionTbl).all();
     expect(sessions).toHaveLength(0);
     expect(location).toMatch(/error/i);
   });
@@ -117,14 +117,14 @@ describe('magic link flow', () => {
   it('returns same user when same email signs in twice', async () => {
     await requestMagicLink('a@b.co');
     await auth.handler(new Request(sent[0].url));
-    const usersAfterFirst = await db.client.select().from(userTbl).all();
+    const usersAfterFirst = db.client.select().from(userTbl).all();
     expect(usersAfterFirst).toHaveLength(1);
     const firstUserId = usersAfterFirst[0].id;
 
     sent = [];
     await requestMagicLink('a@b.co');
     await auth.handler(new Request(sent[0].url));
-    const usersAfterSecond = await db.client.select().from(userTbl).all();
+    const usersAfterSecond = db.client.select().from(userTbl).all();
     expect(usersAfterSecond).toHaveLength(1);
     expect(usersAfterSecond[0].id).toBe(firstUserId);
   });
