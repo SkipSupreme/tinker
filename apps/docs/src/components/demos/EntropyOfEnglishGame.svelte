@@ -97,18 +97,25 @@
   ];
 
   // A label rotated -55° at 9px font is ~120px long, projecting ~70px onto
-  // the x-axis. On a ~600px bar covering value range [0,5], that's 0.58
-  // value-units of horizontal label footprint. Anything closer than ~0.9
-  // needs its own vertical tier. We cycle 0 → 1 → 2 → 0 so three landmarks
-  // packed into the same neighbourhood get three different label heights.
+  // the x-axis. On a ~600px bar covering value range [0,5], that's ~0.58
+  // value-units of horizontal label footprint, so anything closer than
+  // TIER_THRESH needs its own vertical tier. Assignment picks the lowest
+  // tier whose most-recently-placed label is at least TIER_THRESH away —
+  // non-adjacent same-tier labels can't collide even when a closer cluster
+  // pushes some labels deeper.
   const TIER_THRESH = 0.9;
+  const NUM_TIERS = 3;
   const tieredRefs = $derived.by(() => {
-    let prevTier = -1;
-    let prevValue = -Infinity;
+    const lastAtTier: number[] = new Array(NUM_TIERS).fill(-Infinity);
     return REFERENCES.map((r) => {
-      const tier = r.value - prevValue < TIER_THRESH ? (prevTier + 1) % 3 : 0;
-      prevValue = r.value;
-      prevTier = tier;
+      let tier = NUM_TIERS - 1;
+      for (let t = 0; t < NUM_TIERS; t++) {
+        if (r.value - lastAtTier[t] >= TIER_THRESH) {
+          tier = t;
+          break;
+        }
+      }
+      lastAtTier[tier] = r.value;
       return { ...r, tier };
     });
   });
