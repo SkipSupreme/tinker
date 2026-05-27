@@ -40,8 +40,8 @@
     {
       id: 'product',
       label: '(a + b) · c',
-      width: 460,
-      height: 220,
+      width: 540,
+      height: 260,
       root: 'f',
       nodes: [
         { id: 'a', op: 'leaf', label: 'a', initial: 2, editable: true, x: 60, y: 50 },
@@ -60,8 +60,8 @@
     {
       id: 'neuron',
       label: 'tanh(w₁x₁ + w₂x₂ + b)',
-      width: 580,
-      height: 280,
+      width: 700,
+      height: 320,
       root: 'o',
       nodes: [
         { id: 'x1', op: 'leaf', label: 'x₁', initial: 2, editable: true, x: 50, y: 40 },
@@ -90,8 +90,8 @@
     {
       id: 'diamond',
       label: 'f = a · a   (used twice)',
-      width: 380,
-      height: 180,
+      width: 430,
+      height: 160,
       root: 'f',
       nodes: [
         { id: 'a', op: 'leaf', label: 'a', initial: 3, editable: true, x: 70, y: 90 },
