@@ -132,9 +132,14 @@
     aria-label="Logits, softmax probabilities, and gradient arrows for one-hot cross-entropy"
     class="stage"
   >
-    <!-- Section labels -->
+    <!-- Section labels: anchor each on the empty band just inside its panel,
+         so neither label collides with bars. The q label was previously at
+         `midLine - 6` (above the dashed line) where negative-logit bars hang
+         down from the zero-ref line and covered the text. Drop it just below
+         the midline, in the strip the prob bars never reach (max bar tops out
+         at baseline - half, leaving ~20px of clear space). -->
     <text x={padL} y={padT - 10} class="section-label">z (drag up/down)</text>
-    <text x={padL} y={midLine - 6} class="section-label">q = softmax(z)</text>
+    <text x={padL} y={midLine + 14} class="section-label">q = softmax(z)</text>
 
     <!-- Midline -->
     <line x1={padL} y1={midLine} x2={padL + usableW} y2={midLine} class="midline" />
