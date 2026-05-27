@@ -215,7 +215,7 @@
       {#if Math.abs(cosVal) > 0.18}
         <Text
           x={cosVal / 2}
-          y={sinVal >= 0 ? -0.16 : 0.16}
+          y={sinVal >= 0 ? -0.32 : 0.32}
           latex={`\\cos\\theta=${cosVal.toFixed(3)}`}
           size={12}
           color="var(--ink-sea)"
