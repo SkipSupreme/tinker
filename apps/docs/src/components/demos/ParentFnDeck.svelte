@@ -145,6 +145,18 @@
 
   const selected = $derived(FUNCTIONS[selectedIndex]);
 
+  // Thumbnail cards have overflow:hidden, so a tick label that sits at the
+  // viewBox edge (e.g. "4" when y goes to 4) gets clipped by the card mask.
+  // Pad each thumb viewBox by ~6% so the boundary tick labels have headroom.
+  function paddedViewBox(vb: { x: [number, number]; y: [number, number] }) {
+    const xPad = (vb.x[1] - vb.x[0]) * 0.06;
+    const yPad = (vb.y[1] - vb.y[0]) * 0.06;
+    return {
+      x: [vb.x[0] - xPad, vb.x[1] + xPad] as [number, number],
+      y: [vb.y[0] - yPad, vb.y[1] + yPad] as [number, number],
+    };
+  }
+
   const parityNote = $derived.by(() => {
     if (selected.parity === 'even') {
       return 'even: symmetric across the y-axis, so f(-x) = f(x)';
@@ -216,7 +228,7 @@
           <Mafs
             width={150}
             height={110}
-            viewBox={fnItem.viewBox}
+            viewBox={paddedViewBox(fnItem.viewBox)}
             pan={false}
             zoom={false}
           >
