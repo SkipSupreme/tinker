@@ -262,6 +262,13 @@
     const axis = 'color-mix(in srgb, currentColor 22%, transparent)';
     const grid = 'color-mix(in srgb, currentColor 9%, transparent)';
     const tickLabel = 'color-mix(in srgb, currentColor 55%, transparent)';
+    // Canvas 2D does not resolve `var(--token)`; an invalid strokeStyle leaves
+    // the previous value (here, the faint grid grey) in effect, which is why
+    // the live curve was rendering grey despite the legend swatch being red.
+    // Resolve the CSS variable to its computed colour before handing it off.
+    const inkRed =
+      getComputedStyle(canvas).getPropertyValue('--ink-red').trim() ||
+      'crimson';
 
     ctx.strokeStyle = axis; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.stroke();
@@ -317,7 +324,7 @@
     }
 
     // Live engine run: solid, brand color.
-    plot(liveCurve, 'var(--ink-red)', 2.2);
+    plot(liveCurve, inkRed, 2.2);
   }
 
   onMount(() => { drawCurve(); });
