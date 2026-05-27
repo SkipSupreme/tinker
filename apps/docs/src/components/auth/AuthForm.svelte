@@ -35,11 +35,16 @@
         body: JSON.stringify(body),
       });
       if (!res.ok) {
-        if (res.status === 401 || res.status === 403) {
-          throw new Error('That email and password combination didn’t match.');
-        }
-        if (res.status === 409) {
-          throw new Error('An account with that email already exists. Try signing in.');
+        // For signin AND signup we collapse 401/403/409 into one message so
+        // the response doesn't reveal whether an email is already registered.
+        // Validation errors (422/400) stay distinct because the field hint
+        // is the legitimate help the user needs.
+        if (res.status === 401 || res.status === 403 || res.status === 409) {
+          throw new Error(
+            mode === 'signup'
+              ? "Couldn't create your account. If you already signed up, try signing in instead."
+              : "That email and password combination didn't match.",
+          );
         }
         if (res.status === 422 || res.status === 400) {
           throw new Error(
@@ -51,6 +56,8 @@
         if (res.status === 429) {
           throw new Error('Too many tries. Wait a minute and try again.');
         }
+        // Non-401/422/429 = server-side bug we'd otherwise never know about.
+        console.error('[auth] unexpected status', res.status, await res.text().catch(() => ''));
         throw new Error('Something went wrong. Try again.');
       }
       window.location.assign(callbackURL);

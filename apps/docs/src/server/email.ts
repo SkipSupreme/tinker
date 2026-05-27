@@ -100,26 +100,57 @@ async function importHmacKey(secret: string): Promise<CryptoKey> {
   );
 }
 
+/**
+ * Unsubscribe tokens expire after 90 days. The token-shape is
+ * `${userId}.${ts}.${sig}` where the signed payload is `${userId}|${ts}`.
+ * Pre-expiry tokens (no `ts` segment) are accepted forever — kept for the
+ * one-time migration window after this expiry change landed. Remove the
+ * legacy branch once it's clear no live emails carry the old shape.
+ */
+const UNSUB_TOKEN_TTL_MS = 90 * 24 * 60 * 60 * 1000;
+
 export async function signUnsubscribeToken(userId: string, secret: string): Promise<string> {
   const key = await importHmacKey(secret);
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(userId));
-  return `${userId}.${bytesToB64Url(sig)}`;
+  const ts = Date.now();
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(`${userId}|${ts}`));
+  return `${userId}.${ts}.${bytesToB64Url(sig)}`;
 }
 
 export async function verifyUnsubscribeToken(
   token: string,
   secret: string,
 ): Promise<string | null> {
-  const dot = token.indexOf('.');
-  if (dot < 1) return null;
-  const userId = token.slice(0, dot);
-  const sigB64 = token.slice(dot + 1);
-  if (!userId || !sigB64) return null;
+  const parts = token.split('.');
+  // Legacy 2-segment shape: ${userId}.${sig} — pre-2026-05-27 emails.
+  if (parts.length === 2) {
+    const [userId, sigB64] = parts;
+    if (!userId || !sigB64) return null;
+    try {
+      const key = await importHmacKey(secret);
+      const ok = await crypto.subtle.verify(
+        'HMAC', key, b64UrlToBytes(sigB64), enc.encode(userId),
+      );
+      return ok ? userId : null;
+    } catch (e) {
+      console.error('[unsub] legacy token verify threw:', e);
+      return null;
+    }
+  }
+  // Current 3-segment shape: ${userId}.${ts}.${sig}
+  if (parts.length !== 3) return null;
+  const [userId, tsStr, sigB64] = parts;
+  if (!userId || !tsStr || !sigB64) return null;
+  const ts = Number(tsStr);
+  if (!Number.isFinite(ts) || ts <= 0) return null;
+  if (Date.now() - ts > UNSUB_TOKEN_TTL_MS) return null;
   try {
     const key = await importHmacKey(secret);
-    const ok = await crypto.subtle.verify('HMAC', key, b64UrlToBytes(sigB64), enc.encode(userId));
+    const ok = await crypto.subtle.verify(
+      'HMAC', key, b64UrlToBytes(sigB64), enc.encode(`${userId}|${ts}`),
+    );
     return ok ? userId : null;
-  } catch {
+  } catch (e) {
+    console.error('[unsub] token verify threw:', e);
     return null;
   }
 }

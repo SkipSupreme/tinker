@@ -44,9 +44,13 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
 
   if (env.RESEND_API_KEY) {
     (locals as App.Locals).cfContext.waitUntil(
-      sendAccountDeletedEmail(env.RESEND_API_KEY, originalEmail).catch((e) =>
-        console.error('account-deleted email failed:', e),
-      ),
+      sendAccountDeletedEmail(env.RESEND_API_KEY, originalEmail).catch((e: unknown) => {
+        // Avoid logging the email (PII / GDPR concern in 7-day worker logs).
+        // Status + code is enough for diagnosis.
+        const status = e && typeof e === 'object' && 'status' in e ? (e as { status?: number }).status : undefined;
+        const code = e && typeof e === 'object' && 'name' in e ? (e as { name?: string }).name : 'Error';
+        console.error(`[me] account-deleted email failed: ${code} status=${status ?? 'unknown'}`);
+      }),
     );
   }
 

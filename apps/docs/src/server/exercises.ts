@@ -59,7 +59,7 @@ export async function getLatestAnswers(
     seen.add(r.exerciseId);
     out.push({
       exerciseId: r.exerciseId,
-      answerJson: safeJsonParse(r.answerJson),
+      answerJson: safeJsonParse(r.answerJson, userId, r.lessonSlug, r.exerciseId),
       isCorrect: r.isCorrect,
       attemptNo: r.attemptNo,
       createdAt: r.createdAt,
@@ -68,10 +68,21 @@ export async function getLatestAnswers(
   return out;
 }
 
-function safeJsonParse(s: string): unknown {
+function safeJsonParse(
+  s: string,
+  userId: string,
+  lessonSlug: string,
+  exerciseId: string,
+): unknown {
   try {
     return JSON.parse(s);
-  } catch {
+  } catch (e) {
+    // Returning null silently means a corrupted answer reads back as
+    // "no answer". Log the row identifiers so corruption is discoverable.
+    console.error(
+      `[exercises] corrupt answerJson user=${userId} lesson=${lessonSlug} ex=${exerciseId}:`,
+      e,
+    );
     return null;
   }
 }

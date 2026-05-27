@@ -14,7 +14,12 @@ try {
     const session = await auth.api.getSession({ headers: Astro.request.headers });
     if (session) user = { name: session.user.name ?? '', email: session.user.email };
   }
-} catch {
+} catch (e) {
+  // Catch swallows everything (incl. BETTER_AUTH_SECRET missing, DB
+  // binding missing, schema drift). Silent demotion to anon-header on a
+  // misconfigured deploy is hard to diagnose; log so it's visible in
+  // Cloudflare's tail logs.
+  console.error('[nav] session lookup failed:', e);
   user = null;
 }
 ---

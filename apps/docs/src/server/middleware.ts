@@ -39,6 +39,31 @@ export function requireCsrf(request: Request): Response | null {
   return null;
 }
 
+/**
+ * Origin check for HTML form POSTs that can't easily attach an x-tinker-csrf
+ * header (welcome.astro, me.astro). The double-submit CSRF token covers JSON
+ * endpoints; this covers traditional form submits as belt-and-suspenders on
+ * top of the session cookie's SameSite=Lax setting.
+ *
+ * Returns 403 if Origin/Referer doesn't match PUBLIC_SITE_URL. GET is
+ * permitted without an Origin (browsers omit it on top-level navigations).
+ */
+export function requireSameOrigin(request: Request, publicSiteUrl: string): Response | null {
+  if (request.method === 'GET' || request.method === 'HEAD') return null;
+  const expectedOrigin = new URL(publicSiteUrl).origin;
+  const origin = request.headers.get('origin');
+  if (origin) {
+    if (origin !== expectedOrigin) {
+      return jsonError(403, 'forbidden', 'Origin mismatch');
+    }
+    return null;
+  }
+  // No Origin: some legacy form posts. Fall back to Referer prefix check.
+  const referer = request.headers.get('referer');
+  if (referer && new URL(referer).origin === expectedOrigin) return null;
+  return jsonError(403, 'forbidden', 'Origin/Referer required for state-changing request');
+}
+
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let mismatch = 0;

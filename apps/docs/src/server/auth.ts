@@ -50,6 +50,22 @@ export function createAuth(env: AuthEnv) {
         role: { type: 'string', defaultValue: 'user', input: false },
       },
     },
+    // DB-backed rate limit: in-memory is per-isolate, which doesn't survive
+    // Cloudflare's global edge. `tinker.rate_limit` is the same table the
+    // app's checkRateLimit uses, so admin can read both in one query.
+    rateLimit: {
+      enabled: true,
+      storage: 'database',
+      modelName: 'rate_limit',
+      window: 60,
+      max: 60,
+      customRules: {
+        '/sign-in/email': { window: 60, max: 5 },
+        '/sign-up/email': { window: 60, max: 3 },
+        '/forget-password': { window: 60, max: 3 },
+        '/reset-password': { window: 60, max: 5 },
+      },
+    },
   });
 }
 

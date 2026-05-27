@@ -2,9 +2,11 @@ import type { APIRoute } from 'astro';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireCsrf, jsonError, jsonOk } from '../../../server/middleware';
+import { checkRateLimit } from '../../../server/ratelimit';
 import { requireAdmin } from '../../../server/admin';
 import { user as userTbl, userProfile, emailDrop } from '../../../server/schema';
 import { sendDropEmail, signUnsubscribeToken } from '../../../server/email';
+import { sanitizeEmailHtml } from '../../../server/sanitize-html';
 import { getEnv } from '../../../server/env';
 
 export const prerender = false;
@@ -37,6 +39,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   const { db, userId: adminId, email: adminEmail } = guard;
 
+  // Rate-limit per admin: even a compromised admin token can't fire drops
+  // in a loop without tripping this.
+  const rl = await checkRateLimit(db, `admin:drops:${adminId}`, {
+    limit: 5,
+    windowMs: 60_000,
+  });
+  if (!rl.allowed) return jsonError(429, 'rate_limited', 'Slow down on drops');
+
   if (!env.RESEND_API_KEY) {
     return jsonError(503, 'no_resend', 'RESEND_API_KEY not configured');
   }
@@ -52,6 +62,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
   }
   const parsed = Body.safeParse(body);
   if (!parsed.success) return jsonError(400, 'bad_request', 'Invalid payload');
+
+  // Defense-in-depth: a compromised admin can still phrase phishing content,
+  // but they can't inject script tags, javascript: hrefs, or background
+  // CSS exfiltration into emails. See server/sanitize-html.ts.
+  const safeBodyHtml = sanitizeEmailHtml(parsed.data.body_html);
 
   let audience: AudienceRow[];
   if (parsed.data.test_only) {
@@ -69,7 +84,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   await db.insert(emailDrop).values({
     id: dropId,
     subject: parsed.data.subject,
-    bodyMd: parsed.data.body_html,
+    bodyMd: safeBodyHtml,
     courseSlug: parsed.data.course_slug ?? null,
     moduleSlug: parsed.data.module_slug ?? null,
     lessonSlug: parsed.data.lesson_slug ?? null,
@@ -89,12 +104,16 @@ export const POST: APIRoute = async ({ request, locals }) => {
         env.RESEND_API_KEY,
         recipient.email,
         parsed.data.subject,
-        parsed.data.body_html,
+        safeBodyHtml,
         unsubUrl,
       );
       sentCount++;
     } catch (e) {
-      failures.push(`${recipient.email}: ${e instanceof Error ? e.message : String(e)}`);
+      // Don't surface recipient email in the failure list returned to UI —
+      // a compromised admin shouldn't get a fresh list of opted-in users via
+      // a failure scan. Status code + index is enough for diagnosis.
+      const status = e instanceof Error && 'status' in e ? (e as { status?: number }).status : undefined;
+      failures.push(`recipient ${audience.indexOf(recipient)}: status=${status ?? 'unknown'}`);
     }
   }
 

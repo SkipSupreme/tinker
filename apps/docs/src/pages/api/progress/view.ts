@@ -4,6 +4,7 @@ import { requireSession, requireCsrf, jsonError } from '../../../server/middlewa
 import { checkRateLimit } from '../../../server/ratelimit';
 import { recordView } from '../../../server/progress';
 import { getEnv } from '../../../server/env';
+import { isKnownLesson, withApiErrors } from '../../../server/lesson-slugs';
 
 export const prerender = false;
 
@@ -13,7 +14,7 @@ const Body = z.object({
   module_slug: z.string().min(1).max(100),
 });
 
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async ({ request }) => {
   const env = getEnv();
   const csrf = requireCsrf(request);
   if (csrf) return csrf;
@@ -41,11 +42,16 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const parsed = Body.safeParse(body);
   if (!parsed.success) return jsonError(400, 'bad_request', 'Invalid payload');
 
-  await recordView(ctx.db, ctx.session.user.id, {
-    courseSlug: parsed.data.course_slug,
-    moduleSlug: parsed.data.module_slug,
-    lessonSlug: parsed.data.lesson_slug,
-  });
+  if (!(await isKnownLesson(parsed.data.lesson_slug))) {
+    return jsonError(404, 'unknown_lesson', 'Unknown lesson slug');
+  }
 
-  return new Response(null, { status: 204 });
+  return withApiErrors('progress/view', ctx.session.user.id, async () => {
+    await recordView(ctx.db, ctx.session.user.id, {
+      courseSlug: parsed.data.course_slug,
+      moduleSlug: parsed.data.module_slug,
+      lessonSlug: parsed.data.lesson_slug,
+    });
+    return new Response(null, { status: 204 });
+  });
 };

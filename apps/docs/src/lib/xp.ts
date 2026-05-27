@@ -40,12 +40,19 @@ function readInt(key: string, fallback = 0): number {
   }
 }
 
+let xpWriteWarned = false;
 function writeInt(key: string, value: number): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(key, String(value));
-  } catch {
-    /* ignore quota / private mode */
+  } catch (e) {
+    // Quota / private mode is the legitimate case, but silently dropping
+    // a +5 XP write also means a "+5 XP" animation that rolls back on
+    // reload. Log once so the loss-of-XP path is at least observable.
+    if (!xpWriteWarned) {
+      xpWriteWarned = true;
+      console.warn('[xp] localStorage write failed (XP will not persist):', e);
+    }
   }
 }
 

@@ -4,6 +4,7 @@ import { requireSession, requireCsrf, jsonError, jsonOk } from '../../../server/
 import { checkRateLimit } from '../../../server/ratelimit';
 import { recordExerciseAnswer } from '../../../server/exercises';
 import { getEnv } from '../../../server/env';
+import { isKnownLesson, withApiErrors } from '../../../server/lesson-slugs';
 
 export const prerender = false;
 
@@ -14,7 +15,7 @@ const Body = z.object({
   is_correct: z.boolean().nullable(),
 });
 
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async ({ request }) => {
   const env = getEnv();
   const csrf = requireCsrf(request);
   if (csrf) return csrf;
@@ -37,12 +38,29 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const parsed = Body.safeParse(body);
   if (!parsed.success) return jsonError(400, 'bad_request', 'Invalid payload');
 
-  const result = await recordExerciseAnswer(ctx.db, ctx.session.user.id, {
-    lessonSlug: parsed.data.lesson_slug,
-    exerciseId: parsed.data.exercise_id,
-    answerJson: parsed.data.answer_json,
-    isCorrect: parsed.data.is_correct,
-  });
+  if (!(await isKnownLesson(parsed.data.lesson_slug))) {
+    return jsonError(404, 'unknown_lesson', 'Unknown lesson slug');
+  }
 
-  return jsonOk(result);
+  // Reject non-serializable payloads up front so we don't 500 on
+  // JSON.stringify mid-write (BigInt, circular refs, etc.).
+  let serialized: string;
+  try {
+    serialized = JSON.stringify(parsed.data.answer_json);
+  } catch {
+    return jsonError(400, 'bad_request', 'answer_json is not JSON-serializable');
+  }
+  if (!serialized) {
+    return jsonError(400, 'bad_request', 'answer_json is required');
+  }
+
+  return withApiErrors('exercises/answer', ctx.session.user.id, async () => {
+    const result = await recordExerciseAnswer(ctx.db, ctx.session.user.id, {
+      lessonSlug: parsed.data.lesson_slug,
+      exerciseId: parsed.data.exercise_id,
+      answerJson: parsed.data.answer_json,
+      isCorrect: parsed.data.is_correct,
+    });
+    return jsonOk(result);
+  });
 };

@@ -4,6 +4,7 @@ import { requireSession, requireCsrf, jsonError, jsonOk } from '../../../server/
 import { checkRateLimit } from '../../../server/ratelimit';
 import { upsertNote, getNote, NOTE_MAX_BYTES } from '../../../server/notes';
 import { getEnv } from '../../../server/env';
+import { isKnownLesson, withApiErrors } from '../../../server/lesson-slugs';
 
 export const prerender = false;
 
@@ -11,7 +12,7 @@ const Body = z.object({
   body: z.string().max(NOTE_MAX_BYTES),
 });
 
-export const PUT: APIRoute = async ({ request, params, locals }) => {
+export const PUT: APIRoute = async ({ request, params }) => {
   const env = getEnv();
   const csrf = requireCsrf(request);
   if (csrf) return csrf;
@@ -22,6 +23,9 @@ export const PUT: APIRoute = async ({ request, params, locals }) => {
   const lessonSlug = params.lesson;
   if (!lessonSlug || lessonSlug.length > 200) {
     return jsonError(400, 'bad_request', 'Missing or invalid lesson slug');
+  }
+  if (!(await isKnownLesson(lessonSlug))) {
+    return jsonError(404, 'unknown_lesson', 'Unknown lesson slug');
   }
 
   const rl = await checkRateLimit(ctx.db, `notes:${ctx.session.user.id}`, {
@@ -44,16 +48,20 @@ export const PUT: APIRoute = async ({ request, params, locals }) => {
     return jsonError(400, 'bad_request', 'Invalid payload');
   }
 
-  const r = await upsertNote(ctx.db, ctx.session.user.id, lessonSlug, parsed.data.body);
-  return jsonOk({ updatedAt: r.updatedAt.toISOString() });
+  return withApiErrors('notes/put', ctx.session.user.id, async () => {
+    const r = await upsertNote(ctx.db, ctx.session.user.id, lessonSlug, parsed.data.body);
+    return jsonOk({ updatedAt: r.updatedAt.toISOString() });
+  });
 };
 
-export const GET: APIRoute = async ({ request, params, locals }) => {
+export const GET: APIRoute = async ({ request, params }) => {
   const env = getEnv();
   const ctx = await requireSession(request, env);
   if ('error' in ctx) return ctx.error;
   const lessonSlug = params.lesson;
   if (!lessonSlug) return jsonError(400, 'bad_request', 'Missing lesson slug');
-  const r = await getNote(ctx.db, ctx.session.user.id, lessonSlug);
-  return jsonOk({ body: r?.body ?? '', updatedAt: r?.updatedAt?.toISOString() ?? null });
+  return withApiErrors('notes/get', ctx.session.user.id, async () => {
+    const r = await getNote(ctx.db, ctx.session.user.id, lessonSlug);
+    return jsonOk({ body: r?.body ?? '', updatedAt: r?.updatedAt?.toISOString() ?? null });
+  });
 };

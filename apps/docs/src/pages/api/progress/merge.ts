@@ -4,6 +4,7 @@ import { requireSession, requireCsrf, jsonError, jsonOk } from '../../../server/
 import { checkRateLimit } from '../../../server/ratelimit';
 import { mergeAnonProgress } from '../../../server/progress';
 import { getEnv } from '../../../server/env';
+import { loadLessonSlugs, withApiErrors } from '../../../server/lesson-slugs';
 
 export const prerender = false;
 
@@ -18,10 +19,12 @@ const EntrySchema = z.object({
 });
 
 const Body = z.object({
-  entries: z.array(EntrySchema).max(500),
+  // Anon localStorage has at most the published lesson count; 200 is well
+  // above current lesson_count (~92) and below DB egress concern.
+  entries: z.array(EntrySchema).max(200),
 });
 
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async ({ request }) => {
   const env = getEnv();
   const csrf = requireCsrf(request);
   if (csrf) return csrf;
@@ -44,6 +47,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const parsed = Body.safeParse(body);
   if (!parsed.success) return jsonError(400, 'bad_request', 'Invalid payload');
 
-  const result = await mergeAnonProgress(ctx.db, ctx.session.user.id, parsed.data.entries);
-  return jsonOk(result);
+  // Drop any entries that don't match a real lesson slug. We don't 400 the
+  // whole batch — anon clients running an older lesson index shouldn't get
+  // their entire merge rejected.
+  const allowed = await loadLessonSlugs();
+  const filtered = parsed.data.entries.filter((e) => allowed.has(e.lesson_slug));
+
+  return withApiErrors('progress/merge', ctx.session.user.id, async () => {
+    const result = await mergeAnonProgress(ctx.db, ctx.session.user.id, filtered);
+    return jsonOk({ ...result, dropped: parsed.data.entries.length - filtered.length });
+  });
 };

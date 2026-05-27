@@ -101,6 +101,7 @@ export function toggleMuted(): boolean {
   return next;
 }
 
+let audioLoadWarned = false;
 function getAudio(name: SoundName): HTMLAudioElement | null {
   if (typeof window === 'undefined') return null;
   const cached = audios[name];
@@ -112,7 +113,14 @@ function getAudio(name: SoundName): HTMLAudioElement | null {
     a.preload = 'auto';
     audios[name] = a;
     return a;
-  } catch {
+  } catch (e) {
+    // Audio constructor throws when CSP blocks the URL or the path is
+    // unreachable; we'd otherwise silently degrade to no-sound for the
+    // whole session with zero indication why. Log once per session.
+    if (!audioLoadWarned) {
+      audioLoadWarned = true;
+      console.warn('[sound] failed to load audio palette:', e);
+    }
     return null;
   }
 }

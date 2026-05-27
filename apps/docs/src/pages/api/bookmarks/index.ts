@@ -4,6 +4,7 @@ import { requireSession, requireCsrf, jsonError, jsonOk } from '../../../server/
 import { checkRateLimit } from '../../../server/ratelimit';
 import { createBookmark, listBookmarks } from '../../../server/bookmarks';
 import { getEnv } from '../../../server/env';
+import { isKnownLesson, withApiErrors } from '../../../server/lesson-slugs';
 
 export const prerender = false;
 
@@ -12,7 +13,7 @@ const Body = z.object({
   anchor: z.string().max(200).nullable().optional(),
 });
 
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async ({ request }) => {
   const env = getEnv();
   const csrf = requireCsrf(request);
   if (csrf) return csrf;
@@ -35,19 +36,27 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const parsed = Body.safeParse(body);
   if (!parsed.success) return jsonError(400, 'bad_request', 'Invalid payload');
 
-  const r = await createBookmark(
-    ctx.db,
-    ctx.session.user.id,
-    parsed.data.lesson_slug,
-    parsed.data.anchor ?? null,
-  );
-  return jsonOk(r, r.created ? 201 : 200);
+  if (!(await isKnownLesson(parsed.data.lesson_slug))) {
+    return jsonError(404, 'unknown_lesson', 'Unknown lesson slug');
+  }
+
+  return withApiErrors('bookmarks/post', ctx.session.user.id, async () => {
+    const r = await createBookmark(
+      ctx.db,
+      ctx.session.user.id,
+      parsed.data.lesson_slug,
+      parsed.data.anchor ?? null,
+    );
+    return jsonOk(r, r.created ? 201 : 200);
+  });
 };
 
-export const GET: APIRoute = async ({ request, locals }) => {
+export const GET: APIRoute = async ({ request }) => {
   const env = getEnv();
   const ctx = await requireSession(request, env);
   if ('error' in ctx) return ctx.error;
-  const list = await listBookmarks(ctx.db, ctx.session.user.id);
-  return jsonOk({ bookmarks: list });
+  return withApiErrors('bookmarks/list', ctx.session.user.id, async () => {
+    const list = await listBookmarks(ctx.db, ctx.session.user.id);
+    return jsonOk({ bookmarks: list });
+  });
 };

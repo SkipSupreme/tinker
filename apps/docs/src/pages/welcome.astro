@@ -6,6 +6,7 @@ import { createAuth, getSession } from '../server/auth';
 import { getDb } from '../server/db';
 import { userProfile } from '../server/schema';
 import { getEnv } from '../server/env';
+import { requireSameOrigin } from '../server/middleware';
 
 const env = getEnv();
 const auth = createAuth({
@@ -33,6 +34,8 @@ if (!existing) {
 }
 
 if (Astro.request.method === 'POST') {
+  const csrf = requireSameOrigin(Astro.request, env.PUBLIC_SITE_URL);
+  if (csrf) return csrf;
   const form = await Astro.request.formData();
   const optIn = form.get('marketing_opt_in') === 'on';
   await db
