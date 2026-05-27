@@ -98,7 +98,7 @@
       <Line.Segment point1={rightAngle[1]} point2={rightAngle[2]} color="var(--ink-sea)" weight={1.5} />
 
       <!-- Leg + hypotenuse labels. -->
-      <Text x={F[0] + 0.32} y={oppLen / 2} latex={`r\\sin\\theta = ${fmt(oppLen)}`} size={16} color="var(--ink-red)" />
+      <Text x={F[0] + 0.9} y={oppLen / 2} latex={`r\\sin\\theta = ${fmt(oppLen)}`} size={16} color="var(--ink-red)" />
       <Text x={adjLen / 2} y={-0.32} latex={`r\\cos\\theta = ${fmt(adjLen)}`} size={16} color="var(--ink-sea)" />
       <Text x={P[0] / 2 - 0.34} y={P[1] / 2 + 0.3} latex={`r = ${fmt(r)}`} size={16} color="var(--ink-red)" />
 
