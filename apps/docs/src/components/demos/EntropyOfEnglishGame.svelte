@@ -84,7 +84,9 @@
   // teaching purposes it gets the right magnitude without the full subtlety.)
   const impliedBpc = $derived(history.length > 0 ? Math.log2(Math.max(1, meanGuesses)) : 0);
 
-  // Reference points for the side-by-side bar.
+  // Reference points for the side-by-side bar. Pre-sorted by value so the
+  // tier-assignment loop below can look at the previous neighbour to decide
+  // whether the current label needs to be pushed deeper.
   const REFERENCES = [
     { name: 'Shannon 1951 lower', value: 0.6, color: 'var(--ink-sea)' },
     { name: 'Modern char-LM', value: 1.0, color: 'var(--ink-teal)' },
@@ -93,6 +95,23 @@
     { name: 'Tiny-shakespeare capstone', value: 2.16, color: 'var(--ink-orange)' },
     { name: 'Uniform on 27', value: Math.log2(27), color: 'var(--site-fg-muted)' },
   ];
+
+  // A label rotated -55° at 9px font is ~120px long, projecting ~70px onto
+  // the x-axis. On a ~600px bar covering value range [0,5], that's 0.58
+  // value-units of horizontal label footprint. Anything closer than ~0.9
+  // needs its own vertical tier. We cycle 0 → 1 → 2 → 0 so three landmarks
+  // packed into the same neighbourhood get three different label heights.
+  const TIER_THRESH = 0.9;
+  const tieredRefs = $derived.by(() => {
+    let prevTier = -1;
+    let prevValue = -Infinity;
+    return REFERENCES.map((r) => {
+      const tier = r.value - prevValue < TIER_THRESH ? (prevTier + 1) % 3 : 0;
+      prevValue = r.value;
+      prevTier = tier;
+      return { ...r, tier };
+    });
+  });
 
   function fmt(n: number, d = 2): string {
     if (!Number.isFinite(n)) return 'n/a';
@@ -176,10 +195,11 @@
   <div class="floor-panel">
     <div class="floor-title">Where your bpc lands on the entropy ladder</div>
     <div class="floor-bar">
-      {#each REFERENCES as ref, i}
+      {#each tieredRefs as ref}
         <div
           class="floor-marker"
-          class:tier2={i % 2 === 1}
+          class:tier2={ref.tier === 1}
+          class:tier3={ref.tier === 2}
           style={`left: ${(ref.value / 5.0) * 100}%`}
         >
           <span class="floor-tick" style={`background: ${ref.color}`}></span>
@@ -333,9 +353,10 @@
     height: 4px;
     background: color-mix(in srgb, var(--site-fg) 10%, transparent);
     border-radius: 4px;
-    /* Extra bottom margin so the two-tier landmark labels (alternating rows
-       at -55° rotation) don't collide with the explanatory note below. */
-    margin: 24px 0 100px;
+    /* Up to three landmark tiers (assigned dynamically by neighbour distance)
+       fan out below the bar; bottom margin accommodates the deepest tier
+       plus the rotated label hanging below it. */
+    margin: 24px 0 140px;
   }
   .floor-marker {
     position: absolute;
@@ -351,14 +372,22 @@
     height: 14px;
     background: var(--site-fg-muted);
   }
-  /* Odd-index markers extend a longer tick and push their label into a second
-     tier so dense landmarks (e.g. Cover-King 1.25 next to Shannon-upper 1.30)
-     don't overlap. The steep -55° rotation keeps horizontal span small. */
+  /* Tier 1 markers (assigned dynamically when a marker sits within
+     ~0.9 value-units of its predecessor) extend a longer tick and push
+     their label one row down. Tier 2 goes a second row deeper. Three rows
+     plus the -55° rotation handle the worst case (Modern char-LM 1.00 +
+     Cover-King 1.25 + Shannon-upper 1.30 all within 0.3 units). */
   .floor-marker.tier2 .floor-tick {
     height: 38px;
   }
   .floor-marker.tier2 .floor-text {
     margin-top: 42px;
+  }
+  .floor-marker.tier3 .floor-tick {
+    height: 62px;
+  }
+  .floor-marker.tier3 .floor-text {
+    margin-top: 66px;
   }
   .floor-text {
     margin-top: 18px;
