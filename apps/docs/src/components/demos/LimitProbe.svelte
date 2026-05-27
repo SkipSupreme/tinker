@@ -242,7 +242,7 @@
 
       <Text
         x={Math.min(Math.max(a + 0.85, X_MIN + 0.9), X_MAX - 0.9)}
-        y={Y_MAX - 0.62}
+        y={Y_MAX - 1.0}
         latex={`x = ${a.toFixed(3)}`}
         size={13}
         color="var(--ink-sea)"
