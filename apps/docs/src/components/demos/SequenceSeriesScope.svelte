@@ -183,6 +183,7 @@
           bind:y={dY}
           constrain={constrainD}
           color="var(--ink-coral)"
+          radius={0.08}
         />
       </Mafs>
     {:else}
@@ -198,6 +199,7 @@
           bind:y={rY}
           constrain={constrainR}
           color="var(--ink-coral)"
+          radius={0.08}
         />
       </Mafs>
     {/if}
