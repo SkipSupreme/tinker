@@ -176,9 +176,10 @@
   <div class="floor-panel">
     <div class="floor-title">Where your bpc lands on the entropy ladder</div>
     <div class="floor-bar">
-      {#each REFERENCES as ref}
+      {#each REFERENCES as ref, i}
         <div
           class="floor-marker"
+          class:tier2={i % 2 === 1}
           style={`left: ${(ref.value / 5.0) * 100}%`}
         >
           <span class="floor-tick" style={`background: ${ref.color}`}></span>
@@ -332,7 +333,9 @@
     height: 4px;
     background: color-mix(in srgb, var(--site-fg) 10%, transparent);
     border-radius: 4px;
-    margin: 24px 0 38px;
+    /* Extra bottom margin so the two-tier landmark labels (alternating rows
+       at -55° rotation) don't collide with the explanatory note below. */
+    margin: 24px 0 100px;
   }
   .floor-marker {
     position: absolute;
@@ -348,12 +351,21 @@
     height: 14px;
     background: var(--site-fg-muted);
   }
+  /* Odd-index markers extend a longer tick and push their label into a second
+     tier so dense landmarks (e.g. Cover-King 1.25 next to Shannon-upper 1.30)
+     don't overlap. The steep -55° rotation keeps horizontal span small. */
+  .floor-marker.tier2 .floor-tick {
+    height: 38px;
+  }
+  .floor-marker.tier2 .floor-text {
+    margin-top: 42px;
+  }
   .floor-text {
-    margin-top: 16px;
+    margin-top: 18px;
     font-family: var(--font-mono);
     font-size: 9px;
     white-space: nowrap;
-    transform: rotate(-30deg);
+    transform: rotate(-55deg);
     transform-origin: top left;
   }
   .floor-marker.you .you-tick {
