@@ -56,7 +56,7 @@
   const rows = Array.from({ length: 31 }, (_, i) => i);
   const hmLeft = 40;
   const hmTop = 48;
-  const hmCellW = 60;
+  const hmCellW = 76;
   const hmCellH = 16;
   const hmW = $derived(hmLeft + activeComps.length * hmCellW + 8);
   const hmH = hmTop + rows.length * hmCellH + 8;
