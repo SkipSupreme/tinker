@@ -1,4 +1,9 @@
-# Pre-flight tasks for signup + auth v1
+# HISTORICAL: Pre-flight tasks for signup + auth v1
+
+> Tinker shipped with email+password auth only. OAuth (Google, GitHub) and
+> Turnstile were planned during the v1 spec but explicitly reverted before
+> launch. This file is kept for the design archive. **Do not implement.**
+> See `apps/docs/src/server/auth.ts` for the actual configuration.
 
 These are the only steps that require you (account dashboards, dashboards I can't log into). Everything else I do in code.
 

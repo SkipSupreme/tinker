@@ -3,6 +3,12 @@
 
   let { lessonSlug } = $props<{ lessonSlug: string }>();
 
+  // Notes are authed-only. Pages are prerendered so the server can't gate
+  // mount; we hide the button when no CSRF cookie is present (the cookie
+  // is only set once Better Auth has minted a session).
+  let authed = $state(false);
+  $effect(() => { authed = getCsrf() !== ''; });
+
   let open = $state(false);
   let body = $state('');
   let status = $state<'idle' | 'loading' | 'saving' | 'saved' | 'error'>('idle');
@@ -79,9 +85,11 @@
   }
 </script>
 
-<button class="notes-toggle" type="button" onclick={toggle} aria-expanded={open}>
-  📝 Notes
-</button>
+{#if authed}
+  <button class="notes-toggle" type="button" onclick={toggle} aria-expanded={open}>
+    📝 Notes
+  </button>
+{/if}
 
 {#if open}
   <aside class="notes-drawer" role="complementary" aria-label="Notes">

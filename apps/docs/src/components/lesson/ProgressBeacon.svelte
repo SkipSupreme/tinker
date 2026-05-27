@@ -17,7 +17,7 @@
 
   async function postAuthed() {
     try {
-      await fetch('/api/progress/view', {
+      const res = await fetch('/api/progress/view', {
         method: 'POST',
         credentials: 'same-origin',
         headers: {
@@ -31,8 +31,15 @@
         }),
         keepalive: true,
       });
-    } catch {
-      // network failure is fine; user will re-emit on next nav
+      // 401/403 means CSRF stale or session expired; user will re-auth.
+      // 429 means rate-limited; user will re-emit on next nav. Both expected.
+      // Anything else is worth at least a breadcrumb.
+      if (!res.ok && res.status !== 401 && res.status !== 403 && res.status !== 429) {
+        console.error('[progress-beacon] view returned', res.status);
+      }
+    } catch (e) {
+      // Network failure is fine; user will re-emit on next nav.
+      console.warn('[progress-beacon] view fetch failed', e);
     }
   }
 

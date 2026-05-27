@@ -1,0 +1,95 @@
+---
+import { getCollection, getEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import SkillTreeMap from '../../components/course/SkillTreeMap.svelte';
+
+export const prerender = true;
+
+const course = await getEntry('courses', 'ml-math');
+const allModules = await getCollection('modules');
+const allLessons = await getCollection('lessons', (l) => !l.data.draft);
+
+// Color one ink per arc; cycle through brand ink tokens that respect
+// dark-mode flipping (resolved via CSS vars at render time, so the values
+// here are just hex fallbacks for SSR).
+const ARC_COLORS: Record<string, string> = {
+  'arc-0-foundations':    'var(--ink-sea)',
+  'arc-1-prereq-math':    'var(--ink-teal)',
+  'arc-2-ml-foundations': 'var(--ink-red)',
+  'arc-3-transformers':   'var(--ink-orange)',
+  'arc-4-capstone':       'var(--ink-sun)',
+};
+
+const arcs = (course?.data.arcs ?? []).map((a, idx) => ({
+  id: a.id,
+  label: a.title,
+  xIdx: idx,
+  color: ARC_COLORS[a.id] ?? 'var(--site-fg-muted)',
+}));
+
+const arcsById = new Map(arcs.map((a) => [a.id, a]));
+const moduleById = new Map(allModules.map((m) => [m.id, m]));
+
+const lessonCountByModule = new Map<string, number>();
+for (const l of allLessons) {
+  lessonCountByModule.set(l.data.module, (lessonCountByModule.get(l.data.module) ?? 0) + 1);
+}
+
+const modulesByArc = new Map<string, typeof allModules>();
+for (const m of allModules) {
+  const arr = modulesByArc.get(m.data.arc) ?? [];
+  arr.push(m);
+  modulesByArc.set(m.data.arc, arr);
+}
+for (const arr of modulesByArc.values()) arr.sort((a, b) => a.data.order - b.data.order);
+
+const moduleNodes = allModules.map((m) => {
+  const arcInfo = arcsById.get(m.data.arc);
+  const arcGroup = modulesByArc.get(m.data.arc) ?? [];
+  const arcOrder = arcGroup.findIndex((x) => x.id === m.id);
+  const shortTitle = m.data.title.replace(/^[Mm]?\d+[:\s.-]*/, '').slice(0, 22);
+  // Keystone: the m12-backpropagation module, plus the capstone.
+  const keystone = m.id === 'm12-backpropagation' || m.id === 'm18-capstone';
+  const lessonCount = lessonCountByModule.get(m.id) ?? 0;
+  const status = lessonCount > 0 ? 'shipped' : (m.data.status ?? 'planned');
+  return {
+    id: m.id,
+    order: m.data.order,
+    title: m.data.title,
+    shortTitle,
+    summary: m.data.summary,
+    status,
+    endgameConnection: m.data.endgameConnection ?? null,
+    arc: m.data.arc,
+    arcLabel: arcInfo?.label ?? m.data.arc,
+    arcColor: arcInfo?.color ?? 'var(--site-fg-muted)',
+    arcXIdx: arcInfo?.xIdx ?? 0,
+    arcOrder,
+    arcSize: arcGroup.length,
+    prereqs: m.data.prereqs ?? [],
+    lessonCount,
+    href: lessonCount > 0 ? `/lessons/?module=${m.id}` : '#',
+    keystone,
+  };
+});
+---
+
+<Base title="Skill tree" description="Visual map of the Tinker curriculum, arc by arc.">
+  <main class="tree-shell">
+    <header class="tree-head">
+      <h1>Skill tree</h1>
+      <p class="lede">
+        Each node is a module. Edges are prerequisite chains. Drag to pan, scroll to zoom.
+        The keystone arc lands in the middle: backpropagation from scratch.
+      </p>
+    </header>
+    <SkillTreeMap client:idle modules={moduleNodes} arcs={arcs} />
+  </main>
+</Base>
+
+<style>
+  .tree-shell { max-width: 1400px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  .tree-head { max-width: 720px; margin: 0 auto 1.5rem; text-align: center; }
+  h1 { font-family: var(--font-display); font-size: 2.25rem; margin: 0 0 0.5rem; }
+  .lede { color: var(--site-fg-muted); margin: 0; }
+</style>

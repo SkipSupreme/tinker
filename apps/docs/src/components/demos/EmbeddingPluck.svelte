@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import { Mafs, Coordinates, MovablePoint, Point } from 'svelte-mafs';
 
   import { TINKER_HERO_EVENT } from '../../lib/events';
@@ -180,6 +181,13 @@
     if (!hero) return;
     dispatchHero(TINKER_HERO_EVENT.idle, {});
   }
+
+  onDestroy(() => {
+    if (focusRaf) {
+      cancelAnimationFrame(focusRaf);
+      focusRaf = 0;
+    }
+  });
 </script>
 
 <div class="widget" class:widget-hero={hero}>

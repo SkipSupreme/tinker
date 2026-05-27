@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
+
   // ─── Types ──────────────────────────────────────────────────────────────────
 
   interface Props {
@@ -315,6 +317,8 @@
     if (runTimer !== null) { clearTimeout(runTimer); runTimer = null; }
     isRunning = false;
   }
+
+  onDestroy(stopRun);
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 

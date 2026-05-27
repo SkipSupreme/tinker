@@ -1,5 +1,9 @@
 # Signup & auth: v1 design
 
+> **HISTORICAL** -- Tinker shipped email+password only; OAuth (Google,
+> GitHub), magic-link, and Turnstile sections were planned but explicitly
+> reverted before launch. Kept for the design archive. **Do not implement.**
+
 Replace the stub waitlist on `index.astro` with a real signup flow. Build the user model, auth, progress tracking, bookmarks, notes, admin UI, and email infrastructure that gets Tinker out of "wait list" mode and into "real users have real accounts."
 
 ## Goal

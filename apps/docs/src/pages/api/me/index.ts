@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { eq } from 'drizzle-orm';
 import { user } from '../../../server/schema';
 import { requireSession, requireCsrf, jsonError } from '../../../server/middleware';
+import { checkRateLimit } from '../../../server/ratelimit';
 import { sendAccountDeletedEmail } from '../../../server/email';
 import { getEnv } from '../../../server/env';
 
@@ -16,6 +17,16 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
   if ('error' in ctx) return ctx.error;
   const { session, db, auth } = ctx;
 
+  // Cap account-deletion at 3/min per user. A hijacked session can otherwise
+  // wake Resend in a loop; the first call is irreversible regardless.
+  const rl = await checkRateLimit(db, `me:delete:${session.user.id}`, {
+    limit: 3,
+    windowMs: 60_000,
+  });
+  if (!rl.allowed) {
+    return jsonError(429, 'rate_limited', 'Too many delete attempts; wait a minute.');
+  }
+
   const originalEmail = session.user.email;
 
   // Hard delete. ON DELETE CASCADE wipes session, account, user_profile,
@@ -25,9 +36,10 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
   // Sign out via Better Auth (clears session cookie + DB row).
   try {
     await auth.api.signOut({ headers: request.headers });
-  } catch {
-    // ignore; failure here just means the cookie won't be cleared
-    // server-side; client redirect to "/" with a fresh page load is fine.
+  } catch (e) {
+    // Cookie-clear belt-and-suspenders still sets via response header below.
+    // Logged so silent half-delete patterns are detectable in tail logs.
+    console.error('[me] signOut after delete failed:', e);
   }
 
   if (env.RESEND_API_KEY) {

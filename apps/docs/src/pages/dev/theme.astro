@@ -1,0 +1,19 @@
+---
+import Base from '../../layouts/Base.astro';
+import ThemePlayground from '../../components/ThemePlayground.svelte';
+export const prerender = true;
+---
+
+<Base title="Theme playground" description="Interactive color-token tester for the Tinker design system.">
+  <main class="theme-shell">
+    <h1>Theme playground</h1>
+    <p class="lede">Tweak Mafs CSS tokens live and copy the generated CSS.</p>
+    <ThemePlayground client:idle />
+  </main>
+</Base>
+
+<style>
+  .theme-shell { max-width: 960px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+  h1 { font-family: var(--font-display); font-size: 2.25rem; margin: 0 0 0.5rem; }
+  .lede { color: var(--site-fg-muted); margin: 0 0 2rem; }
+</style>

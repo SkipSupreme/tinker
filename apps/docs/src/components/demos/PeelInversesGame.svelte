@@ -4,6 +4,8 @@
    * outside-in on an AST, watching the equation peel down step-by-step.
    */
 
+  import { onDestroy } from 'svelte';
+
   interface Props {
     a?: number;
     b?: number;
@@ -121,6 +123,13 @@
       feedbackKind = '';
     }, kind === 'ok' ? 1600 : 3200);
   }
+
+  onDestroy(() => {
+    if (feedbackTimer) {
+      clearTimeout(feedbackTimer);
+      feedbackTimer = null;
+    }
+  });
 
   function choose(choice: Choice) {
     if (solved) return;

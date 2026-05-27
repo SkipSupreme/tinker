@@ -48,6 +48,13 @@
   let runB: Trajectory | null = $state(null);
   let firstDiffIter: number | null = $state(null);
   let canvas: HTMLCanvasElement | undefined = $state();
+  let host: HTMLElement | undefined = $state();
+
+  function tokenColor(name: string, fallback: string): string {
+    if (typeof window === 'undefined' || !host) return fallback;
+    const v = getComputedStyle(host).getPropertyValue(name).trim();
+    return v || fallback;
+  }
 
   let corpus: CorpusBundle | null = null;
   let engine: Engine | null = null;
@@ -191,8 +198,10 @@
       ctx.stroke();
       ctx.setLineDash([]);
     };
-    if (runA) plot(runA.losses, '#1c4f74');
-    if (runB) plot(runB.losses, '#c34a36', [4, 3]);
+    const seriesA = tokenColor('--ink-sea', '#2a9fd6');
+    const seriesB = tokenColor('--ink-coral', '#ff6a4d');
+    if (runA) plot(runA.losses, seriesA);
+    if (runB) plot(runB.losses, seriesB, [4, 3]);
   }
 
   onMount(() => { drawCurve(); });
@@ -218,7 +227,7 @@
   });
 </script>
 
-<section class="twin">
+<section class="twin" bind:this={host}>
   <header class="head">
     <div>
       <div class="kicker">M18 Slice 4 · twin-seed determinism</div>
@@ -333,8 +342,8 @@
 
   .legend { display: flex; gap: 1.2rem; font-family: var(--font-mono); font-size: 0.78rem; color: var(--site-fg-muted); }
   .dot { display: inline-block; width: 14px; height: 4px; vertical-align: middle; margin-right: 0.4rem; border-radius: 2px; }
-  .dot.a { background: #1c4f74; }
-  .dot.b { background: #c34a36; }
+  .dot.a { background: var(--ink-sea); }
+  .dot.b { background: var(--ink-coral); }
 
   .results { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
   .result {
@@ -353,20 +362,14 @@
     font-family: var(--font-mono); font-weight: 600; font-size: 0.95rem;
     display: flex; flex-wrap: wrap; align-items: center; gap: 0.65rem;
   }
-  .verdict.done { background: color-mix(in srgb, #2d7a4e 18%, transparent); color: #1f5a36; }
-  .verdict.fail { background: color-mix(in srgb, #c34a36 18%, transparent); color: #7a2d22; }
+  .verdict.done { background: color-mix(in srgb, var(--cta) 18%, transparent); color: var(--cta); }
+  .verdict.fail { background: color-mix(in srgb, var(--ink-coral) 18%, transparent); color: var(--site-error); }
   .diff-iter { font-weight: 400; font-size: 0.8rem; color: var(--site-fg-muted); }
 
   .err {
-    font-family: var(--font-mono); font-size: 0.8rem; color: #7a2d22;
-    background: color-mix(in srgb, #c34a36 12%, transparent);
+    font-family: var(--font-mono); font-size: 0.8rem; color: var(--site-error);
+    background: color-mix(in srgb, var(--ink-coral) 12%, transparent);
     padding: 0.6rem; border-radius: 6px;
     white-space: pre-wrap; overflow-wrap: anywhere; margin: 0;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .verdict.done { color: #7fc999; }
-    .verdict.fail { color: #f0a698; }
-    .err { color: #f0a698; }
   }
 </style>

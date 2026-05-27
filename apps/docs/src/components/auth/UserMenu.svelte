@@ -19,8 +19,11 @@
       if (res.ok) {
         const data = (await res.json()) as { user?: User } | null;
         user = data?.user ?? null;
+      } else if (res.status !== 401) {
+        console.error('[usermenu] session fetch returned', res.status);
       }
-    } catch {
+    } catch (e) {
+      console.error('[usermenu] session fetch failed', e);
       user = null;
     } finally {
       loaded = true;
@@ -29,10 +32,21 @@
 
   async function signOut() {
     try {
-      await fetch('/api/auth/sign-out', { method: 'POST', credentials: 'same-origin' });
-    } finally {
-      location.href = '/';
+      const res = await fetch('/api/auth/sign-out', {
+        method: 'POST',
+        credentials: 'same-origin',
+      });
+      if (!res.ok) {
+        console.error('[usermenu] sign-out returned', res.status);
+        alert("Couldn't sign you out. Try again.");
+        return;
+      }
+    } catch (e) {
+      console.error('[usermenu] sign-out failed', e);
+      alert("Couldn't sign you out. Try again.");
+      return;
     }
+    location.href = '/';
   }
 
   function handleDocumentClick(ev: MouseEvent) {

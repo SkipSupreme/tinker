@@ -1,5 +1,9 @@
 # Signup & Auth v1: Implementation Plan
 
+> **HISTORICAL** -- Tinker shipped email+password only; OAuth (Google,
+> GitHub), magic-link, and Turnstile sections were planned but explicitly
+> reverted before launch. Kept for the implementation archive. **Do not implement.**
+
 > **For Claude:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` to implement this plan task-by-task.
 
 **Goal:** Replace the stub waitlist with a real signup flow. Build auth (magic link + Google + GitHub), progress tracking, bookmarks, notes, persisted exercises, and an admin UI for "new module live" emails, all on Cloudflare D1 + Better Auth + Resend.

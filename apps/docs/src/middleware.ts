@@ -23,7 +23,7 @@ const CSP = [
   "form-action 'self'",
   "frame-ancestors 'none'",
   "object-src 'none'",
-  "img-src 'self' data: https://avatars.githubusercontent.com https://lh3.googleusercontent.com",
+  "img-src 'self' data:",
   "font-src 'self' https://fonts.gstatic.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   // 'unsafe-inline' on script-src is needed for Astro's hydration shims and

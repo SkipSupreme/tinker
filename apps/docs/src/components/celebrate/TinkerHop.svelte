@@ -11,7 +11,7 @@
    * mascot in `<Tinker />`. Mount it inside the lesson-complete card so
    * the celebration is local to where the user just earned it.
    */
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { burst } from '../../lib/confetti';
   import { TINKER_EVENT } from '../../lib/events';
 
@@ -35,6 +35,7 @@
   let hopping = $state(false);
   let activeLevel = $state<'lesson' | 'module'>(defaultLevel);
   let reducedMotion = $state(false);
+  let hopTimer: ReturnType<typeof setTimeout> | null = null;
 
   const sizeCss = $derived(typeof size === 'number' ? `${size}px` : size);
 
@@ -47,7 +48,8 @@
       burst(root, { count, spread });
     }
     const duration = level === 'module' ? 1100 : 720;
-    setTimeout(() => (hopping = false), duration + 50);
+    if (hopTimer) clearTimeout(hopTimer);
+    hopTimer = setTimeout(() => { hopping = false; hopTimer = null; }, duration + 50);
   }
 
   onMount(() => {
@@ -65,6 +67,13 @@
       requestAnimationFrame(() => play(defaultLevel));
     }
     return () => window.removeEventListener(TINKER_EVENT.celebrate, handler);
+  });
+
+  onDestroy(() => {
+    if (hopTimer) {
+      clearTimeout(hopTimer);
+      hopTimer = null;
+    }
   });
 </script>
 

@@ -113,9 +113,16 @@
     py = ny;
   }
 
-  // Keep the degree input mirroring the live angle when not focused-editing
+  // Mirror the live angle into the degree input ONLY when the input isn't
+  // focused. The earlier two-way mirror fought the user mid-keystroke: typing
+  // "-9" briefly resolved thetaDeg to 351 and clobbered the field back to 351
+  // before they could finish typing "-90".
+  let degreeInputEl: HTMLInputElement | undefined = $state();
   $effect(() => {
-    degreeInput = Math.round(thetaDeg);
+    const rounded = Math.round(thetaDeg);
+    if (!degreeInputEl || document.activeElement !== degreeInputEl) {
+      degreeInput = rounded;
+    }
   });
 </script>
 
@@ -147,6 +154,7 @@
         min="0"
         max="360"
         step="1"
+        bind:this={degreeInputEl}
         bind:value={degreeInput}
         onchange={applyDegreeInput}
         oninput={applyDegreeInput}

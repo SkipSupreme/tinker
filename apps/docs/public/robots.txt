@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# Internal / auth routes that aren't useful in search results.
+Disallow: /api/
+Disallow: /admin
+Disallow: /admin/
+Disallow: /dev/
+Disallow: /me
+Disallow: /me/
+Disallow: /auth
+Disallow: /signin
+Disallow: /signup
+Disallow: /welcome
+
+Sitemap: https://learntinker.com/sitemap-index.xml

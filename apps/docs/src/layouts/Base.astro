@@ -64,6 +64,15 @@ const titleWithSuffix = title === 'Tinker' ? title : `${title} · Tinker`;
         }
       })();
     </script>
+    {/* Catch otherwise-silent rejections from `void asyncFn()` patterns + unhandled errors. */}
+    <script is:inline>
+      window.addEventListener('unhandledrejection', function (e) {
+        console.error('[unhandledrejection]', e.reason);
+      });
+      window.addEventListener('error', function (e) {
+        if (e.error) console.error('[window-error]', e.error);
+      });
+    </script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to main content</a>

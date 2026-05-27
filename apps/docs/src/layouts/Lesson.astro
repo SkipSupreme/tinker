@@ -4,8 +4,12 @@ import TinkerHop from '../components/celebrate/TinkerHop.svelte';
 import SrAnnouncer from '../components/lesson/SrAnnouncer.svelte';
 import StuckHint from '../components/lesson/StuckHint.svelte';
 import ProgressBeacon from '../components/lesson/ProgressBeacon.svelte';
+import NotesDrawer from '../components/lesson/NotesDrawer.svelte';
+import EndgameCallback from '../components/lesson/EndgameCallback.astro';
+import PrevNext from '../components/lesson/PrevNext.astro';
 import 'katex/dist/katex.min.css';
 
+interface Sibling { title: string; href: string }
 interface Props {
   slug: string;
   title: string;
@@ -13,9 +17,17 @@ interface Props {
   estimatedMinutes: number;
   module: string;
   moduleHref?: string;
+  moduleTitle?: string;
+  prev?: Sibling | null;
+  next?: Sibling | null;
+  endgameBody?: string | null;
 }
-const { slug, title, summary, estimatedMinutes, module, moduleHref } = Astro.props;
-const moduleLabel = module.replace(/-/g, ' ');
+const {
+  slug, title, summary, estimatedMinutes, module, moduleHref,
+  moduleTitle: moduleTitleProp, prev = null, next = null, endgameBody = null,
+} = Astro.props;
+const moduleTitle = moduleTitleProp ?? module.replace(/-/g, ' ');
+const moduleLabel = moduleTitle;
 // Tinker currently ships a single course; every lesson lives under it. When
 // additional courses launch, thread course slug through the lesson frontmatter
 // and ['lessons']/[slug].astro alongside `module`.
@@ -46,6 +58,8 @@ const courseSlug = 'ml-math';
       <div class="shell">
         <slot />
 
+        {endgameBody && <EndgameCallback body={endgameBody} moduleTitle={moduleTitle} />}
+
         <div class="lesson-complete" data-lesson-complete>
           <div class="lc-mascot">
             <TinkerHop client:idle level="lesson" size={120} />
@@ -56,6 +70,10 @@ const courseSlug = 'ml-math';
             <p class="lc-sub" data-lesson-complete-xp>+20 XP</p>
           </div>
         </div>
+
+        {(prev || next) && moduleHref && (
+          <PrevNext prev={prev} next={next} moduleHref={moduleHref} moduleTitle={moduleTitle} />
+        )}
       </div>
     </article>
 
@@ -68,6 +86,7 @@ const courseSlug = 'ml-math';
     <SrAnnouncer client:idle />
     <StuckHint client:idle />
     <ProgressBeacon client:idle lessonSlug={slug} courseSlug={courseSlug} moduleSlug={module} />
+    <NotesDrawer client:idle lessonSlug={slug} />
   </div>
 </Base>
 
@@ -538,7 +557,7 @@ const courseSlug = 'ml-math';
       // for anon users, which the server rejects with 403 — that's fine.
       const csrf = getCsrf();
       if (csrf) {
-        void fetch('/api/progress/complete', {
+        fetch('/api/progress/complete', {
           method: 'POST',
           credentials: 'same-origin',
           headers: {
@@ -547,7 +566,15 @@ const courseSlug = 'ml-math';
           },
           body: JSON.stringify({ lesson_slug: slug }),
           keepalive: true,
-        }).catch(() => { /* network failures are fine; anon flow already wrote localStorage */ });
+        }).then((res) => {
+          // 401/403/429 are expected (stale CSRF, anon flow, rate-limit); anything
+          // else is a server-side bug we'd otherwise never hear about.
+          if (!res.ok && res.status !== 401 && res.status !== 403 && res.status !== 429) {
+            console.error('[lesson] progress/complete returned', res.status);
+          }
+        }).catch((e) => {
+          console.warn('[lesson] progress/complete fetch failed', e);
+        });
       }
       // Route the entire endgame through the orchestrator: spring fill +
       // math-symbol burst + XP tween + TinkerHop event + chime + vibrate +

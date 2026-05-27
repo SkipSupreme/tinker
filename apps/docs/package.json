@@ -20,6 +20,7 @@
   "dependencies": {
     "@astrojs/cloudflare": "^13.2.1",
     "@astrojs/mdx": "^5.0.4",
+    "@astrojs/sitemap": "^3.7.3",
     "@astrojs/svelte": "^8.0.5",
     "astro": "^6.1.9",
     "better-auth": "^1.6.9",

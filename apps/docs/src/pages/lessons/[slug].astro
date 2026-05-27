@@ -1,5 +1,5 @@
 ---
-import { getCollection, render } from 'astro:content';
+import { getCollection, getEntry, render } from 'astro:content';
 import Lesson from '../../layouts/Lesson.astro';
 
 export const prerender = true;
@@ -15,6 +15,27 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { Content } = await render(entry);
 const { title, summary, estimatedMinutes, module } = entry.data;
+
+// Compute prev/next siblings within the same module. Lessons share `module`
+// and have a 1-based `order`; ties fall back to id for determinism.
+const allLessons = await getCollection('lessons', (l) => !l.data.draft);
+const moduleSiblings = allLessons
+  .filter((l) => l.data.module === module)
+  .sort((a, b) => a.data.order - b.data.order || a.id.localeCompare(b.id));
+const idx = moduleSiblings.findIndex((l) => l.id === entry.id);
+const prev = idx > 0
+  ? { title: moduleSiblings[idx - 1].data.title, href: `/lessons/${moduleSiblings[idx - 1].id}/` }
+  : null;
+const next = idx >= 0 && idx < moduleSiblings.length - 1
+  ? { title: moduleSiblings[idx + 1].data.title, href: `/lessons/${moduleSiblings[idx + 1].id}/` }
+  : null;
+
+// Module metadata: title + optional endgameConnection callout body.
+// getEntry returns undefined when the module file is missing (defensive: dev
+// harnesses that import this layout don't always have a real module entry).
+const moduleEntry = await getEntry('modules', module);
+const moduleTitle = moduleEntry?.data.title ?? module.replace(/-/g, ' ');
+const endgameBody = moduleEntry?.data.endgameConnection ?? null;
 ---
 
 <Lesson
@@ -24,6 +45,10 @@ const { title, summary, estimatedMinutes, module } = entry.data;
   estimatedMinutes={estimatedMinutes}
   module={module}
   moduleHref="/lessons"
+  moduleTitle={moduleTitle}
+  prev={prev}
+  next={next}
+  endgameBody={endgameBody}
 >
   <Content />
 </Lesson>
