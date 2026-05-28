@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 import { eq } from 'drizzle-orm';
+import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import { createAuth, getSession } from '../server/auth';
 import { getDb } from '../server/db';
@@ -8,6 +9,7 @@ import { userProfile } from '../server/schema';
 import { getEnv } from '../server/env';
 import { requireSameOrigin } from '../server/middleware';
 import { countRetainedSkills } from '../server/steps';
+import { getCompletedLessonDates, certScope } from '../server/certificates';
 
 const env = getEnv();
 const auth = createAuth({
@@ -41,6 +43,30 @@ const profile = await db
 // Mastery framing (Phase G): skills currently retained, FSRS retrievability
 // >= 0.9. Counts across every module, so it's the whole-course signal.
 const retained = await countRetainedSkills(db, session.user.id);
+
+// Phase K: a quiet "Print certificate" link per fully-completed module, plus
+// the whole course if every module is done. Completion is all-or-nothing,
+// derived from lesson_view.completedAt — see server/certificates.ts.
+const completedDates = await getCompletedLessonDates(db, session.user.id);
+const allLessons = await getCollection('lessons', (l) => !l.data.draft);
+const modules = (await getCollection('modules', (m) => !m.data.draft)).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+const moduleCerts = modules.flatMap((m) => {
+  const lessons = allLessons
+    .filter((l) => l.data.module === m.id)
+    .map((l) => ({ slug: l.id, title: l.data.title }));
+  const cert = certScope({ scope: m.id, name: m.data.title, lessons, completed: completedDates });
+  return cert ? [{ scope: m.id, name: m.data.title }] : [];
+});
+const courseDone =
+  modules.length > 0 &&
+  certScope({
+    scope: 'all',
+    name: 'all',
+    lessons: allLessons.map((l) => ({ slug: l.id, title: l.data.title })),
+    completed: completedDates,
+  }) !== null;
 ---
 
 <Base title="Account">
@@ -67,6 +93,26 @@ const retained = await countRetainedSkills(db, session.user.id);
         {' '}Keep them warm at <a href="/review">review</a>.
       </p>
     </section>
+
+    {moduleCerts.length > 0 && (
+      <section class="block">
+        <h2>Certificates</h2>
+        <ul class="certs">
+          {courseDone && (
+            <li>
+              <span>The whole course</span>
+              <a href="/me/certificate/all/">Print certificate</a>
+            </li>
+          )}
+          {moduleCerts.map((c) => (
+            <li>
+              <span>{c.name}</span>
+              <a href={`/me/certificate/${c.scope}/`}>Print certificate</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
 
     <form method="POST" class="block">
       <h2>Email preferences</h2>
@@ -140,6 +186,24 @@ const retained = await countRetainedSkills(db, session.user.id);
     line-height: 1.5;
   }
   .retained-sub a { color: var(--site-fg); }
+  .certs { list-style: none; padding: 0; margin: 0; }
+  .certs li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--site-border);
+  }
+  .certs li:last-child { border-bottom: none; }
+  .certs li span { font-size: 0.95rem; }
+  .certs li a {
+    color: var(--site-fg-muted);
+    font-size: 0.85rem;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .certs li a:hover { color: var(--site-fg); text-decoration: underline; }
   .block {
     padding: 1.5rem;
     border: 1px solid var(--site-border);
