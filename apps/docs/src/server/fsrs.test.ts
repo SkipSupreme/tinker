@@ -4,6 +4,8 @@ import { join, resolve } from 'node:path';
 import { seedCard, scheduleNext, type FsrsRating } from './fsrs';
 
 const NOW = new Date('2026-01-01T00:00:00Z');
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
 
 describe('seedCard', () => {
   it('returns a fresh card in state=0 with sensible defaults', () => {
@@ -45,12 +47,15 @@ describe('scheduleNext (fresh card)', () => {
     });
   }
 
-  it('again-rated fresh card has lapses incremented or stays in learning', () => {
+  it('again-rated fresh card jumps straight to review state (enable_short_term=false)', () => {
     const seed = seedCard(NOW);
     const { card } = scheduleNext(seed, 'again', NOW);
-    // First review with `again` from a new card puts it in learning (1) and
-    // does not necessarily increment lapses (lapses count post-review failures).
-    expect([1, 3]).toContain(card.state);
+    // With enable_short_term=false the learning steps are bypassed, so a
+    // fresh card moves directly to state=2 (review) regardless of rating.
+    // Lapses count post-review failures, so a first-review `again` does not
+    // increment the lapse counter.
+    expect(card.state).toBe(2);
+    expect(card.lapses).toBe(0);
   });
 
   it('easy advances the due date further than hard', () => {
@@ -58,6 +63,20 @@ describe('scheduleNext (fresh card)', () => {
     const hard = scheduleNext(seed, 'hard', NOW).card;
     const easy = scheduleNext(seed, 'easy', NOW).card;
     expect(easy.due.getTime()).toBeGreaterThan(hard.due.getTime());
+  });
+
+  it('rating ordering: again < hard < good < easy on a fresh card', () => {
+    const seed = seedCard(NOW);
+    const again = scheduleNext(seed, 'again', NOW).card.due.getTime();
+    const hard = scheduleNext(seed, 'hard', NOW).card.due.getTime();
+    const good = scheduleNext(seed, 'good', NOW).card.due.getTime();
+    const easy = scheduleNext(seed, 'easy', NOW).card.due.getTime();
+    // With enable_short_term=false the four ratings land on strictly
+    // increasing day-scale intervals (~24h / 48h / 72h / 192h on a fresh
+    // card with default params).
+    expect(again).toBeLessThan(hard);
+    expect(hard).toBeLessThan(good);
+    expect(good).toBeLessThan(easy);
   });
 });
 
@@ -80,26 +99,33 @@ describe('scheduleNext log payload', () => {
 });
 
 describe('scheduleNext across multiple reviews', () => {
-  it('preserves state through seed -> good -> good -> again', () => {
-    const day = 86_400_000;
-    const t0 = NOW;
-    const t1 = new Date(NOW.getTime() + day);
-    const t2 = new Date(NOW.getTime() + 2 * day);
-    const t3 = new Date(NOW.getTime() + 10 * day);
+  it('multi-review: seed -> good -> good -> again produces a lapse', () => {
+    const seed = seedCard(NOW);
+    const r1 = scheduleNext(seed, 'good', NOW).card;
+    const r2 = scheduleNext(r1, 'good', new Date(NOW.getTime() + DAY_MS)).card;
+    const r3 = scheduleNext(r2, 'again', new Date(NOW.getTime() + 2 * DAY_MS)).card;
 
-    const seed = seedCard(t0);
-    const r1 = scheduleNext(seed, 'good', t1).card;
-    const r2 = scheduleNext(r1, 'good', t2).card;
-    const r3 = scheduleNext(r2, 'again', t3).card;
-
-    // After a failed review, card is in learning (1) or relearning (3).
-    expect([1, 3]).toContain(r3.state);
-    // A genuine lapse on a card that had reached review state increments lapses.
-    if (r2.state === 2) {
-      expect(r3.lapses).toBeGreaterThan(0);
-    }
+    // With enable_short_term=false, the card jumps straight to review (2) on
+    // the first rating and stays there: relearning steps (state=3) are
+    // skipped, so a lapse increments `lapses` but keeps state at 2.
+    expect(r1.state).toBe(2);
+    expect(r2.state).toBe(2);
+    expect(r3.state).toBe(2);
+    expect(r3.lapses).toBe(1);
     expect(r3.reps).toBeGreaterThan(r2.reps);
-    expect(r3.lastReview?.getTime()).toBe(t3.getTime());
+    expect(r3.lastReview?.getTime()).toBe(NOW.getTime() + 2 * DAY_MS);
+  });
+
+  it('handles early review (now < card.due)', () => {
+    const seed = seedCard(NOW);
+    const r1 = scheduleNext(seed, 'good', NOW).card;
+    // Review the card 1 hour later, before its scheduled due time.
+    const earlyNow = new Date(NOW.getTime() + 1 * HOUR_MS);
+    expect(earlyNow.getTime()).toBeLessThan(r1.due.getTime());
+    // Should not throw; should produce a valid next card.
+    const { card: r2, log } = scheduleNext(r1, 'good', earlyNow);
+    expect(r2.due.getTime()).toBeGreaterThan(earlyNow.getTime());
+    expect(log.review.getTime()).toBe(earlyNow.getTime());
   });
 });
 

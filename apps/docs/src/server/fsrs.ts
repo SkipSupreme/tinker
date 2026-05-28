@@ -3,9 +3,9 @@ import { createEmptyCard, fsrs, Rating, type Card, type Grade } from 'ts-fsrs';
 /**
  * Pure-function wrapper around ts-fsrs.
  *
- * All ts-fsrs imports MUST live in this file. Callers see a stable surface
- * (string-union ratings, plain camelCase shape) so a future scheduler swap —
- * FSRS-5 to FSRS-6, or a different library entirely — is a one-file change.
+ * ts-fsrs imports are confined to this module so future scheduler swaps
+ * (a future FSRS algorithm version, or a different library entirely)
+ * are a one-file change.
  *
  * This module does not touch the DB. Phase C (record-review endpoint) owns
  * persistence; fsrs.ts only computes the next card state.
@@ -60,13 +60,20 @@ const ENUM_TO_RATING: Record<number, FsrsRating> = {
   [Rating.Easy]: 'easy',
 };
 
-// Stock scheduler with default parameters. Tuning needs months of real
-// review data; doing it now would be premature.
-const scheduler = fsrs();
+// Tinker's review surface is once-per-day spaced repetition, not in-session
+// re-practice. Short-term learning steps (default ['1m', '10m']) would force
+// us to persist cur_step across sessions in the fsrs_card schema. Disabling
+// short-term keeps the wrapper's data shape sufficient and matches the
+// Quantum Country / mnemonic-medium pedagogy this layer is modeled after.
+// Tuning the rest of the parameters needs months of real review data; doing
+// it now would be premature.
+const scheduler = fsrs({ enable_short_term: false });
 
 // ts-fsrs flags `elapsed_days` deprecated (planned removal in v6) while the
 // runtime still uses it. We read it via index access to keep the deprecation
 // hint out of astro-check until we upgrade.
+// TODO(ts-fsrs v6): inline `card.elapsed_days` - field will be removed
+// in v6; this typed-access shim goes away with the upgrade.
 function readElapsedDays(o: { elapsed_days: number }): number {
   return (o as unknown as Record<string, number>).elapsed_days;
 }
@@ -92,10 +99,9 @@ function toCard(state: FsrsCardState): Card {
     difficulty: state.difficulty,
     elapsed_days: state.elapsedDays,
     scheduled_days: state.scheduledDays,
-    // learning_steps tracks position within learning steps for a card in
-    // state=learning. The fsrs_card schema does not store it, so we reset to
-    // 0 on each rehydration. ts-fsrs treats 0 as "start of learning steps",
-    // which is acceptable for the rare mid-learning state-restore case.
+    // learning_steps is unused: we constructed `fsrs` with enable_short_term=false
+    // (see top of file), so the scheduler never reads or writes this field.
+    // Keep at 0 to satisfy the ts-fsrs Card type.
     learning_steps: 0,
     reps: state.reps,
     lapses: state.lapses,
