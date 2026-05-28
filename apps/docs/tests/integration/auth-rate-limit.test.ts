@@ -30,10 +30,10 @@ function buildAuth(database: ReturnType<typeof drizzleAdapter>) {
     advanced: {
       cookiePrefix: 'tinker',
       useSecureCookies: false,
-      // Better Auth's rate limiter skips silently when it can't read a client
-      // IP from headers; tests run against an in-memory Request, so we pin a
-      // header it does recognize.
-      ipAddress: { ipAddressHeaders: ['x-forwarded-for'] },
+      // Mirror src/server/auth.ts: Cloudflare's canonical client-IP header
+      // first, x-forwarded-for as fallback. Tests below pin one or the other
+      // to exercise both paths.
+      ipAddress: { ipAddressHeaders: ['cf-connecting-ip', 'x-forwarded-for'] },
     },
     user: {
       additionalFields: {
@@ -124,5 +124,60 @@ describe('Better Auth with database-backed rate limit', () => {
       const res = await signIn('safe@example.com', 'wrong-password-on-purpose');
       expect(res.status).not.toBe(500);
     }
+  });
+
+  // Regression: on real Cloudflare, the client IP arrives only in
+  // `cf-connecting-ip`; x-forwarded-for is not always populated. If the
+  // header isn't listed in ipAddressHeaders, Better Auth's getIp() either
+  // returns null (skip rate limit) or — under vitest's NODE_ENV=test —
+  // falls back to 127.0.0.1, which silently bucketizes every real visitor
+  // into the same key. We send cf-connecting-ip and NOTHING else, then
+  // assert the rate_limit row's key contains the real IP from the header
+  // rather than the localhost fallback. That's the exact behavior that
+  // would have failed before commit 752c2d6.
+  it('records and enforces rate limit when only cf-connecting-ip is present', async () => {
+    const FAKE_IP = '203.0.113.42';
+    const cfHeaders = {
+      'content-type': 'application/json',
+      'cf-connecting-ip': FAKE_IP,
+    };
+    const post = (path: string, body: object) =>
+      auth.handler(
+        new Request(`http://localhost/api/auth${path}`, {
+          method: 'POST',
+          headers: cfHeaders,
+          body: JSON.stringify(body),
+        }),
+      );
+
+    await post('/sign-up/email', {
+      email: 'cf@example.com',
+      password: 'correcthorse1',
+      name: 'cf',
+    });
+
+    const responses: Response[] = [];
+    for (let i = 0; i < 8; i++) {
+      responses.push(
+        await post('/sign-in/email', {
+          email: 'cf@example.com',
+          password: 'wrong-password-on-purpose',
+        }),
+      );
+    }
+
+    const codes = responses.map((r) => r.status);
+    expect(codes.every((c) => c !== 500)).toBe(true);
+    expect(codes.some((c) => c === 429)).toBe(true);
+
+    // The critical regression assertion: keys must contain the IP from
+    // cf-connecting-ip, NOT the 127.0.0.1 localhost fallback. Better Auth
+    // builds rate_limit keys as `${ip}|${path}`, so a row keyed on the
+    // localhost address means cf-connecting-ip was never read.
+    const rows = db.client.select().from(schema.rateLimit).all();
+    expect(rows.length).toBeGreaterThan(0);
+    const keys = rows.map((r) => r.key);
+    expect(keys.some((k) => k.includes(FAKE_IP))).toBe(true);
+    expect(keys.every((k) => !k.includes('127.0.0.1'))).toBe(true);
   });
 });
