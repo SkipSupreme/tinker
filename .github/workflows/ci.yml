@@ -156,6 +156,14 @@ jobs:
     if: needs.detect.outputs.has-docs == 'true' && needs.detect.outputs.has-e2e-specs == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      # createAuth() throws if either is missing, which Nav.astro catches —
+      # but the console.error then trips Vite's dev-overlay, which
+      # intercepts pointer events and breaks any hover-based docs e2e.
+      # Pin dummy values here so the dev server boots clean. Anything
+      # 64 chars long satisfies Better Auth's low-entropy check.
+      BETTER_AUTH_SECRET: ci_e2e_dummy_secret_not_used_for_real_signing_x_x_x_x_x_x_x_x_x
+      PUBLIC_SITE_URL: http://127.0.0.1:4321
     steps:
       - uses: actions/checkout@v4
 

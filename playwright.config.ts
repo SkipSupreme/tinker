@@ -22,7 +22,11 @@ const BASE_URL = `http://localhost:${PORT}`;
 
 export default defineConfig({
   // Don't set a top-level testDir — let each project specify its own.
-  snapshotPathTemplate: "{testDir}/__screenshots__/{projectName}/{arg}{ext}",
+  // {platform} segments the baselines by OS — WebKit on iPhone-14 renders
+  // 1px taller on Linux than macOS, so a single shared set can't be green
+  // both locally (darwin) and in CI (linux). Both platform baselines live
+  // alongside each other under __screenshots__/{project}/{platform}/.
+  snapshotPathTemplate: "{testDir}/__screenshots__/{projectName}/{platform}/{arg}{ext}",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
