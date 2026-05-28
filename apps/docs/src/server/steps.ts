@@ -1,4 +1,4 @@
-import { and, asc, eq, lte, max } from 'drizzle-orm';
+import { and, asc, eq, inArray, lte, max } from 'drizzle-orm';
 import { fsrsCard, stepCheck } from './schema';
 import type { DB } from './db';
 import {
@@ -297,6 +297,56 @@ export async function getDueCards(
     })
     .from(fsrsCard)
     .where(and(eq(fsrsCard.userId, userId), lte(fsrsCard.due, now)))
+    .orderBy(asc(fsrsCard.due))
+    .limit(limit);
+
+  return rows.map((r) => ({
+    stepId: r.stepId,
+    lessonSlug: r.lessonSlug,
+    moduleSlug: r.moduleSlug,
+    due: r.due,
+    state: r.state as 0 | 1 | 2 | 3,
+    reps: r.reps,
+    lapses: r.lapses,
+  }));
+}
+
+/**
+ * Due fsrs_card rows restricted to a set of modules, oldest-due first.
+ *
+ * Backs the "Previously" recap on a module's first lesson (Phase F): the
+ * caller passes the slugs of all *prior* modules, and we surface what's due
+ * from them so cross-module retention gets a nudge before new material. An
+ * empty `moduleSlugs` (e.g. the very first module has no priors) short-
+ * circuits to [] rather than emitting a `module_slug IN ()` query.
+ */
+export async function getDueCardsForModules(
+  db: DB,
+  userId: string,
+  moduleSlugs: string[],
+  limit: number,
+  now: Date = new Date(),
+): Promise<DueCardSummary[]> {
+  if (moduleSlugs.length === 0) return [];
+
+  const rows = await db
+    .select({
+      stepId: fsrsCard.stepId,
+      lessonSlug: fsrsCard.lessonSlug,
+      moduleSlug: fsrsCard.moduleSlug,
+      due: fsrsCard.due,
+      state: fsrsCard.state,
+      reps: fsrsCard.reps,
+      lapses: fsrsCard.lapses,
+    })
+    .from(fsrsCard)
+    .where(
+      and(
+        eq(fsrsCard.userId, userId),
+        inArray(fsrsCard.moduleSlug, moduleSlugs),
+        lte(fsrsCard.due, now),
+      ),
+    )
     .orderBy(asc(fsrsCard.due))
     .limit(limit);
 

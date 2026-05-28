@@ -21,10 +21,14 @@ interface Props {
   prev?: Sibling | null;
   next?: Sibling | null;
   endgameBody?: string | null;
+  /** True when this is the first lesson of its module — gates the
+      "Previously" cross-module recap panel (Phase F). */
+  moduleStart?: boolean;
 }
 const {
   slug, title, summary, estimatedMinutes, module, moduleHref,
   moduleTitle: moduleTitleProp, prev = null, next = null, endgameBody = null,
+  moduleStart = false,
 } = Astro.props;
 const moduleTitle = moduleTitleProp ?? module.replace(/-/g, ' ');
 const moduleLabel = moduleTitle;
@@ -35,9 +39,21 @@ const courseSlug = 'ml-math';
 ---
 
 <Base title={title} description={summary} fullWidth>
-  <div class="lesson-shell" data-lesson-slug={slug} data-module-slug={module}>
+  <div
+    class="lesson-shell"
+    data-lesson-slug={slug}
+    data-module-slug={module}
+    data-module-start={moduleStart ? 'true' : undefined}
+  >
     <header class="lesson-header">
       <div class="shell">
+        {moduleStart && (
+          <aside class="recap-panel" data-recap-panel hidden>
+            <p class="recap-eyebrow">Previously</p>
+            <p class="recap-sub">A few things from earlier modules worth keeping warm.</p>
+            <ul class="recap-cards" data-recap-cards></ul>
+          </aside>
+        )}
         <p class="lesson-module">
           {moduleHref ? <a href={moduleHref}>{moduleLabel}</a> : moduleLabel}
           {' · '}{estimatedMinutes} min
@@ -144,6 +160,105 @@ const courseSlug = 'ml-math';
     color: var(--lesson-fg-muted);
     margin: 0 0 1.5rem;
     max-width: 60ch;
+  }
+
+  /* "Previously" recap (Phase F): a quiet cross-module retention nudge that
+     mounts above the title on a module's first lesson, populated client-side
+     from due FSRS cards in prior modules. Stays hidden until the fetch
+     returns cards, so signed-out / nothing-due learners never see an empty
+     shell. Intentionally calm — the lesson is the headline, not this. */
+  .recap-panel {
+    margin: 0 0 1.75rem;
+    padding: 1.1rem 1.25rem 1.25rem;
+    border: 1px solid var(--lesson-border);
+    border-radius: var(--radius-lg);
+    background: var(--lesson-surface);
+  }
+  .recap-eyebrow {
+    font-family: var(--font-game);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--lesson-coral);
+    margin: 0 0 0.2rem;
+  }
+  .recap-sub {
+    font-size: 0.85rem;
+    color: var(--lesson-fg-muted);
+    margin: 0 0 1rem;
+  }
+  .recap-cards {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.75rem;
+  }
+  .recap-card {
+    border: 1px solid var(--lesson-border);
+    border-radius: var(--radius-md);
+    background: var(--band-white);
+    padding: 0.9rem 1rem;
+  }
+  .recap-prompt {
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+  .recap-prompt :global(p:first-child) { margin-top: 0; }
+  .recap-prompt :global(p:last-child) { margin-bottom: 0; }
+  .recap-answer {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed color-mix(in srgb, var(--lesson-fg) 14%, transparent);
+    font-size: 0.95rem;
+  }
+  .recap-answer-label { color: var(--lesson-fg-muted); margin-right: 0.4rem; }
+  .recap-answer-value {
+    font-family: var(--font-game);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+  .recap-options { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; }
+  .recap-option :global(p) { margin: 0; }
+  .recap-actions {
+    margin-top: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .recap-reveal {
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--lesson-border);
+    background: transparent;
+    color: var(--lesson-fg-muted);
+    font-family: var(--font-game);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 140ms ease, color 140ms ease;
+  }
+  .recap-reveal:hover {
+    color: var(--lesson-fg);
+    border-color: color-mix(in srgb, var(--lesson-fg) 35%, transparent);
+  }
+  .recap-review {
+    margin-left: auto;
+    font-family: var(--font-game);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--lesson-fg-muted);
+    text-decoration: none;
+    border-bottom: 1.5px solid transparent;
+    transition: color 140ms ease, border-color 140ms ease;
+  }
+  .recap-review:hover {
+    color: var(--cta);
+    border-bottom-color: var(--cta);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .recap-reveal, .recap-review { transition: none; }
   }
 
   .progress-track {
@@ -679,11 +794,127 @@ const courseSlug = 'ml-math';
     return disarm;
   }
 
+  // "Previously" recap (Phase F). On a module's first lesson, pull the
+  // learner's due cards from PRIOR modules and surface up to three as
+  // click-to-reveal cues above the title. The prompt/answer HTML is resolved
+  // server-side from the build-time manifest, so the response is already
+  // render-ready and the heavy manifest never ships to the client.
+  type RecapCard =
+    | {
+        stepId: string;
+        promptHTML: string;
+        answerType: 'check';
+        answer: number | null;
+        answerLabel: string;
+      }
+    | {
+        stepId: string;
+        promptHTML: string;
+        answerType: 'choice';
+        options: { html: string; correct: boolean }[];
+      };
+
+  function buildRecapCard(card: RecapCard): HTMLLIElement {
+    const li = document.createElement('li');
+    li.className = 'recap-card';
+
+    const prompt = document.createElement('div');
+    prompt.className = 'recap-prompt';
+    // Trusted: promptHTML is generated at build time from our own lesson MDX.
+    prompt.innerHTML = card.promptHTML;
+    li.appendChild(prompt);
+
+    const answer = document.createElement('div');
+    answer.className = 'recap-answer';
+    answer.hidden = true;
+    if (card.answerType === 'check') {
+      const label = document.createElement('span');
+      label.className = 'recap-answer-label';
+      label.textContent = card.answerLabel;
+      const value = document.createElement('span');
+      value.className = 'recap-answer-value';
+      value.textContent = card.answer === null ? '—' : String(card.answer);
+      answer.appendChild(label);
+      answer.appendChild(value);
+    } else {
+      const ul = document.createElement('ul');
+      ul.className = 'recap-options';
+      // Recap shows the right answer, not the distractors.
+      for (const opt of card.options) {
+        if (!opt.correct) continue;
+        const item = document.createElement('li');
+        item.className = 'recap-option';
+        item.innerHTML = opt.html;
+        ul.appendChild(item);
+      }
+      answer.appendChild(ul);
+    }
+    li.appendChild(answer);
+
+    const actions = document.createElement('div');
+    actions.className = 'recap-actions';
+    const reveal = document.createElement('button');
+    reveal.type = 'button';
+    reveal.className = 'recap-reveal';
+    reveal.textContent = 'Reveal';
+    reveal.addEventListener('click', () => {
+      const showing = answer.hidden;
+      answer.hidden = !showing;
+      reveal.textContent = showing ? 'Hide' : 'Reveal';
+      if (showing) play('tick');
+    });
+    const review = document.createElement('a');
+    review.className = 'recap-review';
+    review.href = '/review';
+    review.textContent = 'Review →';
+    actions.appendChild(reveal);
+    actions.appendChild(review);
+    li.appendChild(actions);
+
+    return li;
+  }
+
+  async function mountRecap(root: HTMLElement) {
+    if (root.dataset.moduleStart !== 'true') return;
+    const panel = root.querySelector<HTMLElement>('[data-recap-panel]');
+    const list = root.querySelector<HTMLElement>('[data-recap-cards]');
+    if (!panel || !list) return;
+    const moduleSlug = root.dataset.moduleSlug ?? '';
+
+    let res: Response;
+    try {
+      res = await fetch(`/api/modules/${encodeURIComponent(moduleSlug)}/recap`, {
+        credentials: 'same-origin',
+      });
+    } catch {
+      return; // offline / network error: the panel is optional, skip silently
+    }
+    // 401 (anon), 404 (unknown module), or any error: no panel.
+    if (!res.ok) return;
+
+    let cards: RecapCard[] = [];
+    try {
+      const data = (await res.json()) as { cards?: RecapCard[] };
+      cards = data.cards ?? [];
+    } catch {
+      return;
+    }
+    if (cards.length === 0) return; // nothing due from prior modules
+
+    for (const card of cards) list.appendChild(buildRecapCard(card));
+    panel.hidden = false;
+  }
+
   function initLesson(root: HTMLElement) {
     const slug = root.dataset.lessonSlug ?? 'unknown';
     const moduleSlug = root.dataset.moduleSlug ?? 'unknown';
     const storageKey = lessonUnlockedKey(slug);
     const completionKey = lessonCompletedKey(slug);
+
+    // Fire-and-forget: the recap is a peripheral nudge and must never block
+    // or delay lesson init. It no-ops unless this is a module-start lesson
+    // with due prior-module cards for a signed-in learner.
+    void mountRecap(root);
 
     const steps = Array.from(root.querySelectorAll<HTMLElement>('[data-step]'));
     steps.forEach((step, i) => step.dataset.index = String(i));
