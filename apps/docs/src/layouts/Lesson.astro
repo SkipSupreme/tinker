@@ -35,7 +35,7 @@ const courseSlug = 'ml-math';
 ---
 
 <Base title={title} description={summary} fullWidth>
-  <div class="lesson-shell" data-lesson-slug={slug}>
+  <div class="lesson-shell" data-lesson-slug={slug} data-module-slug={module}>
     <header class="lesson-header">
       <div class="shell">
         <p class="lesson-module">
@@ -411,6 +411,77 @@ const courseSlug = 'ml-math';
   :global(.lesson-shell .choice-feedback.ok)  { color: var(--cta-hover); }
   :global(.lesson-shell .choice-feedback.bad) { color: var(--ink-coral); }
 
+  /* Confidence-rating row (Phase H). Shown after a correct answer in lesson
+     context to seed the FSRS card. Resting state is a quiet row of outlined
+     chips; each tints toward an existing accent token on hover/focus only, so
+     the default read stays calm rather than carnival. Lives inside the
+     check-form / choice-block, so the .step--completed display:none rule
+     disposes of it once the step advances. */
+  :global(.lesson-shell .rating-row) {
+    width: 100%;
+    margin-top: 0.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    animation: rating-row-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  @keyframes rating-row-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global(.lesson-shell .rating-row) { animation: none; }
+  }
+  :global(.lesson-shell .rating-prompt) {
+    font-size: 0.85rem;
+    color: var(--lesson-fg-muted);
+    margin: 0 0.35rem 0 0;
+  }
+  :global(.lesson-shell .rating-btn) {
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--lesson-border);
+    background: var(--lesson-surface);
+    color: var(--lesson-fg-muted);
+    font: inherit;
+    font-family: var(--font-game);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 140ms ease, color 140ms ease,
+      background-color 140ms ease, transform 140ms ease;
+  }
+  :global(.lesson-shell .rating-btn:hover),
+  :global(.lesson-shell .rating-btn:focus-visible) {
+    color: var(--lesson-fg);
+    transform: translateY(-1px);
+    outline: none;
+  }
+  :global(.lesson-shell .rating-btn[data-rating='again']:hover),
+  :global(.lesson-shell .rating-btn[data-rating='again']:focus-visible) {
+    border-color: var(--ink-coral);
+    background: color-mix(in srgb, var(--ink-coral) 12%, var(--lesson-surface));
+  }
+  :global(.lesson-shell .rating-btn[data-rating='hard']:hover),
+  :global(.lesson-shell .rating-btn[data-rating='hard']:focus-visible) {
+    border-color: var(--ink-sun);
+    background: color-mix(in srgb, var(--ink-sun) 16%, var(--lesson-surface));
+  }
+  :global(.lesson-shell .rating-btn[data-rating='good']:hover),
+  :global(.lesson-shell .rating-btn[data-rating='good']:focus-visible) {
+    border-color: var(--cta);
+    background: color-mix(in srgb, var(--cta) 12%, var(--lesson-surface));
+  }
+  :global(.lesson-shell .rating-btn[data-rating='easy']:hover),
+  :global(.lesson-shell .rating-btn[data-rating='easy']:focus-visible) {
+    border-color: var(--ink-sea);
+    background: color-mix(in srgb, var(--ink-sea) 12%, var(--lesson-surface));
+  }
+  :global(.lesson-shell .rating-btn:focus-visible) {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cta) 22%, transparent);
+  }
+
   /* Done state for the last step. */
   :global(.lesson-shell .step.is-final .step-advance) { display: none; }
 
@@ -507,8 +578,110 @@ const courseSlug = 'ml-math';
 
   const STUCK_MS = 30_000;
 
+  type FsrsRating = 'again' | 'hard' | 'good' | 'easy';
+  const RATING_PROMPT = 'How well did you know that?';
+  const RATING_LABELS: ReadonlyArray<{ rating: FsrsRating; label: string }> = [
+    { rating: 'again', label: 'Again' },
+    { rating: 'hard', label: 'Hard' },
+    { rating: 'good', label: 'Good' },
+    { rating: 'easy', label: 'Easy' },
+  ];
+  // After a correct answer we surface the rating chips to seed the FSRS card
+  // with a real confidence signal. If the learner doesn't pick within this
+  // window we default to "good" and advance, so the lesson flow is never
+  // blocked (Phase H of the retention layer).
+  const RATING_DEFAULT_MS = 4_000;
+  // Beat between picking a rating and advancing, so the tap registers visually.
+  const RATING_ADVANCE_MS = 320;
+
+  // POST the seed to /api/steps/answer. Fire-and-forget on the same contract as
+  // progress/complete: anonymous visitors get 401 (no session) and we ignore
+  // it, since localStorage already drives the local lesson UI.
+  function seedFsrsCard(opts: {
+    stepId: string;
+    lessonSlug: string;
+    moduleSlug: string;
+    answer: string;
+    rating: FsrsRating;
+  }) {
+    fetch('/api/steps/answer', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        step_id: opts.stepId,
+        lesson_slug: opts.lessonSlug,
+        module_slug: opts.moduleSlug,
+        answer: opts.answer,
+        is_correct: true,
+        rating: opts.rating,
+      }),
+      keepalive: true,
+    }).then((res) => {
+      if (!res.ok && res.status !== 401 && res.status !== 403 && res.status !== 429) {
+        console.error('[lesson] steps/answer returned', res.status);
+      }
+    }).catch((e) => {
+      console.warn('[lesson] steps/answer fetch failed', e);
+    });
+  }
+
+  // Mount the Again/Hard/Good/Easy chips inside `container`. Calls `onPick`
+  // exactly once: on a chip click, or on the default-to-"good" timeout.
+  // Returns a `cancel` that disarms the row WITHOUT picking — used on reset so
+  // an orphaned timeout can't seed a card or advance after the user bailed.
+  function mountRatingRow(
+    container: HTMLElement,
+    onPick: (rating: FsrsRating) => void,
+  ): () => void {
+    container.querySelector('.rating-row')?.remove();
+
+    const row = document.createElement('div');
+    row.className = 'rating-row';
+    row.setAttribute('role', 'group');
+    row.setAttribute('aria-label', RATING_PROMPT);
+
+    const prompt = document.createElement('span');
+    prompt.className = 'rating-prompt';
+    prompt.textContent = RATING_PROMPT;
+    row.appendChild(prompt);
+
+    let resolved = false;
+    let timer: number | null = null;
+    const disarm = () => {
+      resolved = true;
+      if (timer !== null) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    };
+    const resolve = (rating: FsrsRating) => {
+      if (resolved) return;
+      disarm();
+      onPick(rating);
+    };
+
+    for (const { rating, label } of RATING_LABELS) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'rating-btn';
+      btn.dataset.rating = rating;
+      btn.textContent = label;
+      btn.addEventListener('click', () => {
+        play('tick');
+        resolve(rating);
+      });
+      row.appendChild(btn);
+    }
+
+    container.appendChild(row);
+    timer = window.setTimeout(() => resolve('good'), RATING_DEFAULT_MS);
+    return disarm;
+  }
+
   function initLesson(root: HTMLElement) {
     const slug = root.dataset.lessonSlug ?? 'unknown';
+    const moduleSlug = root.dataset.moduleSlug ?? 'unknown';
     const storageKey = lessonUnlockedKey(slug);
     const completionKey = lessonCompletedKey(slug);
 
@@ -524,6 +697,9 @@ const courseSlug = 'ml-math';
     const saved = Number.parseInt(localStorage.getItem(storageKey) ?? '0', 10);
     let unlocked = Number.isFinite(saved) ? Math.max(0, Math.min(saved, total)) : 0;
     let lessonCompleteFired = localStorage.getItem(completionKey) === '1';
+    // Disarms the currently-mounted confidence-rating row (if any) so its
+    // default-to-"good" timeout can't fire after a reset or re-answer.
+    let cancelActiveRating: (() => void) | null = null;
 
     function persist() {
       localStorage.setItem(storageKey, String(unlocked));
@@ -696,7 +872,19 @@ const courseSlug = 'ml-math';
           // attempt-aware tuning, even though the orchestrator path flat-rates.
           void XP_AWARD.correctRetry;
           void attempts;
-          setTimeout(() => advance(Number(step.dataset.index)), 520);
+          const stepId = step.dataset.stepId;
+          const idx = Number(step.dataset.index);
+          if (stepId) {
+            cancelActiveRating?.();
+            cancelActiveRating = mountRatingRow(form, (rating) => {
+              cancelActiveRating = null;
+              seedFsrsCard({ stepId, lessonSlug: slug, moduleSlug, answer: raw, rating });
+              setTimeout(() => advance(idx), RATING_ADVANCE_MS);
+            });
+          } else {
+            // No stable id (shouldn't happen post Phase A); preserve old flow.
+            setTimeout(() => advance(idx), 520);
+          }
         } else {
           attempts += 1;
           feedback.className = 'check-feedback bad';
@@ -774,7 +962,24 @@ const courseSlug = 'ml-math';
             }
           });
           void celebrateCorrect(submitBtn);
-          setTimeout(() => advance(Number(step.dataset.index)), 520);
+          const stepId = step.dataset.stepId;
+          const idx = Number(step.dataset.index);
+          const block = step.querySelector<HTMLElement>('[data-choice-block]');
+          const answerText = picked
+            .map((o) => o.textContent?.trim() ?? '')
+            .filter(Boolean)
+            .join(' | ')
+            .slice(0, 4_000);
+          if (stepId && block) {
+            cancelActiveRating?.();
+            cancelActiveRating = mountRatingRow(block, (rating) => {
+              cancelActiveRating = null;
+              seedFsrsCard({ stepId, lessonSlug: slug, moduleSlug, answer: answerText, rating });
+              setTimeout(() => advance(idx), RATING_ADVANCE_MS);
+            });
+          } else {
+            setTimeout(() => advance(idx), 520);
+          }
         } else {
           attempts += 1;
           feedback.className = 'choice-feedback bad';
@@ -820,6 +1025,11 @@ const courseSlug = 'ml-math';
         el.className = 'check-feedback';
         el.textContent = '';
       });
+      // Disarm the active rating timeout, then drop any mounted rating rows
+      // so a stale default-to-"good" can't seed a card or advance post-reset.
+      cancelActiveRating?.();
+      cancelActiveRating = null;
+      root.querySelectorAll<HTMLElement>('.rating-row').forEach((el) => el.remove());
       render();
       steps[0]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
