@@ -39,11 +39,6 @@ const bookmarks = await listBookmarks(db, session.user.id);
 </Base>
 
 <script is:inline>
-  function getCsrf() {
-    const m = document.cookie.match(/(?:^|;\s*)__Secure-tinker\.csrf_token=([^;]+)/) ||
-              document.cookie.match(/(?:^|;\s*)tinker\.csrf_token=([^;]+)/);
-    return m ? decodeURIComponent(m[1]) : '';
-  }
   document.querySelectorAll('button.remove').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const id = btn.getAttribute('data-id');
@@ -51,7 +46,6 @@ const bookmarks = await listBookmarks(db, session.user.id);
       const res = await fetch('/api/bookmarks/' + encodeURIComponent(id), {
         method: 'DELETE',
         credentials: 'same-origin',
-        headers: { 'x-tinker-csrf': getCsrf() },
       });
       if (res.ok) {
         btn.closest('li')?.remove();

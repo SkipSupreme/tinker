@@ -498,7 +498,6 @@ const courseSlug = 'ml-math';
   import { celebrateCorrect, celebrateLesson, celebrateWrong } from '../lib/celebrate';
   import { TINKER_EVENT } from '../lib/events';
   import { lessonUnlockedKey, lessonCompletedKey } from '../lib/storage-keys';
-  import { getCsrf } from '../lib/csrf-client';
 
   type CheckData = { answer: number; tolerance: number };
 
@@ -552,30 +551,24 @@ const courseSlug = 'ml-math';
       try { localStorage.setItem(completionKey, '1'); } catch { /* ignore */ }
       // Persist completion server-side for signed-in users. Fire-and-forget:
       // localStorage already records local completion, so a network failure
-      // or 401 (anon visitor) is silently ignored. The CSRF cookie is only
-      // present when Better Auth has minted a session; getCsrf() returns ''
-      // for anon users, which the server rejects with 403 — that's fine.
-      const csrf = getCsrf();
-      if (csrf) {
-        fetch('/api/progress/complete', {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: {
-            'content-type': 'application/json',
-            'x-tinker-csrf': csrf,
-          },
-          body: JSON.stringify({ lesson_slug: slug }),
-          keepalive: true,
-        }).then((res) => {
-          // 401/403/429 are expected (stale CSRF, anon flow, rate-limit); anything
-          // else is a server-side bug we'd otherwise never hear about.
-          if (!res.ok && res.status !== 401 && res.status !== 403 && res.status !== 429) {
-            console.error('[lesson] progress/complete returned', res.status);
-          }
-        }).catch((e) => {
-          console.warn('[lesson] progress/complete fetch failed', e);
-        });
-      }
+      // or 401 (anon visitor) is silently ignored.
+      fetch('/api/progress/complete', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ lesson_slug: slug }),
+        keepalive: true,
+      }).then((res) => {
+        // 401/403/429 are expected (anon flow, same-origin guard, rate-limit);
+        // anything else is a server-side bug we'd otherwise never hear about.
+        if (!res.ok && res.status !== 401 && res.status !== 403 && res.status !== 429) {
+          console.error('[lesson] progress/complete returned', res.status);
+        }
+      }).catch((e) => {
+        console.warn('[lesson] progress/complete fetch failed', e);
+      });
       // Route the entire endgame through the orchestrator: spring fill +
       // math-symbol burst + XP tween + TinkerHop event + chime + vibrate +
       // sweep-green class + aria-live announce. One call, one tuned chain.

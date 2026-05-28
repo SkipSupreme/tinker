@@ -33,10 +33,14 @@ export function requireCsrf(request: Request): Response | null {
     cookieHeader.match(CSRF_COOKIE_PATTERN) ?? cookieHeader.match(CSRF_DEV_COOKIE_PATTERN);
   const csrfCookie = match?.[1];
   const csrfHeader = request.headers.get('x-tinker-csrf');
-  if (!csrfCookie || !csrfHeader || !timingSafeEqual(csrfCookie, csrfHeader)) {
-    return jsonError(403, 'forbidden', 'CSRF check failed');
+  if (csrfCookie && csrfHeader && timingSafeEqual(csrfCookie, csrfHeader)) {
+    return null;
   }
-  return null;
+
+  // Better Auth 1.6 does not mint the csrf_token cookie this app originally
+  // expected. Fall back to Origin/Referer validation so same-origin fetches
+  // keep working while cross-site form/script attempts are still rejected.
+  return requireSameOrigin(request, new URL(request.url).origin);
 }
 
 /**
@@ -60,7 +64,13 @@ export function requireSameOrigin(request: Request, publicSiteUrl: string): Resp
   }
   // No Origin: some legacy form posts. Fall back to Referer prefix check.
   const referer = request.headers.get('referer');
-  if (referer && new URL(referer).origin === expectedOrigin) return null;
+  if (referer) {
+    try {
+      if (new URL(referer).origin === expectedOrigin) return null;
+    } catch {
+      // Malformed Referer should fail closed below, not bubble as a 500.
+    }
+  }
   return jsonError(403, 'forbidden', 'Origin/Referer required for state-changing request');
 }
 

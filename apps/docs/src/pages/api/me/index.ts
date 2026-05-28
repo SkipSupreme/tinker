@@ -43,23 +43,34 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
   }
 
   if (env.RESEND_API_KEY) {
-    (locals as App.Locals).cfContext.waitUntil(
-      sendAccountDeletedEmail(env.RESEND_API_KEY, originalEmail).catch((e: unknown) => {
-        // Avoid logging the email (PII / GDPR concern in 7-day worker logs).
-        // Status + code is enough for diagnosis.
-        const status = e && typeof e === 'object' && 'status' in e ? (e as { status?: number }).status : undefined;
-        const code = e && typeof e === 'object' && 'name' in e ? (e as { name?: string }).name : 'Error';
-        console.error(`[me] account-deleted email failed: ${code} status=${status ?? 'unknown'}`);
-      }),
-    );
+    const accountDeletedEmail = sendAccountDeletedEmail(env.RESEND_API_KEY, originalEmail).catch((e: unknown) => {
+      // Avoid logging the email (PII / GDPR concern in 7-day worker logs).
+      // Status + code is enough for diagnosis.
+      const status = e && typeof e === 'object' && 'status' in e ? (e as { status?: number }).status : undefined;
+      const code = e && typeof e === 'object' && 'name' in e ? (e as { name?: string }).name : 'Error';
+      console.error(`[me] account-deleted email failed: ${code} status=${status ?? 'unknown'}`);
+    });
+    const waitUntil = (locals as { cfContext?: { waitUntil?: (promise: Promise<unknown>) => void } })
+      .cfContext?.waitUntil;
+    if (waitUntil) waitUntil(accountDeletedEmail);
+    else await accountDeletedEmail;
   }
+
+  const headers = new Headers();
+  // Belt-and-suspenders cookie clear in case Better Auth's signOut path failed.
+  // Clear both production and local-dev names.
+  headers.append(
+    'Set-Cookie',
+    '__Secure-tinker.session_token=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax',
+  );
+  headers.append(
+    'Set-Cookie',
+    'tinker.session_token=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax',
+  );
 
   return new Response(null, {
     status: 204,
-    headers: {
-      // Belt-and-suspenders cookie clear in case Better Auth's signOut path failed.
-      'Set-Cookie': '__Secure-tinker.session_token=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax',
-    },
+    headers,
   });
 };
 

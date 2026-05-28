@@ -1,28 +1,17 @@
 <script lang="ts">
-  import { getCsrf } from '../../lib/csrf-client';
-
   let { lessonSlug, courseSlug, moduleSlug } = $props<{
     lessonSlug: string;
     courseSlug: string;
     moduleSlug: string;
   }>();
 
-  // Lesson pages are prerendered statically — the server can't tell us whether
-  // the visitor is signed in. Use the CSRF cookie's presence as a proxy: it
-  // only gets set when Better Auth has minted a session, and Tinker's auth UX
-  // never leaves a stale CSRF cookie around after sign-out.
-  function isAuthed(): boolean {
-    return getCsrf() !== '';
-  }
-
-  async function postAuthed() {
+  async function postAuthed(): Promise<boolean> {
     try {
       const res = await fetch('/api/progress/view', {
         method: 'POST',
         credentials: 'same-origin',
         headers: {
           'content-type': 'application/json',
-          'x-tinker-csrf': getCsrf(),
         },
         body: JSON.stringify({
           lesson_slug: lessonSlug,
@@ -31,15 +20,21 @@
         }),
         keepalive: true,
       });
-      // 401/403 means CSRF stale or session expired; user will re-auth.
-      // 429 means rate-limited; user will re-emit on next nav. Both expected.
-      // Anything else is worth at least a breadcrumb.
-      if (!res.ok && res.status !== 401 && res.status !== 403 && res.status !== 429) {
+      // 401/403 means anon/session expired/same-origin guard failed; fall
+      // back to local progress so the merge path can recover later.
+      if (res.status === 401 || res.status === 403) return false;
+      // 429 means rate-limited; user will re-emit on next nav. Expected.
+      if (res.status === 429) return true;
+      // Anything else is worth at least a breadcrumb and local fallback.
+      if (!res.ok) {
         console.error('[progress-beacon] view returned', res.status);
+        return false;
       }
+      return true;
     } catch (e) {
       // Network failure is fine; user will re-emit on next nav.
       console.warn('[progress-beacon] view fetch failed', e);
+      return false;
     }
   }
 
@@ -81,9 +76,9 @@
     }
   }
 
-  function emit() {
-    if (isAuthed()) postAuthed();
-    else recordAnon();
+  async function emit() {
+    const storedServerSide = await postAuthed();
+    if (!storedServerSide) recordAnon();
   }
 
   let timer: ReturnType<typeof setTimeout> | undefined;

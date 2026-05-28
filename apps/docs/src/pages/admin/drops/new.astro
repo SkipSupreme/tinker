@@ -41,11 +41,6 @@ if (!guard.ok) return guard.response;
 </Base>
 
 <script is:inline>
-  function getCsrf() {
-    const m = document.cookie.match(/(?:^|;\s*)__Secure-tinker\.csrf_token=([^;]+)/) ||
-              document.cookie.match(/(?:^|;\s*)tinker\.csrf_token=([^;]+)/);
-    return m ? decodeURIComponent(m[1]) : '';
-  }
   function payload(form, testOnly) {
     const fd = new FormData(form);
     return {
@@ -68,7 +63,7 @@ if (!guard.ok) return guard.response;
     const res = await fetch('/api/admin/drops', {
       method: 'POST',
       credentials: 'same-origin',
-      headers: { 'content-type': 'application/json', 'x-tinker-csrf': getCsrf() },
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify(data),
     });
     const result = await res.json().catch(() => ({}));

@@ -1,24 +1,40 @@
 <script lang="ts">
-  import { getCsrf } from '../../lib/csrf-client';
-
   let { lessonSlug } = $props<{ lessonSlug: string }>();
 
   // Notes are authed-only. Pages are prerendered so the server can't gate
-  // mount; we hide the button when no CSRF cookie is present (the cookie
-  // is only set once Better Auth has minted a session).
+  // mount; probe the session endpoint before showing the notes control.
   let authed = $state(false);
-  $effect(() => { authed = getCsrf() !== ''; });
+  let saveTimer: ReturnType<typeof setTimeout> | undefined;
+  // Abort the in-flight save when a newer keystroke triggers another save.
+  // Without this a slow request can land AFTER a fresher one and overwrite
+  // the user's latest text with stale content.
+  let inFlightSave: AbortController | null = null;
+
+  $effect(() => {
+    let cancelled = false;
+    fetch('/api/auth/get-session', { credentials: 'same-origin' })
+      .then((res) => {
+        if (!res.ok) return null;
+        return res.json() as Promise<{ user?: unknown } | null>;
+      })
+      .then((data) => {
+        if (!cancelled) authed = !!data?.user;
+      })
+      .catch(() => {
+        if (!cancelled) authed = false;
+      });
+    return () => {
+      cancelled = true;
+      if (saveTimer) clearTimeout(saveTimer);
+      if (inFlightSave) inFlightSave.abort();
+    };
+  });
 
   let open = $state(false);
   let body = $state('');
   let status = $state<'idle' | 'loading' | 'saving' | 'saved' | 'error'>('idle');
   let errorContext = $state<'load' | 'save' | null>(null);
   let lastSavedAt = $state<Date | null>(null);
-  let saveTimer: ReturnType<typeof setTimeout> | undefined;
-  // Abort the in-flight save when a newer keystroke triggers another save.
-  // Without this a slow request can land AFTER a fresher one and overwrite
-  // the user's latest text with stale content.
-  let inFlightSave: AbortController | null = null;
 
   async function load() {
     status = 'loading';
@@ -50,7 +66,6 @@
         credentials: 'same-origin',
         headers: {
           'content-type': 'application/json',
-          'x-tinker-csrf': getCsrf(),
         },
         body: JSON.stringify({ body }),
         signal: controller.signal,

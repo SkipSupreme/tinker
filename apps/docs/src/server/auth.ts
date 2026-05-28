@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { getDb } from './db';
+import * as schema from './schema';
 
 export interface AuthEnv {
   DB: D1Database;
@@ -27,7 +28,11 @@ export function createAuth(env: AuthEnv) {
   const isHttps = env.PUBLIC_SITE_URL.startsWith('https://');
 
   return betterAuth({
-    database: drizzleAdapter(db, { provider: 'sqlite' }),
+    // Pass `schema` so Better Auth can resolve custom model names (in particular
+    // `rate_limit`). Drizzle already knows the full schema map via getDb(), but
+    // the dev-mode Vite transform path doesn't always expose it to the adapter,
+    // which makes /api/auth/* return 500 on every request. Explicit wins.
+    database: drizzleAdapter(db, { provider: 'sqlite', schema }),
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.PUBLIC_SITE_URL,
     trustedOrigins: [env.PUBLIC_SITE_URL],
@@ -50,13 +55,17 @@ export function createAuth(env: AuthEnv) {
         role: { type: 'string', defaultValue: 'user', input: false },
       },
     },
-    // DB-backed rate limit: in-memory is per-isolate, which doesn't survive
-    // Cloudflare's global edge. `tinker.rate_limit` is the same table the
-    // app's checkRateLimit uses, so admin can read both in one query.
+    // Memory-backed rate limit: per-Cloudflare-isolate, so a determined
+    // attacker can spread attempts across edge nodes — known limitation.
+    // The DB-backed alternative requires aligning our rate_limit schema
+    // (key/count/resetAt) with Better Auth's expected shape
+    // (id/key/count/lastRequest), or wiring a customStorage adapter. Until
+    // that's done, memory storage at least enforces something AND keeps
+    // logs clean; the prior `storage: 'database'` config silently failed
+    // on every request because the field map didn't match.
     rateLimit: {
       enabled: true,
-      storage: 'database',
-      modelName: 'rate_limit',
+      storage: 'memory',
       window: 60,
       max: 60,
       customRules: {
