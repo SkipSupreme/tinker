@@ -2,6 +2,8 @@
 
 Source: 2026-05-27 pedagogy + design-space audit. This plan translates the audit's Stage 1 recommendations into Tinker-specific work, sequenced by the codebase audit conducted alongside it.
 
+Updated 2026-05-28: added Phase J (optional streak toggle, off by default) and Phase K (on-request completion certificate) on user direction. These are scope additions to the audit, framed to avoid the engagement-coercion failure modes the audit warned against.
+
 ## Why this and not something else
 
 Tinker's gated StepChecks are de facto retrieval practice within a lesson. The gap is *across* lessons: nothing forces a learner doing M7 to retrieve the chain rule from M5, so by M14 the chain rule has decayed (Bjork "storage strength vs retrieval strength"). Spaced retrieval is the only Dunlosky 2013 "high utility" intervention Tinker doesn't have. Everything else in Stage 2+ (problem bank, worked-example fading, debugging problems) is more valuable once retention is solved, because they amplify what learners can hold onto.
@@ -14,19 +16,18 @@ Precedent already exists: `exerciseAnswer` uses a stable `exerciseId` string (sc
 
 ## Phase A: Stable step IDs (foundation)
 
-1. Add a required `id` prop to `StepCheck.astro` and `StepChoice.astro`.
+1. Add a required `id` prop to `StepCheck.astro` and `StepChoice.astro`, surfaced as `data-step-id={id}` on the rendered section.
    - Convention: `{lessonSlug}#{shortname}`, e.g. `m3-trig#sine-at-pi-over-6`.
-   - At build time, run an Astro integration that validates every StepCheck/StepChoice in `src/content/lessons/*.mdx` has an id, and that ids are unique across the corpus. Fail the build on collision.
-2. Backfill existing lessons. Roughly 30 lessons; one pass through MDX adding ids.
-3. Update `Lesson.astro:516` to read the id from the rendered StepCheck rather than computing `data-index`.
-4. Preserve `data-index` only for ordering UI (progress bar fills, "next step" jumps).
-5. Update `POST /api/exercises/answer` to also accept and store a `stepId` (for stepCheck/stepChoice answers, distinct from exerciseId for free-form exercises).
+   - Shortname is kebab-case, 2-4 words, reflects the math content (NOT the step's ordinal position), so reordering lessons doesn't break stability.
+2. Backfill all ~30 lessons in `src/content/lessons/*.mdx`, hand-assigning a stable shortname per StepCheck and StepChoice. Atomic with step 1 (otherwise the build breaks).
+3. Update `Lesson.astro` to read `data-step-id` from the rendered DOM where it currently uses `data-index`. Preserve `data-index` for ordering UI only (progress bar fill, next-step jumps).
+4. Build-time Astro integration that validates: every StepCheck/StepChoice in lesson MDX has an `id`; ids are unique across the corpus; ids match the `{lessonSlug}#{shortname}` shape. Fail the build on violation.
 
-Risk: an author who later renames a step id orphans its FSRS history. Mitigate with a `stepIdAlias` table that maps old → new ids, populated when a lesson PR changes a step id.
+Risk: an author later renames a step id, orphaning its FSRS history. Mitigate with a `stepIdAlias` table (added in Phase B) that maps old → new ids, populated when a lesson PR changes an id.
 
 ## Phase B: Schema
 
-Add three Drizzle migrations after the existing `0002_align_rate_limit_to_better_auth.sql`:
+Add Drizzle migrations after the existing `0002_align_rate_limit_to_better_auth.sql`:
 
 **`0003_step_check_history`** (per-attempt log, analogous to `exerciseAnswer`):
 ```
@@ -64,7 +65,7 @@ fsrsCard (
 )
 ```
 
-**`0005_key_idea`** (per-module "what do you want to remember in 6 months?" self-authored prompt):
+**`0005_key_idea`** (per-module "remember in 6 months" prompt):
 ```
 keyIdea (
   user_id TEXT NOT NULL,
@@ -73,6 +74,29 @@ keyIdea (
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL,
   PRIMARY KEY (user_id, module_slug)
+)
+```
+
+**`0006_step_id_alias`** (rename history):
+```
+stepIdAlias (
+  old_step_id TEXT NOT NULL,
+  new_step_id TEXT NOT NULL,
+  renamed_at INTEGER NOT NULL,
+  PRIMARY KEY (old_step_id)
+)
+```
+
+**`0007_streak`** (Phase J data, off-by-default opt-in):
+```
+streakState (
+  user_id TEXT NOT NULL PRIMARY KEY,
+  enabled INTEGER NOT NULL DEFAULT 0,    -- 0 = off, 1 = on
+  current INTEGER NOT NULL DEFAULT 0,    -- consecutive active days
+  longest INTEGER NOT NULL DEFAULT 0,    -- longest run achieved
+  last_active_day TEXT,                  -- YYYY-MM-DD in user's tz
+  timezone TEXT NOT NULL DEFAULT 'UTC',
+  updated_at INTEGER NOT NULL
 )
 ```
 
@@ -92,42 +116,39 @@ Add under `src/pages/api/`:
    - Insert a row into `stepCheck` for the attempt log.
    - Anon fallback: write to localStorage with the same shape; merge on sign-in via the existing `/api/progress/merge` pattern.
 
-2. `GET /api/review/queue`
-   - Returns up to N due cards for the current user, sorted by `due ASC`.
-   - Each card includes enough metadata to render the prompt: `stepId`, `lessonSlug`, prompt text (resolved by re-rendering the MDX step in a server context, or by pre-extracting prompts into a build-time JSON manifest — prefer the manifest for performance).
+2. `GET /api/review/queue` returns up to N due cards for the current user, sorted by `due ASC`. Each card carries enough metadata to render the prompt (resolved from a build-time JSON manifest; see Phase E).
 
-3. `POST /api/review/grade`
-   - Body: `{ stepId, rating }`. Updates the `fsrsCard` row; logs to `stepCheck`.
+3. `POST /api/review/grade` body `{ stepId, rating }`; updates `fsrsCard`; logs to `stepCheck`.
 
-4. `GET /api/modules/:moduleSlug/recap`
-   - Returns 3 due cards from *prior* modules for the "previously" recap at module start.
+4. `GET /api/modules/:moduleSlug/recap` returns 3 due cards from *prior* modules for Phase F.
 
-5. `POST /api/modules/:moduleSlug/key-idea` / `GET ...`
-   - Upserts/reads the user's per-module "remember in 6 months" prompt.
+5. `POST/GET /api/modules/:moduleSlug/key-idea` for Phase I.
+
+6. `POST/GET /api/me/streak` and `POST /api/me/streak/toggle` for Phase J.
 
 ## Phase D: FSRS integration
 
-- Package: `ts-fsrs` (the audit's recommendation; benchmarked ~20-30% fewer reviews than SM-2 at equal retention per Expertium's open-spaced-repetition benchmark, ~350M reviews).
-- Wrap it in `src/server/fsrs.ts` exporting `scheduleNext(card, rating, now)` → `{ card, log }`. Keep ts-fsrs imports confined to that one module so a future swap (e.g., FSRS-5 → FSRS-6) is a single-file change.
+- Package: `ts-fsrs` (the audit's recommendation; benchmarked ~20-30% fewer reviews than SM-2 at equal retention per Expertium's open-spaced-repetition benchmark on ~350M filtered reviews).
+- Wrap it in `src/server/fsrs.ts` exporting `scheduleNext(card, rating, now)` returning `{ card, log }`. Keep ts-fsrs imports confined to that one module so a future swap (e.g., FSRS-5 to FSRS-6) is a single-file change.
 - Use defaults; do not tune yet. Tuning needs months of real reviews and is premature.
 
 ## Phase E: `/review` route
 
 New Astro page at `apps/docs/src/pages/review/index.astro`. Structure modeled on `/dev/widget-lab/` (per memory note `project_widget_lab_qa_route.md`):
 
-- Server-side fetch of the queue via `getSession` + a direct DB call (faster than the API roundtrip).
+- Server-side fetch of the queue via `getSession` plus a direct DB call (faster than the API roundtrip).
 - Render one card at a time using the existing StepCheck / StepChoice components in a "review mode" (no localStorage gating; submit posts to `/api/review/grade`).
 - After answer reveal, show four buttons: Again / Hard / Good / Easy. The button choice maps to the FSRS rating; submit advances to the next card.
 - "Done for today" state when the queue is empty.
-- Show a small queue counter ("4 of 12 due") for momentum, but no streaks, no leagues, no badges. See `feedback_no_streaks_badges_leagues.md`.
+- Show a small queue counter ("4 of 12 due") for momentum. Streak badge appears here only if Phase J toggle is ON.
 
-Performance: prompt text resolution should not require running MDX at request time. Add a build step that emits `src/generated/step-prompts.json` mapping `stepId → { promptHTML, hintHTML, answerType, lessonSlug, moduleSlug }`. Regenerated on each lesson change.
+Performance: prompt text resolution should not require running MDX at request time. Add a build step that emits `src/generated/step-prompts.json` mapping `stepId` to `{ promptHTML, hintHTML, answerType, lessonSlug, moduleSlug }`. Regenerated on each lesson change.
 
 ## Phase F: "Previously" recap at module start
 
 In `Lesson.astro`, when `frontmatter.order === 1` (first lesson of a module) and the user is signed in and has completed any prior modules, fetch `GET /api/modules/:moduleSlug/recap` and render a small "Previously" panel above the lesson title. Three cards, click-to-reveal. Each card has a "Review" link that adds it to the `/review` queue.
 
-For module slug → arc order, add an `arc` field to lesson frontmatter (e.g., `arc: foundations`) or derive from a separate `src/content/modules.ts` registry. The latter is cleaner because module-level metadata (display name, arc, color) is currently nowhere centralized.
+For module slug to arc order, add an `arc` field to lesson frontmatter (e.g., `arc: foundations`) or derive from a separate `src/content/modules.ts` registry. The latter is cleaner because module-level metadata (display name, arc, color) is currently nowhere centralized.
 
 ## Phase G: Mastery framing
 
@@ -140,15 +161,48 @@ Retrievability target: 0.9 is the FSRS default "desired retention." Show "retain
 
 ## Phase H: Confidence ratings on first submit (lesson context, not review)
 
-When a learner answers a StepCheck correctly *in lesson context* (not in `/review`), show the same Again/Hard/Good/Easy buttons before advancing to the next step. The rating seeds the initial FSRS card (Phase B/C above). If the learner does not click, default to "Good" after a short delay so the lesson flow isn't blocked. This is necessary because if the first interaction with a step is the next-day review with no prior data, the scheduler has no signal to work with.
+When a learner answers a StepCheck correctly *in lesson context* (not in `/review`), show the same Again/Hard/Good/Easy buttons before advancing to the next step. The rating seeds the initial FSRS card. If the learner doesn't click, default to "Good" after a short delay so the lesson flow isn't blocked. This is necessary because if the first interaction with a step is the next-day review with no prior data, the scheduler has no signal to work with.
 
 ## Phase I: Module-end "remember in 6 months" prompt
 
-After the last StepCheck of a module's last lesson, surface a single textarea: "In one sentence, what do you want to remember in 6 months?" Save to `keyIdea`. On future visits to any lesson in that module, display the saved key idea at the top as a per-user mantra. Optionally, push it into the FSRS queue as a cloze-style self-authored prompt — but only after Phase A-G ships and stabilizes; this is a Stage-1.5 polish.
+After the last StepCheck of a module's last lesson, surface a single textarea: "In one sentence, what do you want to remember in 6 months?" Save to `keyIdea`. On future visits to any lesson in that module, display the saved key idea at the top as a per-user mantra. Optionally, push it into the FSRS queue as a cloze-style self-authored prompt, but only after Phase A through G ships and stabilizes; this is a Stage-1.5 polish.
+
+## Phase J: Optional streak toggle (off by default, no engagement-coercion)
+
+User-preference daily streak. **Off by default.** Designed for users who want a habit hook without making one mandatory for everyone.
+
+Behavior:
+- Setting on `/me`: "Show daily streak" toggle. Default OFF.
+- When ON: any FSRS review action or StepCheck completion counts as "active for the day." Counter increments at midnight in user's local timezone if active; resets to 0 if more than one day is missed.
+- When OFF: no UI indication anywhere. Server still accumulates `streakState.current` from activity so toggling back on later doesn't feel like starting from zero (the user's actual activity record is the source of truth, not a counter that started when they enabled the feature).
+- No "your streak is broken" notifications. No fire emojis. No freeze items, no purchase mechanics, no league placement. The feature is opt-in habit signal, full stop.
+
+UI:
+- A small subdued badge on `/review` and `/me` when enabled, e.g. "5 days." Honor DESIGN.md tokens (no purple, no purchased iconography, no urgency styling).
+- Toggle copy on `/me`: "Show daily streak (off by default; you can turn this on or off any time, no pressure)."
+
+This phase is independent of Phase A through I and can ship after the SR layer stabilizes. It deliberately violates the audit's "no streaks" position on a narrow basis: opt-in only, no coercion, no leaderboards or social shaming attached. See updated `feedback_no_streaks_badges_leagues.md` memory.
+
+## Phase K: Completion certificate (on-request, printable)
+
+A static, printable HTML certificate generated on demand for any user who has completed a module or arc. Not pushed. Not gated. Not signaled.
+
+Behavior:
+- Route: `GET /me/certificate/[scope]` where scope is a module slug or the literal `all`.
+- Renders a printable page: user display name, scope name, date completed, list of lessons covered, Tinker wordmark.
+- "Print" button uses the browser's print dialog; no server-side PDF rendering needed (avoids the wkhtmltopdf / puppeteer dependency).
+- Surfaced as a quiet link on `/me` next to a fully-completed module: "Print certificate." Not in the navbar.
+
+UI:
+- Single-page A4-format printable HTML.
+- Honors DESIGN.md tokens; no purple, restrained typography, no fake-medal iconography.
+- Author voice retained in microcopy: "you finished this. nice. here's something to print and stick on the fridge if that's your kind of thing."
+
+This phase is independent of Phase A through J.
 
 ## Acceptance criteria
 
-Stage 1 is done when, for a signed-in user who completes a sample lesson:
+Stage 1 (Phases A through I) is done when, for a signed-in user who completes a sample lesson:
 1. Every StepCheck/StepChoice answer is persisted to `stepCheck` with a stable `stepId`.
 2. A corresponding row exists in `fsrsCard` with a scheduled `due` timestamp.
 3. The `/review` route shows due cards and grades them via `ts-fsrs`.
@@ -156,24 +210,33 @@ Stage 1 is done when, for a signed-in user who completes a sample lesson:
 5. The `/me` surface shows "N skills retained" instead of "N% complete."
 6. Anonymous users get equivalent localStorage state that merges into the DB on sign-in.
 
+Phase J (streak) ships independently when:
+7. Streak toggle exists on `/me`, defaults OFF, persists across sessions.
+8. When ON, daily-active counter updates correctly across timezone boundaries.
+9. When OFF, no streak UI is shown anywhere in the app.
+
+Phase K (certificate) ships independently when:
+10. `/me/certificate/[scope]` renders a printable page for any fully-completed module.
+11. Print dialog produces a clean single-page A4 layout.
+
 ## What goes to memory vs in-repo doc
 
-Already saved to `~/.claude/memory/`: the five load-bearing principles (reference class, no-streaks, stage priorities, Matuschak taxonomy, authoring constraints).
+Already saved to `~/.claude/memory/`: the five load-bearing principles (reference class, no-engagement-coercion, stage priorities, Matuschak taxonomy, authoring constraints). The no-streaks memory was updated 2026-05-28 to reflect the opt-in-only policy added in Phase J.
 
-This file (`docs/plans/stage1-retention-layer.md`) is the project-scoped, in-repo plan. The full audit text lives in conversation history; if it should also be checked in, save to `docs/research/pedagogy-design-space-audit.md` (note: the em-dash-to-colon hook will lightly mangle prose; consider saving as `.txt` if fidelity matters).
+This file is the project-scoped, in-repo plan. The full audit text lives in conversation history; if it should also be checked in, save to `docs/research/pedagogy-design-space-audit.md` (note: the em-dash to colon hook lightly mangles prose; consider saving as `.txt` if fidelity matters).
 
 ## Open questions before writing code
 
-1. **Stable id authoring discipline.** Should ids be hand-written (`m3-trig#sine-at-pi-over-6`) or auto-derived from prompt text hashes? Hand-written is more robust to prompt edits; auto-derived removes authoring burden but breaks history when the prompt changes. Recommend hand-written with a lint rule.
-2. **Prompt extraction for `/review`.** Do we build a static JSON manifest at build time, or render MDX on demand at request time? Manifest is faster and works offline; on-demand keeps prompts always-fresh. Recommend manifest with a `data-step-id` selector so QA in `/dev/widget-lab/` can show "the prompt the FSRS queue would render" inline.
-3. **Anon learners.** The audit's >50% D14 review-return threshold can only be measured for signed-in users. Should the `/review` route require sign-in, or work for anon via localStorage? Recommend requiring sign-in for `/review` (forces account creation, which Tinker's pricing model assumes) while still accumulating localStorage state for signed-out lesson use that merges on sign-in.
-4. **Knowledge-type tagging.** Phase B includes `knowledge_type` on `fsrsCard`. Who assigns it? Author hand-tags via a new `<StepCheck type="procedural" ...>` prop, or an LLM classifier at build time? Recommend hand-tag with an LLM-suggested default at lint time. Per Matuschak's taxonomy, this discipline is what makes prompts good.
+1. **Stable id authoring discipline.** Should ids be hand-written (`m3-trig#sine-at-pi-over-6`) or auto-derived from prompt text hashes? Hand-written is more robust to prompt edits; auto-derived removes authoring burden but breaks history when the prompt changes. **Recommendation: hand-written with a build-time lint rule.**
+2. **Prompt extraction for `/review`.** Do we build a static JSON manifest at build time, or render MDX on demand at request time? Manifest is faster and works offline; on-demand keeps prompts always-fresh. **Recommendation: manifest.**
+3. **Anon learners.** Should the `/review` route require sign-in, or work for anon via localStorage? **Recommendation: require sign-in for `/review`; anon lesson use continues to use localStorage and merges on sign-in.**
+4. **Knowledge-type tagging.** Phase B includes `knowledge_type` on `fsrsCard`. **Recommendation: hand-tag via a new `type` prop on StepCheck (default "factual"); LLM-suggested default at lint time as a future polish.**
 
 ## What this plan deliberately leaves out
 
 - Stage 2 items (problem bank, worked-example fading, Stuck? intervention).
-- Streaks, badges, leagues, certificates - permanently skipped per audit and memory.
-- Free-form notes, highlighting - audit rates as low-utility / engagement-noise.
-- AI tutor chatbot - audit rates as overrated for this audience.
-- Native mobile lesson UI - Capacitor is on the table for `/review` only in a later phase.
-- Adaptive difficulty - explicitly an ML problem we don't want layered on top of an ML course.
+- Leagues, leaderboards, badges, friend feeds. Permanently skipped per audit and memory. Phase J's opt-in streak is the only exception, narrowly scoped.
+- Free-form notes, highlighting. Audit rates as low-utility / engagement-noise.
+- AI tutor chatbot. Audit rates as overrated for this audience.
+- Native mobile lesson UI. Capacitor is on the table for `/review` only in a later phase.
+- Adaptive difficulty. Explicitly an ML problem we don't want layered on top of an ML course.
