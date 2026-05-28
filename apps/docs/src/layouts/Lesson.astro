@@ -24,11 +24,14 @@ interface Props {
   /** True when this is the first lesson of its module — gates the
       "Previously" cross-module recap panel (Phase F). */
   moduleStart?: boolean;
+  /** True when this is the last lesson of its module — gates the module-end
+      "remember in 6 months" key-idea capture (Phase I). */
+  moduleEnd?: boolean;
 }
 const {
   slug, title, summary, estimatedMinutes, module, moduleHref,
   moduleTitle: moduleTitleProp, prev = null, next = null, endgameBody = null,
-  moduleStart = false,
+  moduleStart = false, moduleEnd = false,
 } = Astro.props;
 const moduleTitle = moduleTitleProp ?? module.replace(/-/g, ' ');
 const moduleLabel = moduleTitle;
@@ -54,6 +57,10 @@ const courseSlug = 'ml-math';
             <ul class="recap-cards" data-recap-cards></ul>
           </aside>
         )}
+        <aside class="keyidea-mantra" data-keyidea-mantra hidden>
+          <p class="keyidea-mantra-eyebrow">Your key idea</p>
+          <p class="keyidea-mantra-text" data-keyidea-mantra-text></p>
+        </aside>
         <p class="lesson-module">
           {moduleHref ? <a href={moduleHref}>{moduleLabel}</a> : moduleLabel}
           {' · '}{estimatedMinutes} min
@@ -85,6 +92,24 @@ const courseSlug = 'ml-math';
             <h2 class="lc-headline">Nice tinkering.</h2>
           </div>
         </div>
+
+        {moduleEnd && (
+          <section class="keyidea-capture" data-keyidea-capture hidden>
+            <p class="keyidea-eyebrow">Before you go</p>
+            <h3 class="keyidea-q">In one sentence, what do you want to remember in 6 months?</h3>
+            <textarea
+              class="keyidea-input"
+              data-keyidea-input
+              rows="2"
+              maxlength="500"
+              placeholder="The one idea from this module worth keeping warm."
+            ></textarea>
+            <div class="keyidea-actions">
+              <button type="button" class="keyidea-save" data-keyidea-save disabled>Save key idea</button>
+              <span class="keyidea-flash" data-keyidea-flash aria-live="polite" hidden></span>
+            </div>
+          </section>
+        )}
 
         {(prev || next) && moduleHref && (
           <PrevNext prev={prev} next={next} moduleHref={moduleHref} moduleTitle={moduleTitle} />
@@ -667,6 +692,116 @@ const courseSlug = 'ml-math';
     :global(.lesson-shell .lesson-complete.is-visible) { animation: none; }
     :global(.lesson-shell .lesson-complete.is-visible)::before { display: none; }
   }
+
+  /* Key idea (Phase I). The mantra banner persists the learner's saved
+     one-sentence takeaway at the top of every lesson in the module; the
+     capture card asks for it once, at the end of the final lesson. */
+  .keyidea-mantra {
+    margin: 0 0 1.75rem;
+    padding: 0.95rem 1.15rem;
+    border: 1px solid var(--lesson-border);
+    border-left: 3px solid var(--lesson-coral);
+    border-radius: var(--radius-md);
+    background: var(--lesson-surface);
+  }
+  .keyidea-mantra-eyebrow {
+    font-family: var(--font-game);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--lesson-coral);
+    margin: 0 0 0.3rem;
+  }
+  .keyidea-mantra-text {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    line-height: 1.45;
+    margin: 0;
+    color: var(--lesson-fg);
+  }
+
+  .keyidea-capture {
+    margin-top: 2.5rem;
+    padding: 1.75rem 1.5rem;
+    border: 1px solid var(--lesson-border);
+    border-radius: var(--radius-lg);
+    background: var(--lesson-surface);
+  }
+  .keyidea-eyebrow {
+    font-family: var(--font-game);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--lesson-coral);
+    margin: 0 0 0.4rem;
+  }
+  .keyidea-q {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.15rem, 2.5vw, 1.4rem);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    margin: 0 0 1rem;
+  }
+  .keyidea-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.75rem 0.9rem;
+    border: 1.5px solid var(--lesson-border);
+    border-radius: var(--radius-md);
+    background: var(--band-white);
+    color: var(--lesson-fg);
+    font: inherit;
+    font-size: 1rem;
+    line-height: 1.5;
+    resize: vertical;
+    transition: border-color 140ms ease;
+  }
+  .keyidea-input:focus {
+    outline: none;
+    border-color: var(--cta);
+  }
+  .keyidea-actions {
+    margin-top: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+  .keyidea-save {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.6rem 1.1rem;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--cta);
+    background: var(--cta);
+    color: var(--cta-fg);
+    font-family: var(--font-game);
+    font-weight: 650;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 140ms ease, transform 140ms ease;
+  }
+  .keyidea-save:hover:not(:disabled) {
+    background: var(--cta-hover);
+    border-color: var(--cta-hover);
+    transform: translateY(-1px);
+  }
+  .keyidea-save:disabled {
+    background: color-mix(in srgb, var(--lesson-fg) 10%, transparent);
+    border-color: transparent;
+    color: var(--lesson-fg-muted);
+    cursor: not-allowed;
+    transform: none;
+  }
+  .keyidea-flash {
+    font-size: 0.85rem;
+    color: var(--lesson-fg-muted);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .keyidea-save { transition: none; }
+  }
 </style>
 
 <script>
@@ -896,6 +1031,109 @@ const courseSlug = 'ml-math';
     panel.hidden = false;
   }
 
+  // Key idea (Phase I). Reveals the learner's saved one-sentence takeaway as a
+  // mantra at the top of every lesson in the module, and — on the module's last
+  // lesson only — wires the capture textarea so they can write or edit it.
+  // No-ops gracefully for anon visitors (GET 401) and offline.
+  async function mountKeyIdea(root: HTMLElement) {
+    const moduleSlug = root.dataset.moduleSlug ?? '';
+    if (!moduleSlug) return;
+
+    const mantra = root.querySelector<HTMLElement>('[data-keyidea-mantra]');
+    const mantraText = root.querySelector<HTMLElement>('[data-keyidea-mantra-text]');
+    const capture = root.querySelector<HTMLElement>('[data-keyidea-capture]');
+    const input = root.querySelector<HTMLTextAreaElement>('[data-keyidea-input]');
+    const saveBtn = root.querySelector<HTMLButtonElement>('[data-keyidea-save]');
+    const flash = root.querySelector<HTMLElement>('[data-keyidea-flash]');
+
+    // Last value confirmed by the server. Drives the mantra and the save
+    // button's enabled state (an unchanged idea can't be re-submitted).
+    let savedText = '';
+
+    function showMantra(text: string) {
+      if (!mantra || !mantraText) return;
+      mantraText.textContent = text;
+      mantra.hidden = text.length === 0;
+    }
+
+    function syncSaveState() {
+      if (!saveBtn || !input) return;
+      const text = input.value.trim();
+      saveBtn.disabled = text.length === 0 || text === savedText;
+    }
+
+    function setFlash(msg: string) {
+      if (!flash) return;
+      flash.textContent = msg;
+      flash.hidden = msg.length === 0;
+    }
+
+    // Wire the capture synchronously so the textarea is usable before the GET
+    // round-trip resolves. render() owns the section's visibility (hidden until
+    // the lesson is complete), so we never touch capture.hidden here.
+    if (capture && input && saveBtn) {
+      input.addEventListener('input', () => {
+        setFlash('');
+        syncSaveState();
+      });
+      saveBtn.addEventListener('click', () => {
+        const text = input.value.trim();
+        if (text.length === 0) return;
+        saveBtn.disabled = true;
+        setFlash('Saving…');
+        fetch(`/api/modules/${encodeURIComponent(moduleSlug)}/key-idea`, {
+          method: 'PUT',
+          credentials: 'same-origin',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ text }),
+        }).then((res) => {
+          if (res.ok) {
+            savedText = text;
+            showMantra(text);
+            setFlash('Saved.');
+            play('tick');
+          } else if (res.status === 401) {
+            setFlash('Sign in to save your key idea.');
+          } else {
+            setFlash('Could not save — try again.');
+          }
+          syncSaveState();
+        }).catch(() => {
+          setFlash('Could not save — try again.');
+          syncSaveState();
+        });
+      });
+    }
+
+    let res: Response;
+    try {
+      res = await fetch(`/api/modules/${encodeURIComponent(moduleSlug)}/key-idea`, {
+        credentials: 'same-origin',
+      });
+    } catch {
+      return; // offline: the mantra is optional, skip silently
+    }
+    if (!res.ok) return; // 401 (anon) / 404 (unknown module) / error: no mantra
+
+    let text = '';
+    try {
+      const data = (await res.json()) as { text?: string };
+      text = (data.text ?? '').trim();
+    } catch {
+      return;
+    }
+    if (text.length === 0) {
+      syncSaveState();
+      return;
+    }
+    savedText = text;
+    showMantra(text);
+    if (input) {
+      input.value = text;
+      syncSaveState();
+    }
+  }
+
   function initLesson(root: HTMLElement) {
     const slug = root.dataset.lessonSlug ?? 'unknown';
     const moduleSlug = root.dataset.moduleSlug ?? 'unknown';
@@ -906,6 +1144,9 @@ const courseSlug = 'ml-math';
     // or delay lesson init. It no-ops unless this is a module-start lesson
     // with due prior-module cards for a signed-in learner.
     void mountRecap(root);
+    // Same fire-and-forget contract: reveals the saved mantra and wires the
+    // module-end capture textarea. No-ops for anon visitors and offline.
+    void mountKeyIdea(root);
 
     const steps = Array.from(root.querySelectorAll<HTMLElement>('[data-step]'));
     steps.forEach((step, i) => step.dataset.index = String(i));
@@ -915,6 +1156,10 @@ const courseSlug = 'ml-math';
     const label = root.querySelector<HTMLElement>('[data-progress-label]');
     const track = root.querySelector<HTMLElement>('[data-progress-track]');
     const completeCard = root.querySelector<HTMLElement>('[data-lesson-complete]');
+    // Present only on the module's last lesson (moduleEnd). Shares the
+    // completeCard visibility gate so it appears with the completion card and
+    // reappears on reload of an already-finished module-end lesson.
+    const keyIdeaCapture = root.querySelector<HTMLElement>('[data-keyidea-capture]');
 
     const saved = Number.parseInt(localStorage.getItem(storageKey) ?? '0', 10);
     let unlocked = Number.isFinite(saved) ? Math.max(0, Math.min(saved, total)) : 0;
@@ -939,6 +1184,9 @@ const courseSlug = 'ml-math';
       if (track) track.setAttribute('aria-valuenow', String(pct));
       if (completeCard) {
         completeCard.classList.toggle('is-visible', unlocked >= total && total > 0);
+      }
+      if (keyIdeaCapture) {
+        keyIdeaCapture.hidden = !(unlocked >= total && total > 0);
       }
     }
 
