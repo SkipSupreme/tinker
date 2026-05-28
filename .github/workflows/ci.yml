@@ -197,6 +197,13 @@ jobs:
       - name: Build svelte-mafs (required by apps/docs dev server)
         run: pnpm -F svelte-mafs build
 
+      # The Cloudflare dev D1 starts empty. Every page hits the Better Auth
+      # session middleware, which selects from `rate_limit`; without the
+      # schema, every request 500s and the vite overlay intercepts pointer
+      # events on hover-based e2e specs.
+      - name: Apply D1 migrations to local dev DB
+        run: pnpm -F docs exec wrangler d1 migrations apply tinker --local
+
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         id: pw-cache
