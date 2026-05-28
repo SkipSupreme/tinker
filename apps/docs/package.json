@@ -33,6 +33,7 @@
     "resend": "^6.12.4",
     "svelte": "^5.55.9",
     "svelte-mafs": "workspace:*",
+    "ts-fsrs": "5.4.1",
     "typescript": "^5.9.3",
     "wrangler": "^4.95.0",
     "zod": "^4.4.3"
