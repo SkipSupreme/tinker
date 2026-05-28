@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "79d52392-3ab1-4d73-9dd1-3d718755086a",
+  "id": "cd3e888d-7430-4144-a124-c2d7b1ba8b58",
   "prevId": "c5f1a2b3-3e4d-4f50-a09b-d2e3f4a5b6c7",
   "tables": {
     "account": {
@@ -424,7 +424,8 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
         },
         "stability": {
           "name": "stability",
@@ -489,14 +490,6 @@
         }
       },
       "indexes": {
-        "fsrs_card_by_user_due": {
-          "name": "fsrs_card_by_user_due",
-          "columns": [
-            "user_id",
-            "due"
-          ],
-          "isUnique": false
-        },
         "fsrs_card_by_user_module_due": {
           "name": "fsrs_card_by_user_module_due",
           "columns": [

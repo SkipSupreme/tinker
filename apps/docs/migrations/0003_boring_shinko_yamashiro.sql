@@ -4,7 +4,7 @@ CREATE TABLE `fsrs_card` (
 	`lesson_slug` text NOT NULL,
 	`module_slug` text NOT NULL,
 	`knowledge_type` text,
-	`due` integer NOT NULL,
+	`due` integer DEFAULT (unixepoch() * 1000) NOT NULL,
 	`stability` real NOT NULL,
 	`difficulty` real NOT NULL,
 	`elapsed_days` real DEFAULT 0 NOT NULL,
@@ -17,7 +17,6 @@ CREATE TABLE `fsrs_card` (
 	FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE INDEX `fsrs_card_by_user_due` ON `fsrs_card` (`user_id`,`due`);--> statement-breakpoint
 CREATE INDEX `fsrs_card_by_user_module_due` ON `fsrs_card` (`user_id`,`module_slug`,`due`);--> statement-breakpoint
 CREATE TABLE `key_idea` (
 	`user_id` text NOT NULL,

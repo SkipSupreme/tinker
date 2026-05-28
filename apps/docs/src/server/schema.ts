@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { sqliteTable, text, integer, real, primaryKey, index, unique } from 'drizzle-orm/sqlite-core';
 
 export const user = sqliteTable('user', {
@@ -132,13 +133,17 @@ export const stepCheck = sqliteTable('step_check', {
   index('step_check_by_user_lesson').on(t.userId, t.lessonSlug),
 ]);
 
+// FSRS-5 scheduler state. One row per (user, step). The `state` integer
+// follows ts-fsrs's enum: 0=new, 1=learning, 2=review, 3=relearning.
+// lesson_slug/module_slug are denormalized from step_id for query speed;
+// step_id_alias handles renames.
 export const fsrsCard = sqliteTable('fsrs_card', {
   userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
   stepId: text('step_id').notNull(),
   lessonSlug: text('lesson_slug').notNull(),
   moduleSlug: text('module_slug').notNull(),
   knowledgeType: text('knowledge_type', { enum: ['factual', 'procedural', 'conceptual'] }),
-  due: integer('due', { mode: 'timestamp_ms' }).notNull(),
+  due: integer('due', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
   stability: real('stability').notNull(),
   difficulty: real('difficulty').notNull(),
   elapsedDays: real('elapsed_days').notNull().default(0),
@@ -149,7 +154,6 @@ export const fsrsCard = sqliteTable('fsrs_card', {
   lastReview: integer('last_review', { mode: 'timestamp_ms' }),
 }, (t) => [
   primaryKey({ columns: [t.userId, t.stepId] }),
-  index('fsrs_card_by_user_due').on(t.userId, t.due),
   index('fsrs_card_by_user_module_due').on(t.userId, t.moduleSlug, t.due),
 ]);
 
@@ -161,12 +165,17 @@ export const keyIdea = sqliteTable('key_idea', {
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 }, (t) => [primaryKey({ columns: [t.userId, t.moduleSlug] })]);
 
+// Authoring artifact, not user data: a global old->new step id rename
+// history. No user FK because aliases apply across all users.
 export const stepIdAlias = sqliteTable('step_id_alias', {
   oldStepId: text('old_step_id').primaryKey(),
   newStepId: text('new_step_id').notNull(),
   renamedAt: integer('renamed_at', { mode: 'timestamp_ms' }).notNull(),
 });
 
+// Phase J opt-in daily streak. Disabled by default. last_active_day is
+// stored as YYYY-MM-DD in the user's local timezone for cheap string
+// comparison; analytics queries can use lexicographic ordering.
 export const streakState = sqliteTable('streak_state', {
   userId: text('user_id').primaryKey().references(() => user.id, { onDelete: 'cascade' }),
   enabled: integer('enabled', { mode: 'boolean' }).notNull().default(false),
