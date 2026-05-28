@@ -57,6 +57,7 @@ One serious cost: every word becomes ~5 tokens, so the sequence the transformer 
 </Step>
 
 <StepCheck
+  id="text-becomes-integers#tiny-shakespeare-char-vocab-65"
   title="Char-level tiny-shakespeare"
   prompt="vocab_size = "
   answer={65}
@@ -78,6 +79,7 @@ The vocab cost is real. The embedding table at the top of the model is $\lvert V
 </Step>
 
 <StepCheck
+  id="text-becomes-integers#word-level-embed-mb"
   title="What word-level costs you"
   prompt="MB = "
   answer={256}

@@ -51,6 +51,7 @@ The diagnosis lives in the *gap*. If train error is 0.05 and validation error is
 </Step>
 
 <StepCheck
+  id="when-your-model-memorizes#gen-gap-train-0-05-val-0-5"
   title="Generalization gap"
   prompt="gap = "
   answer={0.45}
@@ -81,6 +82,7 @@ The fix is not elaborate. Lock your hyperparameter sweep to the validation set. 
 </Step>
 
 <StepCheck
+  id="when-your-model-memorizes#test-set-size-15-percent-10k"
   title="The split"
   prompt="test = "
   answer={1500}

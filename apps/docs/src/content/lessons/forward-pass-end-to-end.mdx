@@ -42,6 +42,7 @@ Step through the stages. The input is two numbers. The hidden pre-activation $z^
 </Step>
 
 <StepCheck
+  id="forward-pass-end-to-end#mlp-output-at-1-1"
   title="Compute the output"
   prompt="ŷ = "
   answer={0.191}
@@ -68,6 +69,7 @@ Notice the bar chart: the parameters are not spread evenly. They pile up in the 
 </Step>
 
 <StepCheck
+  id="forward-pass-end-to-end#mnist-mlp-param-count"
   title="Size a real network"
   prompt="params = "
   answer={109386}
@@ -96,6 +98,7 @@ The theorem is true. It is also much weaker than its name.
 </Step>
 
 <StepChoice
+  id="forward-pass-end-to-end#universal-approximation-oversells"
   title="What the theorem oversells"
   hint="The universal approximation theorem is existence-only: it never tells you how to find the weights, nor whether training will. It also gives no bound on the hidden width, which can be enormous. It does not promise anything about data outside the region, or about discontinuous targets."
 >

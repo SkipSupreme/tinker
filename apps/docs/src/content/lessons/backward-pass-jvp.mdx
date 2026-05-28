@@ -109,6 +109,7 @@ This is, literally, every time `loss.backward()` runs.
 </Step>
 
 <StepCheck
+  id="backward-pass-jvp#partial-L-by-w"
   title="Compute ∂L/∂w"
   prompt="∂L/∂w = "
   answer={-8}
@@ -119,6 +120,7 @@ Same loss with $x = 2$, $y = 5$, $(w, b) = (1, 1)$. Confirm $\dfrac{\partial L}{
 </StepCheck>
 
 <StepCheck
+  id="backward-pass-jvp#partial-L-by-b"
   title="And ∂L/∂b"
   prompt="∂L/∂b = "
   answer={-4}

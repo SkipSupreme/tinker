@@ -51,6 +51,7 @@ You can derive these from first principles by writing $Y_{ij} = \sum_k X_{ik} W_
 </Step>
 
 <StepCheck
+  id="from-scalars-to-tensors#dW-shape-second-dim"
   title="Shape of dW"
   prompt="dW has shape (?, ?). Type the second number."
   answer={10}
@@ -97,6 +98,7 @@ Pick the wrong axis and the result has the wrong shape; the widget tells you. Pi
 </Step>
 
 <StepCheck
+  id="from-scalars-to-tensors#bias-broadcast-sum-axis-0"
   title="The bias backward"
   prompt="db shape's only entry = "
   answer={64}
@@ -133,6 +135,7 @@ The "gradient of softmax-cross-entropy with respect to the logits is the predict
 </Step>
 
 <StepCheck
+  id="from-scalars-to-tensors#softmax-ce-middle-entry"
   title="One backward pass through the classifier head"
   prompt="middle entry of p − y ≈ "
   answer={0.242}

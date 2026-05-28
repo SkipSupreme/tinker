@@ -49,6 +49,7 @@ The top strip of bars on the widget is $p_X$. The right strip is $p_Y$. Drag cel
 </Step>
 
 <StepCheck
+  id="joint-marginal-conditional#marginal-of-X-eq-1"
   title="Marginal of X"
   prompt="P(X = 1) = "
   answer={0.5}
@@ -79,6 +80,7 @@ The numerator is one cell of the joint. The denominator is the marginal of $Y$. 
 </Step>
 
 <StepCheck
+  id="joint-marginal-conditional#conditional-Y-given-X-eq-1"
   title="Slice and rescale"
   prompt="P(Y = 1 | X = 1) = "
   answer={0.4}
@@ -113,6 +115,7 @@ Now read it again with the right substitution. Replace $X_i$ with "the $i$-th to
 </Step>
 
 <StepCheck
+  id="joint-marginal-conditional#bigram-chain-rule-score"
   title="Score a sentence with a bigram model"
   prompt="P(·ab·) = "
   answer={0.024}
@@ -157,6 +160,7 @@ This is the canonical "posteriors live downstream of priors" demonstration. Drag
 </Step>
 
 <StepCheck
+  id="joint-marginal-conditional#bayes-rare-disease-posterior"
   title="Compute the posterior"
   prompt="P(sick | +) ≈ "
   answer={0.09}

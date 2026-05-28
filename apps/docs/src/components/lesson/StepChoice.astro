@@ -16,18 +16,20 @@
  * initLesson), parallel to the `data-check` StepCheck branch.
  */
 interface Props {
+  id: string;
   title?: string;
   /** One-answer mode: selecting an option clears the others. Default: multi. */
   single?: boolean;
   /** Optional hint, revealed after two wrong attempts. */
   hint?: string;
 }
-const { title, single = false, hint } = Astro.props;
+const { id, title, single = false, hint } = Astro.props;
 ---
 
 <section
   class="step step-choice"
   data-step
+  data-step-id={id}
   data-choice
   data-single={single ? 'true' : undefined}
 >

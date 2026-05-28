@@ -47,6 +47,7 @@ Two layers did not build something new. They built a different spelling of one l
 </Step>
 
 <StepCheck
+  id="linear-layers-collapse#two-layer-eval-at-1-1"
   title="Collapse it yourself"
   prompt="f(x) = "
   answer={5}
@@ -73,6 +74,7 @@ Leave **ReLU between layers** unchecked and push the layer count up to 5. The ou
 </Step>
 
 <StepChoice
+  id="linear-layers-collapse#straight-boundary-bug-or-expected"
   title="Bug, or expected?"
   single
   hint="Linear layers compose into a single linear map. A linear map sends straight lines to straight lines, always. No bug — this is the math working exactly as proven above."
@@ -96,6 +98,7 @@ That little function wedged between every pair of layers is called the **activat
 </Step>
 
 <StepChoice
+  id="linear-layers-collapse#what-rescues-depth"
   title="What actually rescues depth?"
   single
   hint="The collapse happens for any linear (or, more generally, polynomial) map between layers. What breaks it is inserting a function that is not a polynomial — ReLU, sigmoid, tanh and GELU all qualify. ReLU is a common default, not the only option."

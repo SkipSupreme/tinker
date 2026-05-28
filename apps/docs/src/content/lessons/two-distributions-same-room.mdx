@@ -54,6 +54,7 @@ The cleanest mental model: $H(P)$ is the entropy of the truth, the irreducible a
 </Step>
 
 <StepCheck
+  id="two-distributions-same-room#cross-entropy-fair-coin-match"
   title="Truth-matches-model"
   prompt="H(P, Q) = "
   answer={1}
@@ -66,6 +67,7 @@ $P = (0.5, 0.5)$ and $Q = (0.5, 0.5)$, a fair coin matched perfectly by a fair-c
 </StepCheck>
 
 <StepCheck
+  id="two-distributions-same-room#cross-entropy-fair-vs-biased-model"
   title="Model thinks the coin is biased"
   prompt="H(P, Q) ≈ "
   answer={1.737}
@@ -92,6 +94,7 @@ Three properties to internalize:
 </Step>
 
 <StepCheck
+  id="two-distributions-same-room#kl-divergence-fair-vs-biased"
   title="Compute the KL"
   prompt="D_KL(P ‖ Q) ≈ "
   answer={0.737}

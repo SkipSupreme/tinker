@@ -42,6 +42,7 @@ A contiguous split, not a shuffle. Why? Because the model is autoregressive: it 
 </Step>
 
 <StepCheck
+  id="wrapping-the-training-loop#train-tokens-90-10-split"
   title="Train tokens after the split"
   prompt="train_tokens = "
   answer={1003854}
@@ -83,6 +84,7 @@ That averaging is the part that gets people. If you compute the loss only at the
 </Step>
 
 <StepCheck
+  id="wrapping-the-training-loop#supervision-per-step-B-T"
   title="Predictions per step"
   prompt="examples = "
   answer={4096}
@@ -142,6 +144,7 @@ Cosine is the dominant choice in modern training. It decays smoothly, spends a l
 </Step>
 
 <StepCheck
+  id="wrapping-the-training-loop#iter-0-loss-log-65"
   title="Iter-0 loss on tiny-shakespeare-char"
   prompt="loss ≈ "
   answer={4.17}

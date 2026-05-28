@@ -67,6 +67,7 @@ This matters less for translation, where the source language tightly constrains 
 </Step>
 
 <StepCheck
+  id="how-distributions-become-text#greedy-as-topk-one"
   title="Greedy as a degenerate top-k"
   prompt="k = "
   answer={1}
@@ -99,6 +100,7 @@ One useful invariant: $\tau$ does not change the argmax (for any $\tau > 0$). Th
 </Step>
 
 <StepCheck
+  id="how-distributions-become-text#softmax-2-1-0-tau-1"
   title="Temperature 1, top probability"
   prompt="p₁ = "
   answer={0.665}
@@ -109,6 +111,7 @@ Logits $\ell = (2,\, 1,\, 0)$ at $\tau = 1$. **What is $p_1$**, to two decimals?
 </StepCheck>
 
 <StepCheck
+  id="how-distributions-become-text#softmax-2-1-0-tau-half"
   title="Temperature 0.5, top probability"
   prompt="p₁ = "
   answer={0.867}
@@ -147,6 +150,7 @@ In production this is typically `top_p = 0.9`, occasionally `0.95`. The kept set
 </Step>
 
 <StepCheck
+  id="how-distributions-become-text#nucleus-size-at-p-0-9"
   title="Nucleus on the confident step"
   prompt="size = "
   answer={4}
@@ -206,6 +210,7 @@ This is inference-only. Training already has all positions in parallel inside on
 </Step>
 
 <StepCheck
+  id="how-distributions-become-text#no-cache-complexity-exponent"
   title="The cost of not caching"
   prompt="O(T^?) = "
   answer={2}

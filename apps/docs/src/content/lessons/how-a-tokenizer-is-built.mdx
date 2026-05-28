@@ -55,6 +55,7 @@ Watch the widget bar move.
 </Step>
 
 <StepCheck
+  id="how-a-tokenizer-is-built#pair-count-after-first-merge"
   title="Pair count after merge ①"
   prompt="count = "
   answer={5}
@@ -80,6 +81,7 @@ The widget exposes this. After two merges (`(u, g)` then `(u, n)`) type new word
 </Step>
 
 <StepCheck
+  id="how-a-tokenizer-is-built#tokenize-hugs-after-two-merges"
   title="Tokenize 'hugs' after two merges"
   prompt="tokens = "
   answer={3}
@@ -112,6 +114,7 @@ GPT-2 trained 50,001 merges on top of those 256 bytes (vocab = 50,257 once you a
 </Step>
 
 <StepCheck
+  id="how-a-tokenizer-is-built#byte-level-base-vocab-size"
   title="Byte-level base vocab"
   prompt="vocab = "
   answer={256}

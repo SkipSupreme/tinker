@@ -65,6 +65,7 @@ Pick $\varepsilon$ in the green band. Use centered differences. Compare with rel
 </Step>
 
 <StepCheck
+  id="check-it-break-it-fix-it#optimal-epsilon-log10"
   title="Where the U bottoms out"
   prompt="optimal log₁₀(ε) ≈ "
   answer={-5}
@@ -89,6 +90,7 @@ Most production bugs are one of these four. A gradient check on any new layer ca
 </Step>
 
 <StepChoice
+  id="check-it-break-it-fix-it#matmul-backward-operand-order"
   title="Spot the bug"
   hint="Look at the shape rule from the previous lesson: dW = X.T @ dY. Here it's written backwards. The shapes only happen to be compatible because the problem uses N=D."
 >

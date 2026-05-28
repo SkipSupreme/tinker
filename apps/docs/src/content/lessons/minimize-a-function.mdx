@@ -38,6 +38,7 @@ Read it aloud: *new $\mathbf{w}$ equals old $\mathbf{w}$ minus a step-size $\eta
 </Step>
 
 <StepCheck
+  id="minimize-a-function#gd-one-step-w-squared"
   title="One step by hand"
   prompt="w_1 = "
   answer={1}
@@ -65,6 +66,7 @@ The general rule: **the biggest stable learning rate is $2/L$**, where $L$ is th
 </Step>
 
 <StepCheck
+  id="minimize-a-function#divergence-threshold-x-squared"
   title="Threshold of divergence"
   prompt="η_max (divergence threshold) = "
   answer={1}
@@ -75,6 +77,7 @@ For $f(x) = x^2$, what is the largest learning rate above which GD diverges?
 </StepCheck>
 
 <StepCheck
+  id="minimize-a-function#divergence-threshold-5x-squared"
   title="Another curvature"
   prompt="η_max = "
   answer={0.2}
@@ -95,6 +98,7 @@ Switch the navigator above to **SGD + momentum** and run the same starting point
 </Step>
 
 <StepCheck
+  id="minimize-a-function#condition-number-100"
   title="Condition number"
   prompt="κ = "
   answer={100}

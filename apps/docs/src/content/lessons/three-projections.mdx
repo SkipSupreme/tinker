@@ -68,6 +68,7 @@ The "shape passport" (the chain of tensor shapes) is the single most useful debu
 </Step>
 
 <StepCheck
+  id="three-projections#qk-top-entries-t-4"
   title="Shape passport drill"
   prompt="entries in QKᵀ = "
   answer={16}
@@ -107,6 +108,7 @@ The same Q, K, V trains as a bidirectional encoder or as a causal decoder, depen
 </Step>
 
 <StepCheck
+  id="three-projections#causal-mask-future-weight-zero"
   title="Inside the mask"
   prompt="α = "
   answer={0}
@@ -135,6 +137,7 @@ That property is called **permutation equivariance**. It is *the* reason a trans
 </Step>
 
 <StepCheck
+  id="three-projections#permutation-equivariance-norm-zero"
   title="Permutation equivariance, in one number"
   prompt="‖Y′ − P · Y‖ = "
   answer={0}

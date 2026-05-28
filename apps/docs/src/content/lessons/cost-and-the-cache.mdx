@@ -24,6 +24,7 @@ That T² term is the reason context windows are expensive. Doubling the input le
 </Step>
 
 <StepCheck
+  id="cost-and-the-cache#doubling-T-quadratic-factor"
   title="The quadratic"
   prompt="factor = "
   answer={4}
@@ -60,6 +61,7 @@ Step the generator a few times with **cache on**. Each token's K and V are compu
 </Step>
 
 <StepCheck
+  id="cost-and-the-cache#kv-cache-speedup-1024"
   title="Speedup at 1024 tokens"
   prompt="ratio ≈ "
   answer={1024}

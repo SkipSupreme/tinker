@@ -69,6 +69,7 @@ Two things you get from tying:
 </Step>
 
 <StepCheck
+  id="stacking-n-and-the-full-forward-pass#tied-embed-param-count-65-by-64"
   title="Tied character model param count"
   prompt="params = "
   answer={4160}
@@ -126,6 +127,7 @@ The widget's NLL deltas are pre-recorded (there isn't a real GPT running in your
 </Step>
 
 <StepCheck
+  id="stacking-n-and-the-full-forward-pass#worst-ablation-final-ln"
   title="The catastrophic ablation"
   prompt="block 1 attn = 1, block 4 ffn = 2, final LN = 3, position encoding = 4: "
   answer={3}

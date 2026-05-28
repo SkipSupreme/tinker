@@ -62,6 +62,7 @@ Regularization is not a hack you bolt onto the loss. It is the prior the modeler
 </Step>
 
 <StepCheck
+  id="ways-to-keep-weights-small#l2-lambda-from-prior-variance"
   title="Prior to penalty"
   prompt="λ = "
   answer={4}
@@ -127,6 +128,7 @@ a = a * mask / (1.0 - p)   # training only; eval skips this entirely
 </Step>
 
 <StepCheck
+  id="ways-to-keep-weights-small#inverted-dropout-scale-5"
   title="Inverted dropout"
   prompt="scaled value = "
   answer={6.25}

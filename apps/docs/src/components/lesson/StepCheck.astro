@@ -1,5 +1,6 @@
 ---
 interface Props {
+  id: string;
   title?: string;
   answer: number;
   tolerance?: number;
@@ -8,12 +9,13 @@ interface Props {
   /** Optional revealed after a wrong answer */
   hint?: string;
 }
-const { title, answer, tolerance = 0.01, prompt = 'answer', hint } = Astro.props;
+const { id, title, answer, tolerance = 0.01, prompt = 'answer', hint } = Astro.props;
 ---
 
 <section
   class="step step-check"
   data-step
+  data-step-id={id}
   data-check
   data-answer={answer}
   data-tolerance={tolerance}

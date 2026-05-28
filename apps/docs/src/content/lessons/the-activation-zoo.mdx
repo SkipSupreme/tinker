@@ -37,6 +37,7 @@ As you drag, the bias readout tracks you: the kink sits at $x = -b$. A ReLU neur
 </Step>
 
 <StepCheck
+  id="the-activation-zoo#relu-sum-neg-3-and-2-5"
   title="Run ReLU by hand"
   prompt="sum = "
   answer={2.5}
@@ -67,6 +68,7 @@ For decades this was *the* activation, the squash felt biological, an "on/off-ne
 </Step>
 
 <StepCheck
+  id="the-activation-zoo#sigmoid-at-zero"
   title="Evaluate the squash"
   prompt="σ(0) = "
   answer={0.5}
@@ -91,6 +93,7 @@ The signal is gone before it arrives. The early layers get a gradient so faint t
 </Step>
 
 <StepChoice
+  id="the-activation-zoo#why-sigmoid-lost-hidden-layer"
   title="Why sigmoid lost the hidden layer"
   single
   hint="Sigmoid's derivative never exceeds 0.25. Backpropagation multiplies one such factor per layer, so in a deep stack the gradient shrinks geometrically and the early layers stop learning."

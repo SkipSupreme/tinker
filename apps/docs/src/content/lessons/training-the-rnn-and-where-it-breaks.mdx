@@ -44,6 +44,7 @@ That's it. That's the entire algorithm. Unroll, run backprop, sum the shared-wei
 </Step>
 
 <StepCheck
+  id="training-the-rnn-and-where-it-breaks#bptt-shared-weight-term-count"
   title="Counting BPTT contributions"
   prompt="terms = "
   answer={6}
@@ -78,6 +79,7 @@ Drag the spectral radius slider. At ρ = 0.7, the gradient at $t = 0$ from a los
 </Step>
 
 <StepCheck
+  id="training-the-rnn-and-where-it-breaks#contraction-0-7-to-the-20"
   title="Vanishing in numbers"
   prompt="|grad| ≈ "
   answer={0.000798}

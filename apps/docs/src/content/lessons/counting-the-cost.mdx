@@ -29,6 +29,7 @@ This is a 2017 convention that keeps holding up. Every standard pre-LN transform
 </Step>
 
 <StepCheck
+  id="counting-the-cost#gpt2-small-per-block-params"
   title="Per-block params at GPT-2 dimensions"
   prompt="params = "
   answer={7077888}
@@ -63,6 +64,7 @@ Now scale this up. Snap the widget below to **GPT-2 small** and watch it land ne
 </Step>
 
 <StepCheck
+  id="counting-the-cost#gpt2-small-total-params"
   title="GPT-2 small total"
   prompt="≈ "
   answer={124000000}
@@ -100,6 +102,7 @@ The FFN, meanwhile, is $\sim 16 \, T d^2$, linear in $T$, dominant at all reason
 </Step>
 
 <StepCheck
+  id="counting-the-cost#double-T-attention-flops"
   title="Doubling sequence length"
   prompt="factor = "
   answer={4}

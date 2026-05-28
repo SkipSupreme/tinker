@@ -53,6 +53,7 @@ That's stochastic gradient descent.
 </Step>
 
 <StepCheck
+  id="batches-and-noise#average-minibatch-gradient"
   title="Compute an estimate"
   prompt="ĝ_x = "
   answer={2.5}
@@ -73,6 +74,7 @@ Mini-batch is what everyone actually uses. It's the sweet spot. Pure SGD is too 
 </Step>
 
 <StepCheck
+  id="batches-and-noise#variance-scaling-batch-25"
   title="Variance scaling"
   prompt="variance at |B|=25 = "
   answer={0.04}
@@ -99,6 +101,7 @@ Important consequence: **you cannot use "the gradient is zero" as a stopping cri
 </Step>
 
 <StepCheck
+  id="batches-and-noise#noise-ball-radius"
   title="Estimate the noise ball radius"
   prompt="radius ≈ "
   answer={0.0025}

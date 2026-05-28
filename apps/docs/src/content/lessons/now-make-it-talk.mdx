@@ -51,6 +51,7 @@ This is called **degenerate repetition**, and it is the canonical failure mode o
 </Step>
 
 <StepCheck
+  id="now-make-it-talk#two-logit-softmax-tau-half"
   title="High-confidence softmax"
   prompt="p_top1 = "
   answer={0.982}
@@ -101,6 +102,7 @@ Most modern samplers (the GPT API default included) use top-p with $\tau \approx
 </Step>
 
 <StepCheck
+  id="now-make-it-talk#greedy-prob-mass-one"
   title="When sampling stops being random"
   prompt="p_top1 = "
   answer={1}
