@@ -167,11 +167,16 @@ jobs:
       # .dev.vars in dev mode — shell env vars don't reach it. Write a
       # gitignored .dev.vars with throwaway values so the dev server
       # boots cleanly. The secret is never used for real signing here.
+      #
+      # PUBLIC_SITE_URL must match Playwright's BASE_URL exactly — `localhost`
+      # and `127.0.0.1` are different origins to the browser and to Better
+      # Auth's trustedOrigins / requireSameOrigin check, so any mismatch
+      # would 403 every state-changing auth/progress POST in CI.
       - name: Seed dev env for Cloudflare Workers
         run: |
           cat > apps/docs/.dev.vars <<'DEVVARS'
           BETTER_AUTH_SECRET=ci_e2e_dummy_secret_not_used_for_real_signing_x_x_x_x
-          PUBLIC_SITE_URL=http://127.0.0.1:4321
+          PUBLIC_SITE_URL=http://localhost:4321
           UNSUBSCRIBE_HMAC_SECRET=ci_e2e_dummy_unsub_hmac_x_x_x_x_x_x_x_x_x_x_x_x_x
           RESEND_API_KEY=ci_e2e_dummy_resend_key
           DEVVARS

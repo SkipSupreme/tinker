@@ -70,4 +70,27 @@ describe('requireSameOrigin', () => {
     const res = requireSameOrigin(req, 'https://learntinker.com');
     expect(res?.status).toBe(403);
   });
+
+  // Regression: `localhost` and `127.0.0.1` are distinct origins to the
+  // browser, to Better Auth's trustedOrigins, and to this check. CI seeds
+  // PUBLIC_SITE_URL and the Playwright BASE_URL — they must agree on which
+  // one to use, or every state-changing auth/progress POST 403s in CI.
+  it('treats localhost and 127.0.0.1 as different origins', () => {
+    const req = new Request('http://localhost:4321/me', {
+      method: 'POST',
+      headers: { origin: 'http://127.0.0.1:4321' },
+    });
+
+    const res = requireSameOrigin(req, 'http://localhost:4321');
+    expect(res?.status).toBe(403);
+  });
+
+  it('allows matching localhost dev origin', () => {
+    const req = new Request('http://localhost:4321/me', {
+      method: 'POST',
+      headers: { origin: 'http://localhost:4321' },
+    });
+
+    expect(requireSameOrigin(req, 'http://localhost:4321')).toBeNull();
+  });
 });
