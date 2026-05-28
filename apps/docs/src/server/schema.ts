@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, primaryKey, index, unique } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, primaryKey, index, unique } from 'drizzle-orm/sqlite-core';
 
 export const user = sqliteTable('user', {
   id: text('id').primaryKey(),
@@ -115,4 +115,64 @@ export const rateLimit = sqliteTable('rate_limit', {
   key: text('key').notNull().unique(),
   count: integer('count').notNull(),
   lastRequest: integer('last_request').notNull(),
+});
+
+export const stepCheck = sqliteTable('step_check', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  lessonSlug: text('lesson_slug').notNull(),
+  stepId: text('step_id').notNull(),
+  answerJson: text('answer_json').notNull(),
+  isCorrect: integer('is_correct', { mode: 'boolean' }).notNull(),
+  rating: text('rating', { enum: ['again', 'hard', 'good', 'easy'] }),
+  attemptNo: integer('attempt_no').notNull().default(1),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+}, (t) => [
+  index('step_check_by_user_step').on(t.userId, t.stepId),
+  index('step_check_by_user_lesson').on(t.userId, t.lessonSlug),
+]);
+
+export const fsrsCard = sqliteTable('fsrs_card', {
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  stepId: text('step_id').notNull(),
+  lessonSlug: text('lesson_slug').notNull(),
+  moduleSlug: text('module_slug').notNull(),
+  knowledgeType: text('knowledge_type', { enum: ['factual', 'procedural', 'conceptual'] }),
+  due: integer('due', { mode: 'timestamp_ms' }).notNull(),
+  stability: real('stability').notNull(),
+  difficulty: real('difficulty').notNull(),
+  elapsedDays: real('elapsed_days').notNull().default(0),
+  scheduledDays: real('scheduled_days').notNull().default(0),
+  reps: integer('reps').notNull().default(0),
+  lapses: integer('lapses').notNull().default(0),
+  state: integer('state').notNull().default(0),
+  lastReview: integer('last_review', { mode: 'timestamp_ms' }),
+}, (t) => [
+  primaryKey({ columns: [t.userId, t.stepId] }),
+  index('fsrs_card_by_user_due').on(t.userId, t.due),
+  index('fsrs_card_by_user_module_due').on(t.userId, t.moduleSlug, t.due),
+]);
+
+export const keyIdea = sqliteTable('key_idea', {
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  moduleSlug: text('module_slug').notNull(),
+  text: text('text').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+}, (t) => [primaryKey({ columns: [t.userId, t.moduleSlug] })]);
+
+export const stepIdAlias = sqliteTable('step_id_alias', {
+  oldStepId: text('old_step_id').primaryKey(),
+  newStepId: text('new_step_id').notNull(),
+  renamedAt: integer('renamed_at', { mode: 'timestamp_ms' }).notNull(),
+});
+
+export const streakState = sqliteTable('streak_state', {
+  userId: text('user_id').primaryKey().references(() => user.id, { onDelete: 'cascade' }),
+  enabled: integer('enabled', { mode: 'boolean' }).notNull().default(false),
+  current: integer('current').notNull().default(0),
+  longest: integer('longest').notNull().default(0),
+  lastActiveDay: text('last_active_day'),
+  timezone: text('timezone').notNull().default('UTC'),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 });
