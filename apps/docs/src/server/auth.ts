@@ -45,6 +45,13 @@ export function createAuth(env: AuthEnv) {
         secure: isHttps,
         httpOnly: true,
       },
+      // Cloudflare Workers receive the real client IP in `cf-connecting-ip`;
+      // without listing it here Better Auth's rate limiter falls back to
+      // x-forwarded-for, which Workers don't always populate, and silently
+      // skips rate limiting when neither is present.
+      ipAddress: {
+        ipAddressHeaders: ['cf-connecting-ip', 'x-forwarded-for'],
+      },
     },
     session: {
       expiresIn: 60 * 60 * 24 * 30,
