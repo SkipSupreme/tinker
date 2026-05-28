@@ -55,17 +55,14 @@ export function createAuth(env: AuthEnv) {
         role: { type: 'string', defaultValue: 'user', input: false },
       },
     },
-    // Memory-backed rate limit: per-Cloudflare-isolate, so a determined
-    // attacker can spread attempts across edge nodes — known limitation.
-    // The DB-backed alternative requires aligning our rate_limit schema
-    // (key/count/resetAt) with Better Auth's expected shape
-    // (id/key/count/lastRequest), or wiring a customStorage adapter. Until
-    // that's done, memory storage at least enforces something AND keeps
-    // logs clean; the prior `storage: 'database'` config silently failed
-    // on every request because the field map didn't match.
+    // D1-backed rate limit so counters are shared across Cloudflare edge
+    // isolates. The rate_limit table was realigned to Better Auth's
+    // {key, count, last_request} shape in migration 0002 — without that,
+    // the drizzle adapter throws on every increment and `/api/auth/*`
+    // returns 500.
     rateLimit: {
       enabled: true,
-      storage: 'memory',
+      storage: 'database',
       window: 60,
       max: 60,
       customRules: {

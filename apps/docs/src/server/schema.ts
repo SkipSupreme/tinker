@@ -107,8 +107,12 @@ export const emailDrop = sqliteTable('email_drop', {
   sentByUserId: text('sent_by_user_id').references(() => user.id),
 });
 
+// Better Auth's rate limiter writes `lastRequest` as a raw `Date.now()`
+// number, so we store the column as a plain integer (millis-since-epoch),
+// not a Drizzle timestamp_ms. See migration 0002.
 export const rateLimit = sqliteTable('rate_limit', {
-  key: text('key').primaryKey(),
+  id: text('id').primaryKey(),
+  key: text('key').notNull().unique(),
   count: integer('count').notNull(),
-  resetAt: integer('reset_at', { mode: 'timestamp_ms' }).notNull(),
+  lastRequest: integer('last_request').notNull(),
 });

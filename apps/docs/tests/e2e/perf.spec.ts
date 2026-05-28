@@ -20,8 +20,10 @@ import { playAudit } from "playwright-lighthouse";
  */
 
 // Skip by default unless RUN_PERF=1 — perf runs are slow (~1 min per page)
-// and need a clean isolated browser context. CI flips RUN_PERF on; local
-// dev opts in.
+// and need a clean isolated browser context. Lighthouse scores vary with
+// CI runner load, so this spec is opt-in everywhere (locally via
+// `pnpm test:perf`, in CI via a manual workflow_dispatch with RUN_PERF=1)
+// rather than gated on PR builds.
 const RUN_PERF = process.env.RUN_PERF === "1";
 
 test.describe.configure({ mode: "serial" });
