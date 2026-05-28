@@ -2,7 +2,7 @@
 
 Source: 2026-05-27 pedagogy + design-space audit. This plan translates the audit's Stage 1 recommendations into Tinker-specific work, sequenced by the codebase audit conducted alongside it.
 
-Updated 2026-05-28: added Phase J (optional streak toggle, off by default) and Phase K (on-request completion certificate) on user direction. These are scope additions to the audit, framed to avoid the engagement-coercion failure modes the audit warned against.
+Updated 2026-05-28: added Phase K (on-request completion certificate) on user direction. A Phase J (opt-in daily streak toggle) was scoped here and then cut on user direction: even an off-by-default, no-coercion streak wasn't worth the engagement-coercion risk for this audience. Its scaffolding (streak UI, client helpers, the `streak_state` table) was removed; migration `0004_clear_lucky_pierre.sql` drops the table.
 
 ## Why this and not something else
 
@@ -87,19 +87,6 @@ stepIdAlias (
 )
 ```
 
-**`0007_streak`** (Phase J data, off-by-default opt-in):
-```
-streakState (
-  user_id TEXT NOT NULL PRIMARY KEY,
-  enabled INTEGER NOT NULL DEFAULT 0,    -- 0 = off, 1 = on
-  current INTEGER NOT NULL DEFAULT 0,    -- consecutive active days
-  longest INTEGER NOT NULL DEFAULT 0,    -- longest run achieved
-  last_active_day TEXT,                  -- YYYY-MM-DD in user's tz
-  timezone TEXT NOT NULL DEFAULT 'UTC',
-  updated_at INTEGER NOT NULL
-)
-```
-
 Index considerations:
 - `fsrsCard(user_id, due)` for "due now" queue lookup.
 - `fsrsCard(user_id, module_slug, due)` for "previously" recap (pull due cards from prior modules).
@@ -124,8 +111,6 @@ Add under `src/pages/api/`:
 
 5. `POST/GET /api/modules/:moduleSlug/key-idea` for Phase I.
 
-6. `POST/GET /api/me/streak` and `POST /api/me/streak/toggle` for Phase J.
-
 ## Phase D: FSRS integration
 
 - Package: `ts-fsrs` (the audit's recommendation; benchmarked ~20-30% fewer reviews than SM-2 at equal retention per Expertium's open-spaced-repetition benchmark on ~350M filtered reviews).
@@ -140,7 +125,7 @@ New Astro page at `apps/docs/src/pages/review/index.astro`. Structure modeled on
 - Render one card at a time using the existing StepCheck / StepChoice components in a "review mode" (no localStorage gating; submit posts to `/api/review/grade`).
 - After answer reveal, show four buttons: Again / Hard / Good / Easy. The button choice maps to the FSRS rating; submit advances to the next card.
 - "Done for today" state when the queue is empty.
-- Show a small queue counter ("4 of 12 due") for momentum. Streak badge appears here only if Phase J toggle is ON.
+- Show a small queue counter ("4 of 12 due") for momentum.
 
 Performance: prompt text resolution should not require running MDX at request time. Add a build step that emits `src/generated/step-prompts.json` mapping `stepId` to `{ promptHTML, hintHTML, answerType, lessonSlug, moduleSlug }`. Regenerated on each lesson change.
 
@@ -167,21 +152,9 @@ When a learner answers a StepCheck correctly *in lesson context* (not in `/revie
 
 After the last StepCheck of a module's last lesson, surface a single textarea: "In one sentence, what do you want to remember in 6 months?" Save to `keyIdea`. On future visits to any lesson in that module, display the saved key idea at the top as a per-user mantra. Optionally, push it into the FSRS queue as a cloze-style self-authored prompt, but only after Phase A through G ships and stabilizes; this is a Stage-1.5 polish.
 
-## Phase J: Optional streak toggle (off by default, no engagement-coercion)
+## Phase J: cut
 
-User-preference daily streak. **Off by default.** Designed for users who want a habit hook without making one mandatory for everyone.
-
-Behavior:
-- Setting on `/me`: "Show daily streak" toggle. Default OFF.
-- When ON: any FSRS review action or StepCheck completion counts as "active for the day." Counter increments at midnight in user's local timezone if active; resets to 0 if more than one day is missed.
-- When OFF: no UI indication anywhere. Server still accumulates `streakState.current` from activity so toggling back on later doesn't feel like starting from zero (the user's actual activity record is the source of truth, not a counter that started when they enabled the feature).
-- No "your streak is broken" notifications. No fire emojis. No freeze items, no purchase mechanics, no league placement. The feature is opt-in habit signal, full stop.
-
-UI:
-- A small subdued badge on `/review` and `/me` when enabled, e.g. "5 days." Honor DESIGN.md tokens (no purple, no purchased iconography, no urgency styling).
-- Toggle copy on `/me`: "Show daily streak (off by default; you can turn this on or off any time, no pressure)."
-
-This phase is independent of Phase A through I and can ship after the SR layer stabilizes. It deliberately violates the audit's "no streaks" position on a narrow basis: opt-in only, no coercion, no leaderboards or social shaming attached. See updated `feedback_no_streaks_badges_leagues.md` memory.
+Scoped as an opt-in, off-by-default daily streak toggle, then cut on user direction before shipping. Even narrowly framed (opt-in only, no coercion, no leaderboards), a streak was the wrong fit for this adult-engineer audience. All scaffolding was removed; the `streak_state` table is dropped by `0004_clear_lucky_pierre.sql`. The `feedback_no_streaks_badges_leagues.md` memory stands as written: no streaks.
 
 ## Phase K: Completion certificate (on-request, printable)
 
@@ -198,7 +171,7 @@ UI:
 - Honors DESIGN.md tokens; no purple, restrained typography, no fake-medal iconography.
 - Author voice retained in microcopy: "you finished this. nice. here's something to print and stick on the fridge if that's your kind of thing."
 
-This phase is independent of Phase A through J.
+This phase is independent of Phase A through I.
 
 ## Acceptance criteria
 
@@ -210,18 +183,13 @@ Stage 1 (Phases A through I) is done when, for a signed-in user who completes a 
 5. The `/me` surface shows "N skills retained" instead of "N% complete."
 6. Anonymous users get equivalent localStorage state that merges into the DB on sign-in.
 
-Phase J (streak) ships independently when:
-7. Streak toggle exists on `/me`, defaults OFF, persists across sessions.
-8. When ON, daily-active counter updates correctly across timezone boundaries.
-9. When OFF, no streak UI is shown anywhere in the app.
-
 Phase K (certificate) ships independently when:
-10. `/me/certificate/[scope]` renders a printable page for any fully-completed module.
-11. Print dialog produces a clean single-page A4 layout.
+7. `/me/certificate/[scope]` renders a printable page for any fully-completed module.
+8. Print dialog produces a clean single-page A4 layout.
 
 ## What goes to memory vs in-repo doc
 
-Already saved to `~/.claude/memory/`: the five load-bearing principles (reference class, no-engagement-coercion, stage priorities, Matuschak taxonomy, authoring constraints). The no-streaks memory was updated 2026-05-28 to reflect the opt-in-only policy added in Phase J.
+Already saved to `~/.claude/memory/`: the five load-bearing principles (reference class, no-engagement-coercion, stage priorities, Matuschak taxonomy, authoring constraints). The no-streaks memory stands as written: streaks were considered (Phase J) and cut.
 
 This file is the project-scoped, in-repo plan. The full audit text lives in conversation history; if it should also be checked in, save to `docs/research/pedagogy-design-space-audit.md` (note: the em-dash to colon hook lightly mangles prose; consider saving as `.txt` if fidelity matters).
 
@@ -235,7 +203,7 @@ This file is the project-scoped, in-repo plan. The full audit text lives in conv
 ## What this plan deliberately leaves out
 
 - Stage 2 items (problem bank, worked-example fading, Stuck? intervention).
-- Leagues, leaderboards, badges, friend feeds. Permanently skipped per audit and memory. Phase J's opt-in streak is the only exception, narrowly scoped.
+- Leagues, leaderboards, badges, friend feeds, and streaks. Permanently skipped per audit and memory. (A narrowly-scoped opt-in streak was considered as Phase J and cut.)
 - Free-form notes, highlighting. Audit rates as low-utility / engagement-noise.
 - AI tutor chatbot. Audit rates as overrated for this audience.
 - Native mobile lesson UI. Capacitor is on the table for `/review` only in a later phase.

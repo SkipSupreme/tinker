@@ -1,7 +1,6 @@
 ---
 import ThemeToggle from './ThemeToggle.astro';
 import UserMenu from './auth/UserMenu.svelte';
-import StreakFlame from './nav/StreakFlame.svelte';
 import { createAuth } from '../server/auth';
 
 let user: { name: string; email: string } | null = null;
@@ -31,10 +30,6 @@ try {
     </a>
 
     <div class="spacer"></div>
-
-    <div class="counters">
-      <StreakFlame client:load streak={0} />
-    </div>
 
     <div class="auth-slot" data-auth-state={user ? 'user' : 'anon'}>
       <a
@@ -110,12 +105,6 @@ try {
   }
   .spacer { flex: 1; }
 
-  .counters {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
   .auth-slot {
     display: inline-flex;
     align-items: center;
@@ -180,15 +169,13 @@ try {
     font-size: 0.78rem;
   }
 
-  /* Mobile: collapse the nav to its essentials. The streak flame reads as
-     broken when it's 0 anonymously, and "Sign in" + "Sign up" side-by-side
-     eats the whole row. Keep brand + primary CTA + theme toggle. */
+  /* Mobile: collapse the nav to its essentials. "Sign in" + "Sign up"
+     side-by-side eats the whole row. Keep brand + primary CTA + theme toggle. */
   @media (max-width: 640px) {
     .shell {
       gap: 0.4rem;
       padding: 0.5rem 0.85rem;
     }
-    .counters { display: none; }
     .auth-link { display: none; }
     .user-name { display: none; }
     .wordmark { font-size: 1.05rem; }
@@ -211,10 +198,9 @@ try {
    * We fetch the session and flip the slot if there's a user. Skipped when
    * the server already rendered "user" (dynamic pages got it right).
    *
-   * Streak live updates live in components/nav/StreakFlame.svelte (via
-   * tinker:streak). The visible XP counter was removed in Phase G (mastery
-   * framing replaces the points economy); awardXp / tinker:xp still fire but
-   * no longer have a visible listener.
+   * The visible XP counter was removed in Phase G (mastery framing replaces
+   * the points economy); awardXp / tinker:xp still fire but no longer have a
+   * visible listener.
    */
   type SessionResponse = { user?: { name?: string; email: string } };
   const slot = document.querySelector<HTMLElement>('.auth-slot');

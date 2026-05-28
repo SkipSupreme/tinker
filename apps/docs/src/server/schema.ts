@@ -172,16 +172,3 @@ export const stepIdAlias = sqliteTable('step_id_alias', {
   newStepId: text('new_step_id').notNull(),
   renamedAt: integer('renamed_at', { mode: 'timestamp_ms' }).notNull(),
 });
-
-// Phase J opt-in daily streak. Disabled by default. last_active_day is
-// stored as YYYY-MM-DD in the user's local timezone for cheap string
-// comparison; analytics queries can use lexicographic ordering.
-export const streakState = sqliteTable('streak_state', {
-  userId: text('user_id').primaryKey().references(() => user.id, { onDelete: 'cascade' }),
-  enabled: integer('enabled', { mode: 'boolean' }).notNull().default(false),
-  current: integer('current').notNull().default(0),
-  longest: integer('longest').notNull().default(0),
-  lastActiveDay: text('last_active_day'),
-  timezone: text('timezone').notNull().default('UTC'),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
-});

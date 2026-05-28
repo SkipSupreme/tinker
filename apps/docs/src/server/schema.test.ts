@@ -7,7 +7,6 @@ import {
   fsrsCard,
   keyIdea,
   stepIdAlias,
-  streakState,
 } from './schema';
 
 let db: TestDb;
@@ -191,39 +190,8 @@ describe('stepIdAlias table', () => {
   });
 });
 
-describe('streakState table', () => {
-  it('accepts an insert with defaults and reads it back', async () => {
-    await db.client.insert(streakState).values({
-      userId: USER,
-      updatedAt: new Date(),
-    });
-    const r = db.client.select().from(streakState).where(eq(streakState.userId, USER)).get();
-    expect(r?.enabled).toBe(false);
-    expect(r?.current).toBe(0);
-    expect(r?.longest).toBe(0);
-    expect(r?.timezone).toBe('UTC');
-    expect(r?.lastActiveDay).toBeNull();
-  });
-
-  it('stores lastActiveDay as YYYY-MM-DD text', async () => {
-    await db.client.insert(streakState).values({
-      userId: USER,
-      enabled: true,
-      current: 3,
-      longest: 7,
-      lastActiveDay: '2026-05-27',
-      timezone: 'America/Los_Angeles',
-      updatedAt: new Date(),
-    });
-    const r = db.client.select().from(streakState).where(eq(streakState.userId, USER)).get();
-    expect(r?.lastActiveDay).toBe('2026-05-27');
-    expect(r?.timezone).toBe('America/Los_Angeles');
-    expect(r?.current).toBe(3);
-  });
-});
-
 describe('cascade delete behavior', () => {
-  it('cascades user delete to stepCheck, fsrsCard, keyIdea, streakState', async () => {
+  it('cascades user delete to stepCheck, fsrsCard, keyIdea', async () => {
     const now = new Date();
     await db.client.insert(stepCheck).values({
       id: 'sc-cascade', userId: USER, lessonSlug: 'l', stepId: 's',
@@ -236,16 +204,12 @@ describe('cascade delete behavior', () => {
     await db.client.insert(keyIdea).values({
       userId: USER, moduleSlug: 'm', text: 't', createdAt: now, updatedAt: now,
     });
-    await db.client.insert(streakState).values({
-      userId: USER, updatedAt: now,
-    });
 
     await db.client.delete(userTbl).where(eq(userTbl.id, USER));
 
     expect(await db.client.select().from(stepCheck)).toHaveLength(0);
     expect(await db.client.select().from(fsrsCard)).toHaveLength(0);
     expect(await db.client.select().from(keyIdea)).toHaveLength(0);
-    expect(await db.client.select().from(streakState)).toHaveLength(0);
   });
 
   it('does NOT cascade user delete to stepIdAlias (no FK; authoring artifact)', async () => {

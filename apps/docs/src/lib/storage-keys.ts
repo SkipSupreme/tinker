@@ -7,9 +7,6 @@
  */
 export const LS_KEY = {
   xp: 'tinker:xp',
-  streak: 'tinker:streak',
-  streakMax: 'tinker:streak-max',
-  streakLastDay: 'tinker:streak-last-day',
   soundMuted: 'tinker:sound-muted',
   stuckLastShown: 'tinker:stuck-last-shown',
 } as const;
