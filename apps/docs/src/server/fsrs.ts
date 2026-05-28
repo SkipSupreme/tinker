@@ -151,3 +151,16 @@ export function scheduleNext(
 
   return { card: toState(result.card), log: nextLog };
 }
+
+/**
+ * Current retrievability of a card at `now`: the FSRS estimate of recall
+ * probability in [0, 1]. Cards still in state=0 (new, never reviewed) return
+ * 0, so a freshly seeded card never reads as "retained".
+ *
+ * Backs the "N skills retained" mastery signal (Phase G). The scheduler is
+ * the same instance used for scheduling, so the curve matches what drives
+ * due dates.
+ */
+export function retrievability(card: FsrsCardState, now: Date = new Date()): number {
+  return scheduler.get_retrievability(toCard(card), now, false);
+}

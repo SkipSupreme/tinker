@@ -7,6 +7,7 @@ import { getDb } from '../server/db';
 import { userProfile } from '../server/schema';
 import { getEnv } from '../server/env';
 import { requireSameOrigin } from '../server/middleware';
+import { countRetainedSkills } from '../server/steps';
 
 const env = getEnv();
 const auth = createAuth({
@@ -36,6 +37,10 @@ const profile = await db
   .from(userProfile)
   .where(eq(userProfile.userId, session.user.id))
   .get();
+
+// Mastery framing (Phase G): skills currently retained, FSRS retrievability
+// >= 0.9. Counts across every module, so it's the whole-course signal.
+const retained = await countRetainedSkills(db, session.user.id);
 ---
 
 <Base title="Account">
@@ -51,6 +56,17 @@ const profile = await db
         </>
       ) : null}
     </dl>
+
+    <section class="block">
+      <h2>Mastery</h2>
+      <p class="retained"><strong>{retained}</strong> {retained === 1 ? 'skill' : 'skills'} retained</p>
+      <p class="retained-sub">
+        {retained > 0
+          ? 'Concepts you’d recall right now with at least 90% confidence.'
+          : 'Concepts land here once you’ve reviewed them and they’ve stuck.'}
+        {' '}Keep them warm at <a href="/review">review</a>.
+      </p>
+    </section>
 
     <form method="POST" class="block">
       <h2>Email preferences</h2>
@@ -107,6 +123,23 @@ const profile = await db
   }
   .info dt { color: var(--site-fg-muted); font-size: 0.9rem; }
   .info dd { margin: 0; }
+  .retained {
+    margin: 0 0 0.35rem;
+    font-family: var(--font-game);
+    font-variant-numeric: tabular-nums;
+    font-size: 1.1rem;
+  }
+  .retained strong {
+    font-weight: 700;
+    font-size: 1.5rem;
+  }
+  .retained-sub {
+    margin: 0;
+    color: var(--site-fg-muted);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .retained-sub a { color: var(--site-fg); }
   .block {
     padding: 1.5rem;
     border: 1px solid var(--site-border);

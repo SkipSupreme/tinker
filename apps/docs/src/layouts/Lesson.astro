@@ -83,7 +83,6 @@ const courseSlug = 'ml-math';
           <div class="lc-text">
             <p class="lc-eyebrow">Lesson complete</p>
             <h2 class="lc-headline">Nice tinkering.</h2>
-            <p class="lc-sub" data-lesson-complete-xp>+20 XP</p>
           </div>
         </div>
 
@@ -645,14 +644,6 @@ const courseSlug = 'ml-math';
     margin: 0 0 0.3rem;
     line-height: 1.15;
     letter-spacing: -0.015em;
-  }
-  :global(.lesson-shell .lesson-complete .lc-sub) {
-    font-family: var(--font-game);
-    font-variant-numeric: tabular-nums;
-    font-weight: 700;
-    font-size: 1.05rem;
-    color: var(--cta-hover);
-    margin: 0;
   }
   /* Green sweep overlay that pulses across on completion. */
   :global(.lesson-shell .lesson-complete.is-visible)::before {

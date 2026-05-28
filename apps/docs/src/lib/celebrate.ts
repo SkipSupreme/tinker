@@ -71,7 +71,7 @@ export async function celebrateLesson(card: HTMLElement) {
   card.classList.add('sweep-green');
   await wait(640);
   card.classList.remove('sweep-green');
-  announce('Lesson complete. Plus 20 XP.');
+  announce('Lesson complete.');
 }
 
 export async function celebrateModule(
@@ -97,5 +97,5 @@ export async function celebrateModule(
   // TODO(alive-layer): glowMasteredNode(nodeId) once the map node component lands.
   void nodeId;
   const tail = nextModuleName ? ` ${nextModuleName} unlocked.` : '';
-  announce(`Module complete. Plus 100 XP.${tail}`);
+  announce(`Module complete.${tail}`);
 }

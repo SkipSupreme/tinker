@@ -1,7 +1,6 @@
 ---
 import ThemeToggle from './ThemeToggle.astro';
 import UserMenu from './auth/UserMenu.svelte';
-import XpCounter from './nav/XpCounter.svelte';
 import StreakFlame from './nav/StreakFlame.svelte';
 import { createAuth } from '../server/auth';
 
@@ -34,7 +33,6 @@ try {
     <div class="spacer"></div>
 
     <div class="counters">
-      <XpCounter client:load initial={0} />
       <StreakFlame client:load streak={0} />
     </div>
 
@@ -182,9 +180,9 @@ try {
     font-size: 0.78rem;
   }
 
-  /* Mobile: collapse the nav to its essentials. The XP counter and streak
-     flame read as broken when they're 0 anonymously, and "Sign in" + "Sign up"
-     side-by-side eats the whole row. Keep brand + primary CTA + theme toggle. */
+  /* Mobile: collapse the nav to its essentials. The streak flame reads as
+     broken when it's 0 anonymously, and "Sign in" + "Sign up" side-by-side
+     eats the whole row. Keep brand + primary CTA + theme toggle. */
   @media (max-width: 640px) {
     .shell {
       gap: 0.4rem;
@@ -213,11 +211,10 @@ try {
    * We fetch the session and flip the slot if there's a user. Skipped when
    * the server already rendered "user" (dynamic pages got it right).
    *
-   * XP + streak listeners moved to components/nav/{XpCounter,StreakFlame}.svelte;
-   * those own live updates via tinker:xp / tinker:streak. Server-side initial
-   * values default to 0 since Astro.locals doesn't carry session XP/streak yet;
-   * server hydration of those values lands when the auth schema grows xp + streak
-   * columns (see plan).
+   * Streak live updates live in components/nav/StreakFlame.svelte (via
+   * tinker:streak). The visible XP counter was removed in Phase G (mastery
+   * framing replaces the points economy); awardXp / tinker:xp still fire but
+   * no longer have a visible listener.
    */
   type SessionResponse = { user?: { name?: string; email: string } };
   const slot = document.querySelector<HTMLElement>('.auth-slot');

@@ -20,7 +20,7 @@ import Base from '../../layouts/Base.astro';
 import { createAuth, getSession } from '../../server/auth';
 import { getDb } from '../../server/db';
 import { getEnv } from '../../server/env';
-import { getDueCards } from '../../server/steps';
+import { getDueCards, countRetainedSkills } from '../../server/steps';
 import prompts from '../../generated/step-prompts.json';
 import 'katex/dist/katex.min.css';
 
@@ -74,6 +74,10 @@ const cards = due
   .filter((c): c is NonNullable<typeof c> => c !== null);
 
 const total = cards.length;
+
+// Mastery framing (Phase G): how many skills the learner currently retains
+// (FSRS retrievability >= 0.9), shown alongside the due count.
+const retained = await countRetainedSkills(db, session.user.id);
 ---
 
 <Base title="Review">
@@ -83,6 +87,11 @@ const total = cards.length;
       <p class="review-counter" data-review-counter>
         {total > 0 ? `${total} of ${total} due` : 'nothing due'}
       </p>
+      {retained > 0 && (
+        <p class="review-retained">
+          <strong>{retained}</strong> {retained === 1 ? 'skill' : 'skills'} retained
+        </p>
+      )}
     </header>
 
     <div class="review-deck" data-review-deck hidden={total === 0}>
@@ -309,6 +318,17 @@ const total = cards.length;
     font-variant-numeric: tabular-nums;
     font-size: 0.95rem;
     color: var(--site-fg-muted);
+  }
+  .review-retained {
+    margin: 0.35rem 0 0;
+    font-family: var(--font-game);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.9rem;
+    color: var(--site-fg-muted);
+  }
+  .review-retained strong {
+    color: var(--site-fg);
+    font-weight: 700;
   }
 
   .review-card {

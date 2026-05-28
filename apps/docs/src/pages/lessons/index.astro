@@ -39,6 +39,7 @@ const sortedGroups = Array.from(grouped.entries()).sort(([a], [b]) => {
         Pick any module to start; each lesson is one read-in-one-sitting page with
         gated steps and a widget for every key idea.
       </p>
+      <p class="retained-badge" data-retained hidden></p>
     </header>
 
     <ol class="modules">
@@ -80,6 +81,29 @@ const sortedGroups = Array.from(grouped.entries()).sort(([a], [b]) => {
   </main>
 </Base>
 
+<script>
+  /**
+   * Mastery framing (Phase G). This page is prerendered, so the per-user
+   * "N skills retained" count can't be server-rendered; fetch it and reveal
+   * the badge. Stays hidden for anon visitors, on error, and at zero so a new
+   * learner never sees a discouraging "0 skills retained".
+   */
+  const badge = document.querySelector<HTMLElement>('[data-retained]');
+  if (badge) {
+    fetch('/api/me/retained', { credentials: 'same-origin' })
+      .then((r) => (r.ok ? (r.json() as Promise<{ retained?: number }>) : null))
+      .then((data) => {
+        const n = data?.retained ?? 0;
+        if (n <= 0) return;
+        badge.textContent = `${n} ${n === 1 ? 'skill' : 'skills'} retained`;
+        badge.hidden = false;
+      })
+      .catch(() => {
+        /* anon / network failure: leave the badge hidden */
+      });
+  }
+</script>
+
 <style>
   .lessons-shell {
     max-width: var(--max-shell, 1120px);
@@ -112,6 +136,19 @@ const sortedGroups = Array.from(grouped.entries()).sort(([a], [b]) => {
     color: var(--site-fg-muted);
     line-height: 1.55;
     max-width: 60ch;
+  }
+  .retained-badge {
+    margin: 1rem 0 0;
+    display: inline-block;
+    font-family: var(--font-game, "Space Grotesk", system-ui, sans-serif);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--site-fg);
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--site-border);
+    border-radius: 999px;
+    background: var(--demo-card, transparent);
   }
 
   .modules {

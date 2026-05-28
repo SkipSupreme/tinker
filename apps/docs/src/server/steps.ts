@@ -2,6 +2,7 @@ import { and, asc, eq, inArray, lte, max } from 'drizzle-orm';
 import { fsrsCard, stepCheck } from './schema';
 import type { DB } from './db';
 import {
+  retrievability,
   scheduleNext,
   seedCard,
   type FsrsCardState,
@@ -84,6 +85,11 @@ export class FsrsCardNotFoundError extends Error {
 }
 
 const REVIEW_CONTEXT_SENTINEL = '{"context":"review"}';
+
+// FSRS desired-retention default. A card counts as a "retained skill" once
+// its current retrievability is at or above this — i.e. recall probability
+// >= 90% right now. Backs the Phase G mastery signal; see plan.
+const RETAINED_RETRIEVABILITY = 0.9;
 
 function readFsrsRow(row: typeof fsrsCard.$inferSelect): FsrsCardState {
   return {
@@ -359,4 +365,31 @@ export async function getDueCardsForModules(
     reps: r.reps,
     lapses: r.lapses,
   }));
+}
+
+/**
+ * How many of the user's cards are currently "retained" — retrievability
+ * >= 0.9 at `now`. Backs the "N skills retained" mastery framing (Phase G)
+ * on /me, /lessons, and /review.
+ *
+ * Retrievability is a per-card power function of elapsed time and stability,
+ * not something SQLite can filter on, so we read the user's cards and fold
+ * in JS. A user has at most one card per step (low hundreds), so a full
+ * scan per call is fine.
+ */
+export async function countRetainedSkills(
+  db: DB,
+  userId: string,
+  now: Date = new Date(),
+): Promise<number> {
+  const rows = await db
+    .select()
+    .from(fsrsCard)
+    .where(eq(fsrsCard.userId, userId));
+
+  let count = 0;
+  for (const row of rows) {
+    if (retrievability(readFsrsRow(row), now) >= RETAINED_RETRIEVABILITY) count++;
+  }
+  return count;
 }
