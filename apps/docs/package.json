@@ -7,7 +7,9 @@
   },
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "node scripts/validate-step-ids.mjs",
     "build": "astro build",
+    "validate:ids": "node scripts/validate-step-ids.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "generate-types": "wrangler types",
