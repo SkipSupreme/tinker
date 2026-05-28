@@ -24,7 +24,11 @@ const CSP = [
   "frame-ancestors 'none'",
   "object-src 'none'",
   "img-src 'self' data:",
-  "font-src 'self' https://fonts.gstatic.com",
+  // `data:` covers KaTeX's small delimiter fonts (Size3, etc.), which Vite
+  // inlines as base64 woff2 below its asset-inline limit. Without it the CSP
+  // blocks the inlined source and the browser falls back to the external .woff
+  // — works, but logs a violation on every math-heavy page. Mirrors img-src.
+  "font-src 'self' data: https://fonts.gstatic.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   // 'unsafe-inline' on script-src is needed for Astro's hydration shims and
   // inline initialization scripts. 'unsafe-eval' is needed by KaTeX in some
