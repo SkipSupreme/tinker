@@ -9,15 +9,25 @@ import {
 } from './fsrs';
 
 /**
- * Service layer for the SR (spaced-repetition) loop.
+ * Service layer for the SR (spaced-repetition) loop, backing
+ * /api/steps/answer, /api/review/queue, and /api/review/grade.
  *
  * Ties Phase B's `fsrs_card` + `step_check` tables to the Phase D `fsrs.ts`
  * wrapper. Persistence + identifier-mapping live here; the FSRS algorithm
  * stays in fsrs.ts.
  *
+ * The endpoint files are thin wrappers (auth -> parse -> call service ->
+ * format response). Business logic lives here and is covered by
+ * steps.test.ts.
+ *
  * All public functions accept an optional `now` parameter so callers
  * (notably tests) can drive deterministic schedules. Production callers
  * leave `now` undefined and get `new Date()`.
+ *
+ * TODO: there is no integration-test pattern in this codebase for invoking
+ * Astro APIRoute modules against a mocked cloudflare:workers env. When one
+ * is added (likely with the recap/key-idea/streak endpoint batch in Phase
+ * F/I/J), backfill end-to-end coverage for the SR loop.
  */
 
 export interface StepAttemptInput {

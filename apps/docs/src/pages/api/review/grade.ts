@@ -9,7 +9,7 @@ import { withApiErrors } from '../../../server/lesson-slugs';
 export const prerender = false;
 
 const Body = z.object({
-  stepId: z.string().min(1).max(300),
+  step_id: z.string().min(1).max(300),
   rating: z.enum(['again', 'hard', 'good', 'easy']),
 });
 
@@ -41,7 +41,7 @@ export const POST: APIRoute = async ({ request }) => {
       const r = await gradeReviewCard(
         ctx.db,
         ctx.session.user.id,
-        parsed.data.stepId,
+        parsed.data.step_id,
         parsed.data.rating,
       );
       return jsonOk({

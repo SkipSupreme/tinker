@@ -9,11 +9,11 @@ import { isKnownLesson, withApiErrors } from '../../../server/lesson-slugs';
 export const prerender = false;
 
 const Body = z.object({
-  stepId: z.string().min(1).max(300),
-  lessonSlug: z.string().min(1).max(200),
-  moduleSlug: z.string().min(1).max(200),
+  step_id: z.string().min(1).max(300),
+  lesson_slug: z.string().min(1).max(200),
+  module_slug: z.string().min(1).max(200),
   answer: z.string().max(4_000),
-  isCorrect: z.boolean(),
+  is_correct: z.boolean(),
   rating: z.enum(['again', 'hard', 'good', 'easy']).optional(),
 });
 
@@ -40,17 +40,17 @@ export const POST: APIRoute = async ({ request }) => {
   const parsed = Body.safeParse(body);
   if (!parsed.success) return jsonError(400, 'bad_request', 'Invalid payload');
 
-  if (!(await isKnownLesson(parsed.data.lessonSlug))) {
+  if (!(await isKnownLesson(parsed.data.lesson_slug))) {
     return jsonError(404, 'unknown_lesson', 'Unknown lesson slug');
   }
 
   return withApiErrors('steps/answer', ctx.session.user.id, async () => {
     const r = await recordStepAttempt(ctx.db, ctx.session.user.id, {
-      stepId: parsed.data.stepId,
-      lessonSlug: parsed.data.lessonSlug,
-      moduleSlug: parsed.data.moduleSlug,
+      stepId: parsed.data.step_id,
+      lessonSlug: parsed.data.lesson_slug,
+      moduleSlug: parsed.data.module_slug,
       answer: parsed.data.answer,
-      isCorrect: parsed.data.isCorrect,
+      isCorrect: parsed.data.is_correct,
       rating: parsed.data.rating,
     });
     return jsonOk({

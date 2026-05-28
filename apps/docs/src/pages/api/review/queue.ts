@@ -27,6 +27,11 @@ export const GET: APIRoute = async ({ request }) => {
 
   return withApiErrors('review/queue', ctx.session.user.id, async () => {
     const cards = await getDueCards(ctx.db, ctx.session.user.id, limit);
+    // TODO(phase-e): clients will need prompt + hint text for each due card,
+    // but the queue endpoint returns IDs only (no MDX rendering at request
+    // time). Phase E will produce a build-time manifest mapping step_id ->
+    // { promptHTML, hintHTML, answerType }; the /review UI reads that
+    // manifest, not this endpoint, for prompt content.
     return jsonOk({
       cards: cards.map((c) => ({
         stepId: c.stepId,
