@@ -1,0 +1,513 @@
+---
+/**
+ * /review — the spaced-repetition review surface (Phase E).
+ *
+ * A signed-in learner works through their due FSRS cards one at a time:
+ * recall the answer, reveal it, then self-rate Again/Hard/Good/Easy. Each
+ * rating POSTs to /api/review/grade which reschedules the card via FSRS.
+ *
+ * Grading is self-rated recall: the grade endpoint takes only
+ * { step_id, rating } and does no answer-checking, so this page must show
+ * the correct answer on reveal. Prompt content is NOT rendered from MDX at
+ * request time — it comes from the build-time manifest at
+ * src/generated/step-prompts.json (built by scripts/gen-step-prompts.mjs,
+ * wired into prebuild). The manifest HTML already carries KaTeX markup, so
+ * we import katex.min.css here to style it.
+ */
+export const prerender = false;
+
+import Base from '../../layouts/Base.astro';
+import { createAuth, getSession } from '../../server/auth';
+import { getDb } from '../../server/db';
+import { getEnv } from '../../server/env';
+import { getDueCards } from '../../server/steps';
+import prompts from '../../generated/step-prompts.json';
+import 'katex/dist/katex.min.css';
+
+const env = getEnv();
+const auth = createAuth({
+  DB: env.DB,
+  BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
+  PUBLIC_SITE_URL: env.PUBLIC_SITE_URL,
+});
+
+const session = await getSession(auth, Astro.request.headers);
+if (!session) return Astro.redirect('/signin');
+
+const db = getDb(env.DB);
+
+// Shape of a manifest entry. The JSON is loosely typed on import, so narrow
+// it here for the resolve step below.
+interface CheckPrompt {
+  lessonSlug: string;
+  title: string | null;
+  hint: string | null;
+  answerType: 'check';
+  promptHTML: string;
+  answer: number | null;
+  answerLabel: string;
+}
+interface ChoicePrompt {
+  lessonSlug: string;
+  title: string | null;
+  hint: string | null;
+  answerType: 'choice';
+  promptHTML: string;
+  single: boolean;
+  options: { html: string; correct: boolean }[];
+}
+type PromptEntry = CheckPrompt | ChoicePrompt;
+
+const manifest = prompts as Record<string, PromptEntry>;
+
+// Pull the due queue and resolve each card to its manifest entry. Drop any
+// card whose stepId is no longer in the manifest (a renamed/removed step):
+// we can't render a prompt we don't have, and leaving it would strand the
+// learner on a blank card.
+const due = await getDueCards(db, session.user.id, 50);
+const cards = due
+  .map((c) => {
+    const entry = manifest[c.stepId];
+    if (!entry) return null;
+    return { stepId: c.stepId, ...entry };
+  })
+  .filter((c): c is NonNullable<typeof c> => c !== null);
+
+const total = cards.length;
+---
+
+<Base title="Review">
+  <section class="review-shell">
+    <header class="review-header">
+      <h1>Review</h1>
+      <p class="review-counter" data-review-counter>
+        {total > 0 ? `${total} of ${total} due` : 'nothing due'}
+      </p>
+    </header>
+
+    <div class="review-deck" data-review-deck hidden={total === 0}>
+      {
+        cards.map((card, i) => (
+          <article
+            class="review-card"
+            data-review-card
+            data-step-id={card.stepId}
+            data-answer-type={card.answerType}
+            hidden={i !== 0}
+          >
+            <div class="review-prompt" set:html={card.promptHTML} />
+
+            <div class="review-answer" data-review-answer hidden>
+              {card.answerType === 'check' ? (
+                <p class="answer-line">
+                  <span class="answer-label">{card.answerLabel}</span>
+                  <span class="answer-value">{card.answer}</span>
+                </p>
+              ) : (
+                <ul class="answer-options">
+                  {card.options.map((opt) => (
+                    <li class:list={['answer-option', { correct: opt.correct }]}>
+                      <span class="opt-mark" aria-hidden="true">
+                        {opt.correct ? '✓' : '·'}
+                      </span>
+                      <span class="opt-text" set:html={opt.html} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {card.hint && <p class="answer-hint">{card.hint}</p>}
+            </div>
+
+            <div class="review-controls">
+              <button type="button" class="reveal-btn" data-review-reveal>
+                Reveal answer
+              </button>
+              <div class="rating-row" data-rating-row hidden>
+                <span class="rating-prompt">How well did you recall it?</span>
+                <button type="button" class="rating-btn" data-rating="again">Again</button>
+                <button type="button" class="rating-btn" data-rating="hard">Hard</button>
+                <button type="button" class="rating-btn" data-rating="good">Good</button>
+                <button type="button" class="rating-btn" data-rating="easy">Easy</button>
+              </div>
+              <p class="review-flash" data-review-flash aria-live="polite" hidden></p>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+
+    <div class="review-done" data-review-done hidden={total !== 0}>
+      <p class="done-line">Done for today.</p>
+      <p class="done-sub">
+        Nothing else is due right now. The cards will resurface when it's time to
+        see them again — that spacing is the whole point.
+      </p>
+      <a class="done-link" href="/">Back to the modules</a>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { play } from '../../lib/sound';
+
+  type Rating = 'again' | 'hard' | 'good' | 'easy';
+
+  const deck = document.querySelector<HTMLElement>('[data-review-deck]');
+  const doneEl = document.querySelector<HTMLElement>('[data-review-done]');
+  const counterEl = document.querySelector<HTMLElement>('[data-review-counter]');
+  const cards = Array.from(
+    document.querySelectorAll<HTMLElement>('[data-review-card]'),
+  );
+
+  const total = cards.length;
+  let index = 0;
+  // Guard so a given card grades at most once, even on rapid double-clicks.
+  const graded = new Set<number>();
+
+  function remaining(): number {
+    return Math.max(total - index, 0);
+  }
+
+  function updateCounter() {
+    if (!counterEl) return;
+    counterEl.textContent =
+      total === 0 ? 'nothing due' : `${remaining()} of ${total} due`;
+  }
+
+  function finish() {
+    if (deck) deck.hidden = true;
+    if (doneEl) doneEl.hidden = false;
+    updateCounter();
+  }
+
+  function showCard(i: number) {
+    if (i >= total) {
+      finish();
+      return;
+    }
+    const card = cards[i];
+    // Reset to the un-revealed state (matters when a later card is reached).
+    const answer = card.querySelector<HTMLElement>('[data-review-answer]');
+    const reveal = card.querySelector<HTMLButtonElement>('[data-review-reveal]');
+    const ratingRow = card.querySelector<HTMLElement>('[data-rating-row]');
+    const flash = card.querySelector<HTMLElement>('[data-review-flash]');
+    if (answer) answer.hidden = true;
+    if (reveal) reveal.hidden = false;
+    if (ratingRow) ratingRow.hidden = true;
+    if (flash) {
+      flash.hidden = true;
+      flash.textContent = '';
+    }
+    card.hidden = false;
+    updateCounter();
+  }
+
+  function advance() {
+    cards[index].hidden = true;
+    index += 1;
+    showCard(index);
+  }
+
+  function wireCard(card: HTMLElement, i: number) {
+    const reveal = card.querySelector<HTMLButtonElement>('[data-review-reveal]');
+    const answer = card.querySelector<HTMLElement>('[data-review-answer]');
+    const ratingRow = card.querySelector<HTMLElement>('[data-rating-row]');
+    const flash = card.querySelector<HTMLElement>('[data-review-flash]');
+    const ratingBtns = Array.from(
+      card.querySelectorAll<HTMLButtonElement>('[data-rating]'),
+    );
+    const stepId = card.dataset.stepId ?? '';
+
+    reveal?.addEventListener('click', () => {
+      if (answer) answer.hidden = false;
+      reveal.hidden = true;
+      if (ratingRow) ratingRow.hidden = false;
+      play('tick');
+    });
+
+    function setFlash(msg: string | null) {
+      if (!flash) return;
+      if (msg === null) {
+        flash.hidden = true;
+        flash.textContent = '';
+      } else {
+        flash.textContent = msg;
+        flash.hidden = false;
+      }
+    }
+
+    for (const btn of ratingBtns) {
+      btn.addEventListener('click', async () => {
+        if (graded.has(i)) return; // already graded this card
+        const rating = btn.dataset.rating as Rating;
+
+        // Disable all rating buttons while the request is in flight to block
+        // double-submit; re-enable only on a recoverable error (429).
+        for (const b of ratingBtns) b.disabled = true;
+        setFlash(null);
+
+        let res: Response | null = null;
+        try {
+          res = await fetch('/api/review/grade', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ step_id: stepId, rating }),
+          });
+        } catch (err) {
+          // Network failure: don't trap the learner; log and advance.
+          console.error('[review] grade request failed', err);
+          graded.add(i);
+          advance();
+          return;
+        }
+
+        if (res.status === 429) {
+          // Rate limited: let them retry this card.
+          setFlash('Slow down a sec, then try again.');
+          for (const b of ratingBtns) b.disabled = false;
+          return;
+        }
+
+        // ok or 404 (card vanished server-side): advance either way. Other
+        // errors: log but still advance so the user isn't stuck.
+        if (!res.ok && res.status !== 404) {
+          console.error('[review] grade returned', res.status);
+        }
+        graded.add(i);
+        play('tick');
+        advance();
+      });
+    }
+  }
+
+  if (total === 0) {
+    finish();
+  } else {
+    cards.forEach(wireCard);
+    showCard(0);
+  }
+</script>
+
+<style>
+  .review-shell {
+    max-width: 720px;
+    margin: 3rem auto 4rem;
+    padding: 0 1.5rem;
+  }
+  .review-header {
+    margin-bottom: 2rem;
+  }
+  .review-header h1 {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    margin: 0 0 0.35rem;
+  }
+  .review-counter {
+    margin: 0;
+    font-family: var(--font-game);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.95rem;
+    color: var(--site-fg-muted);
+  }
+
+  .review-card {
+    border: 1px solid var(--site-border);
+    border-radius: var(--radius-lg);
+    background: var(--demo-card);
+    padding: 1.75rem 1.75rem 1.5rem;
+  }
+  .review-prompt {
+    font-size: 1.05rem;
+    line-height: 1.65;
+  }
+  .review-prompt :global(p:first-child) { margin-top: 0; }
+  .review-prompt :global(p:last-child) { margin-bottom: 0; }
+  .review-prompt :global(code) {
+    font-size: 0.92em;
+    padding: 0.1em 0.35em;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--site-fg) 8%, transparent);
+  }
+
+  /* Revealed answer block. */
+  .review-answer {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--site-border);
+  }
+  .answer-line {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+  .answer-label {
+    color: var(--site-fg-muted);
+  }
+  .answer-value {
+    font-family: var(--font-game);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--site-fg);
+  }
+  .answer-options {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+  }
+  .answer-option {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--site-border);
+    border-radius: var(--radius-md);
+    color: var(--site-fg-muted);
+  }
+  .answer-option.correct {
+    border-color: color-mix(in srgb, var(--cta) 45%, var(--site-border));
+    background: color-mix(in srgb, var(--cta) 10%, var(--demo-card));
+    color: var(--site-fg);
+  }
+  .answer-option .opt-mark {
+    font-family: var(--font-game);
+    font-weight: 700;
+  }
+  .answer-option.correct .opt-mark { color: var(--cta-hover); }
+  .answer-option .opt-text :global(p) { margin: 0; }
+  .answer-hint {
+    margin: 1rem 0 0;
+    font-size: 0.9rem;
+    color: var(--site-fg-muted);
+    font-style: italic;
+  }
+
+  .review-controls {
+    margin-top: 1.5rem;
+  }
+
+  /* Primary CTA: the ONE green button. Reveal / continue the loop. */
+  .reveal-btn {
+    padding: 0.65rem 1.4rem;
+    border: none;
+    border-radius: var(--radius-md);
+    background: var(--cta);
+    color: var(--cta-fg);
+    font-family: var(--font-game);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background-color 140ms ease, transform 140ms ease;
+  }
+  .reveal-btn:hover { background: var(--cta-hover); transform: translateY(-1px); }
+  .reveal-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cta) 30%, transparent);
+  }
+
+  /* Confidence-rating row — mirrors Phase H's in-lesson chips. Quiet
+     outlined chips at rest; each tints toward an existing accent token on
+     hover/focus only, so the default read stays calm. Copied locally (the
+     lesson rules are scoped under .lesson-shell). */
+  .rating-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    animation: rating-row-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  @keyframes rating-row-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rating-row { animation: none; }
+  }
+  .rating-prompt {
+    font-size: 0.85rem;
+    color: var(--site-fg-muted);
+    margin: 0 0.35rem 0 0;
+  }
+  .rating-btn {
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--site-border);
+    background: var(--demo-card);
+    color: var(--site-fg-muted);
+    font-family: var(--font-game);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 140ms ease, color 140ms ease,
+      background-color 140ms ease, transform 140ms ease;
+  }
+  .rating-btn:disabled { opacity: 0.5; cursor: default; }
+  .rating-btn:not(:disabled):hover,
+  .rating-btn:not(:disabled):focus-visible {
+    color: var(--site-fg);
+    transform: translateY(-1px);
+    outline: none;
+  }
+  .rating-btn[data-rating='again']:not(:disabled):hover,
+  .rating-btn[data-rating='again']:not(:disabled):focus-visible {
+    border-color: var(--ink-coral);
+    background: color-mix(in srgb, var(--ink-coral) 12%, var(--demo-card));
+  }
+  .rating-btn[data-rating='hard']:not(:disabled):hover,
+  .rating-btn[data-rating='hard']:not(:disabled):focus-visible {
+    border-color: var(--ink-sun);
+    background: color-mix(in srgb, var(--ink-sun) 16%, var(--demo-card));
+  }
+  .rating-btn[data-rating='good']:not(:disabled):hover,
+  .rating-btn[data-rating='good']:not(:disabled):focus-visible {
+    border-color: var(--cta);
+    background: color-mix(in srgb, var(--cta) 12%, var(--demo-card));
+  }
+  .rating-btn[data-rating='easy']:not(:disabled):hover,
+  .rating-btn[data-rating='easy']:not(:disabled):focus-visible {
+    border-color: var(--ink-sea);
+    background: color-mix(in srgb, var(--ink-sea) 12%, var(--demo-card));
+  }
+  .rating-btn:focus-visible {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cta) 22%, transparent);
+  }
+
+  .review-flash {
+    margin: 0.85rem 0 0;
+    font-size: 0.85rem;
+    color: var(--ink-coral);
+  }
+
+  /* Empty / done state. Calm, author-voiced, no carnival. */
+  .review-done {
+    text-align: center;
+    padding: 3rem 1.5rem;
+  }
+  .done-line {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    margin: 0 0 0.75rem;
+  }
+  .done-sub {
+    max-width: 38ch;
+    margin: 0 auto 1.5rem;
+    color: var(--site-fg-muted);
+    line-height: 1.6;
+  }
+  .done-link {
+    display: inline-block;
+    padding: 0.55rem 1.2rem;
+    border: 1px solid var(--site-border);
+    border-radius: var(--radius-pill);
+    color: var(--site-fg);
+    text-decoration: none;
+    font-family: var(--font-game);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .done-link:hover {
+    border-color: var(--cta);
+    background: color-mix(in srgb, var(--cta) 10%, transparent);
+  }
+</style>
