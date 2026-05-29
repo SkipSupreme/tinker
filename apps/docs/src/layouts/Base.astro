@@ -42,6 +42,11 @@ const titleWithSuffix = title === 'Tinker' ? title : `${title} · Tinker`;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {/* Browser chrome (iOS Safari address/status bar) color. Left contentless
+        on purpose: the inline script below sets it from the active theme's
+        --site-bg token so global.css stays the single source of truth, and
+        re-syncs it on every theme toggle. */}
+    <meta name="theme-color" />
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content="noindex" />}
     <meta name="generator" content={Astro.generator} />
@@ -70,6 +75,31 @@ const titleWithSuffix = title === 'Tinker' ? title : `${title} · Tinker`;
         } catch (_) {
           document.documentElement.dataset.theme = 'light';
         }
+      })();
+    </script>
+    {/* Keep the browser chrome (iOS address/status bar) matching the theme.
+        Reads the active theme's --site-bg token and writes it to the
+        theme-color meta on load and on every toggle, so the browser UI goes
+        dark with the page instead of staying light. */}
+    <script is:inline>
+      (function () {
+        function sync() {
+          var bg = getComputedStyle(document.documentElement)
+            .getPropertyValue('--site-bg').trim();
+          if (!bg) return;
+          var m = document.querySelector('meta[name="theme-color"]');
+          if (m) m.setAttribute('content', bg);
+        }
+        // Best-effort now (if styles are already parsed), then once on load,
+        // then on every data-theme flip from the theme toggle.
+        sync();
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', sync);
+        }
+        new MutationObserver(sync).observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ['data-theme'],
+        });
       })();
     </script>
     {/* Catch otherwise-silent rejections from `void asyncFn()` patterns + unhandled errors. */}
