@@ -2,14 +2,12 @@
   import { getSessionUser, type SessionUser as User } from '../../lib/auth-state';
 
   let user = $state<User | null>(null);
-  let loaded = $state(false);
   let open = $state(false);
 
   async function loadSession() {
     // Shared, memoized get-session check (also used to gate authed-only
     // fetches elsewhere), so the whole page makes one session request.
     user = await getSessionUser();
-    loaded = true;
   }
 
   async function signOut() {
@@ -49,9 +47,11 @@
 </script>
 
 <div class="usermenu-root">
-  {#if !loaded}
-    <span class="placeholder" aria-hidden="true"></span>
-  {:else if user}
+  <!-- No loading placeholder: an anonymous visitor (the common case, and the
+       SSR default) would otherwise see a gray circle paint then vanish on
+       hydration. Render nothing until a real user is confirmed; the avatar
+       pops in for signed-in users. Anon "Sign in" lives in Nav's .auth-slot. -->
+  {#if user}
     <button
       class="avatar-btn"
       type="button"
@@ -90,13 +90,6 @@
     align-items: center;
     gap: 0.5rem;
     position: relative;
-  }
-  .placeholder {
-    display: inline-block;
-    width: 2rem;
-    height: 2rem;
-    border-radius: 50%;
-    background: var(--site-surface);
   }
   .avatar-btn {
     width: 2rem;

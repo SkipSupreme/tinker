@@ -63,40 +63,32 @@ const titleWithSuffix = title === 'Tinker' ? title : `${title} · Tinker`;
     />
     <title>{titleWithSuffix}</title>
 
-    {/* FOUC-free theme init: must run before paint. */}
+    {/* FOUC-free theme init + browser-chrome (theme-color) sync. BOTH must run
+        before first paint, so this CANNOT depend on global.css being parsed
+        yet — Astro injects that stylesheet AFTER this inline script, so
+        getComputedStyle('--site-bg') is empty here. We set theme-color from
+        literal values instead; iOS Safari only registers a theme-color that
+        has content at first paint, then it honors later updates. The two
+        values mirror --site-bg in global.css — keep them in sync. */}
     <script is:inline>
       (function () {
-        try {
-          // Default to light mode. Only an explicit saved choice from the
-          // theme toggle overrides it; OS prefers-color-scheme is ignored.
-          var saved = localStorage.getItem('theme');
-          document.documentElement.dataset.theme =
-            saved === 'dark' || saved === 'light' ? saved : 'light';
-        } catch (_) {
-          document.documentElement.dataset.theme = 'light';
-        }
-      })();
-    </script>
-    {/* Keep the browser chrome (iOS address/status bar) matching the theme.
-        Reads the active theme's --site-bg token and writes it to the
-        theme-color meta on load and on every toggle, so the browser UI goes
-        dark with the page instead of staying light. */}
-    <script is:inline>
-      (function () {
-        function sync() {
-          var bg = getComputedStyle(document.documentElement)
-            .getPropertyValue('--site-bg').trim();
-          if (!bg) return;
+        var THEME_COLORS = { light: '#fdfdfc', dark: '#0e0f10' };
+        function syncChrome() {
+          var t = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
           var m = document.querySelector('meta[name="theme-color"]');
-          if (m) m.setAttribute('content', bg);
+          if (m) m.setAttribute('content', THEME_COLORS[t]);
         }
-        // Best-effort now (if styles are already parsed), then once on load,
-        // then on every data-theme flip from the theme toggle.
-        sync();
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', sync);
-        }
-        new MutationObserver(sync).observe(document.documentElement, {
+        var saved;
+        try { saved = localStorage.getItem('theme'); } catch (_) {}
+        // Default to light; only an explicit saved choice overrides it (OS
+        // prefers-color-scheme is intentionally ignored).
+        document.documentElement.dataset.theme =
+          saved === 'dark' || saved === 'light' ? saved : 'light';
+        // Color the address/status bar before paint.
+        syncChrome();
+        // Re-sync the meta ONLY (never touches data-theme, so no observer
+        // loop) whenever the theme toggle flips data-theme.
+        new MutationObserver(syncChrome).observe(document.documentElement, {
           attributes: true,
           attributeFilter: ['data-theme'],
         });
