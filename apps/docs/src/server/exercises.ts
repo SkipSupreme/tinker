@@ -2,6 +2,9 @@ import { and, desc, eq, max } from 'drizzle-orm';
 import { exerciseAnswer } from './schema';
 import type { DB } from './db';
 
+export const EXERCISE_ANSWER_MAX_BYTES = 16_384;
+const utf8 = new TextEncoder();
+
 export interface ExerciseSubmission {
   lessonSlug: string;
   exerciseId: string;
@@ -9,11 +12,44 @@ export interface ExerciseSubmission {
   isCorrect: boolean | null;
 }
 
+export type ExerciseAnswerPayloadErrorReason = 'non_serializable' | 'missing' | 'too_large';
+
+export class ExerciseAnswerPayloadError extends Error {
+  constructor(
+    readonly reason: ExerciseAnswerPayloadErrorReason,
+    readonly byteLength?: number,
+  ) {
+    super(`Invalid exercise answer payload: ${reason}`);
+    this.name = 'ExerciseAnswerPayloadError';
+  }
+}
+
+export function serializeExerciseAnswer(answerJson: unknown): string {
+  let serialized: string | undefined;
+  try {
+    serialized = JSON.stringify(answerJson);
+  } catch {
+    throw new ExerciseAnswerPayloadError('non_serializable');
+  }
+
+  if (!serialized) {
+    throw new ExerciseAnswerPayloadError('missing');
+  }
+
+  const byteLength = utf8.encode(serialized).byteLength;
+  if (byteLength > EXERCISE_ANSWER_MAX_BYTES) {
+    throw new ExerciseAnswerPayloadError('too_large', byteLength);
+  }
+
+  return serialized;
+}
+
 export async function recordExerciseAnswer(
   db: DB,
   userId: string,
   s: ExerciseSubmission,
 ): Promise<{ id: string; attemptNo: number }> {
+  const serializedAnswer = serializeExerciseAnswer(s.answerJson);
   // Find the highest attemptNo for this (user, lesson, exercise)
   const prev = await db
     .select({ n: max(exerciseAnswer.attemptNo) })
@@ -33,7 +69,7 @@ export async function recordExerciseAnswer(
     userId,
     lessonSlug: s.lessonSlug,
     exerciseId: s.exerciseId,
-    answerJson: JSON.stringify(s.answerJson),
+    answerJson: serializedAnswer,
     isCorrect: s.isCorrect,
     attemptNo,
     createdAt: new Date(),

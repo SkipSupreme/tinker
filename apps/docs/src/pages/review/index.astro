@@ -251,7 +251,7 @@ const retained = await countRetainedSkills(db, session.user.id);
         const rating = btn.dataset.rating as Rating;
 
         // Disable all rating buttons while the request is in flight to block
-        // double-submit; re-enable only on a recoverable error (429).
+        // double-submit. Re-enable unless the server confirms the grade saved.
         for (const b of ratingBtns) b.disabled = true;
         setFlash(null);
 
@@ -264,10 +264,9 @@ const retained = await countRetainedSkills(db, session.user.id);
             body: JSON.stringify({ step_id: stepId, rating }),
           });
         } catch (err) {
-          // Network failure: don't trap the learner; log and advance.
           console.error('[review] grade request failed', err);
-          graded.add(i);
-          advance();
+          setFlash("Couldn't save that review. Check your connection and try again.");
+          for (const b of ratingBtns) b.disabled = false;
           return;
         }
 
@@ -278,11 +277,20 @@ const retained = await countRetainedSkills(db, session.user.id);
           return;
         }
 
-        // ok or 404 (card vanished server-side): advance either way. Other
-        // errors: log but still advance so the user isn't stuck.
-        if (!res.ok && res.status !== 404) {
-          console.error('[review] grade returned', res.status);
+        if (res.status === 404) {
+          setFlash('This card is no longer in your review queue. Skipping it.');
+          graded.add(i);
+          window.setTimeout(() => advance(), 900);
+          return;
         }
+
+        if (!res.ok) {
+          console.error('[review] grade returned', res.status);
+          setFlash("Couldn't save that review. Try again in a moment.");
+          for (const b of ratingBtns) b.disabled = false;
+          return;
+        }
+
         graded.add(i);
         play('tick');
         advance();

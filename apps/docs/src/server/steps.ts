@@ -1,5 +1,5 @@
 import { and, asc, eq, inArray, lte, max } from 'drizzle-orm';
-import { fsrsCard, stepCheck } from './schema';
+import { fsrsCard, stepCheck, stepIdAlias } from './schema';
 import type { DB } from './db';
 import {
   retrievability,
@@ -112,6 +112,66 @@ async function nextAttemptNo(db: DB, userId: string, stepId: string): Promise<nu
     .where(and(eq(stepCheck.userId, userId), eq(stepCheck.stepId, stepId)))
     .get();
   return (prev?.n ?? 0) + 1;
+}
+
+async function resolveDueCardAliases(db: DB, rows: Array<{
+  stepId: string;
+  lessonSlug: string;
+  moduleSlug: string;
+  due: Date;
+  state: number;
+  reps: number;
+  lapses: number;
+}>): Promise<DueCardSummary[]> {
+  if (rows.length === 0) return [];
+
+  const aliases = await db
+    .select({
+      oldStepId: stepIdAlias.oldStepId,
+      newStepId: stepIdAlias.newStepId,
+    })
+    .from(stepIdAlias)
+    .where(inArray(stepIdAlias.oldStepId, rows.map((r) => r.stepId)));
+  const byOldId = new Map(aliases.map((a) => [a.oldStepId, a.newStepId]));
+
+  return rows.map((r) => ({
+    stepId: byOldId.get(r.stepId) ?? r.stepId,
+    lessonSlug: r.lessonSlug,
+    moduleSlug: r.moduleSlug,
+    due: r.due,
+    state: r.state as 0 | 1 | 2 | 3,
+    reps: r.reps,
+    lapses: r.lapses,
+  }));
+}
+
+async function findReviewCard(
+  db: DB,
+  userId: string,
+  stepId: string,
+): Promise<{ row: typeof fsrsCard.$inferSelect; responseStepId: string } | null> {
+  const direct = await db
+    .select()
+    .from(fsrsCard)
+    .where(and(eq(fsrsCard.userId, userId), eq(fsrsCard.stepId, stepId)))
+    .get();
+  if (direct) return { row: direct, responseStepId: stepId };
+
+  const aliases = await db
+    .select({ oldStepId: stepIdAlias.oldStepId })
+    .from(stepIdAlias)
+    .where(eq(stepIdAlias.newStepId, stepId));
+
+  for (const alias of aliases) {
+    const row = await db
+      .select()
+      .from(fsrsCard)
+      .where(and(eq(fsrsCard.userId, userId), eq(fsrsCard.stepId, alias.oldStepId)))
+      .get();
+    if (row) return { row, responseStepId: stepId };
+  }
+
+  return null;
 }
 
 /**
@@ -236,27 +296,24 @@ export async function gradeReviewCard(
   rating: FsrsRating,
   now: Date = new Date(),
 ): Promise<ReviewGradeResult> {
-  const existing = await db
-    .select()
-    .from(fsrsCard)
-    .where(and(eq(fsrsCard.userId, userId), eq(fsrsCard.stepId, stepId)))
-    .get();
+  const found = await findReviewCard(db, userId, stepId);
 
-  if (!existing) {
+  if (!found) {
     throw new FsrsCardNotFoundError(userId, stepId);
   }
 
+  const existing = found.row;
   const prior = readFsrsRow(existing);
   const { card: next } = scheduleNext(prior, rating, now);
 
-  await upsertCard(db, userId, stepId, existing.lessonSlug, existing.moduleSlug, next);
+  await upsertCard(db, userId, existing.stepId, existing.lessonSlug, existing.moduleSlug, next);
 
-  const attemptNo = await nextAttemptNo(db, userId, stepId);
+  const attemptNo = await nextAttemptNo(db, userId, existing.stepId);
   await db.insert(stepCheck).values({
     id: crypto.randomUUID(),
     userId,
     lessonSlug: existing.lessonSlug,
-    stepId,
+    stepId: existing.stepId,
     // Sentinel meaning "this attempt came from /review, no actual answer
     // was re-submitted." Distinct from a real lesson submission so a
     // future review-history view can filter.
@@ -271,7 +328,7 @@ export async function gradeReviewCard(
   });
 
   return {
-    stepId,
+    stepId: found.responseStepId,
     due: next.due,
     state: next.state,
     reps: next.reps,
@@ -306,15 +363,7 @@ export async function getDueCards(
     .orderBy(asc(fsrsCard.due))
     .limit(limit);
 
-  return rows.map((r) => ({
-    stepId: r.stepId,
-    lessonSlug: r.lessonSlug,
-    moduleSlug: r.moduleSlug,
-    due: r.due,
-    state: r.state as 0 | 1 | 2 | 3,
-    reps: r.reps,
-    lapses: r.lapses,
-  }));
+  return resolveDueCardAliases(db, rows);
 }
 
 /**
@@ -356,15 +405,7 @@ export async function getDueCardsForModules(
     .orderBy(asc(fsrsCard.due))
     .limit(limit);
 
-  return rows.map((r) => ({
-    stepId: r.stepId,
-    lessonSlug: r.lessonSlug,
-    moduleSlug: r.moduleSlug,
-    due: r.due,
-    state: r.state as 0 | 1 | 2 | 3,
-    reps: r.reps,
-    lapses: r.lapses,
-  }));
+  return resolveDueCardAliases(db, rows);
 }
 
 /**

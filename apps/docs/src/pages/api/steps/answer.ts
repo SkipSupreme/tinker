@@ -1,10 +1,12 @@
 import type { APIRoute } from 'astro';
+import { getCollection } from 'astro:content';
 import { z } from 'zod';
 import { requireSession, requireCsrf, jsonError, jsonOk } from '../../../server/middleware';
 import { checkRateLimit } from '../../../server/ratelimit';
 import { recordStepAttempt } from '../../../server/steps';
 import { getEnv } from '../../../server/env';
-import { isKnownLesson, withApiErrors } from '../../../server/lesson-slugs';
+import { withApiErrors } from '../../../server/lesson-slugs';
+import { resolveKnownStep } from '../../../server/step-manifest';
 
 export const prerender = false;
 
@@ -16,6 +18,20 @@ const Body = z.object({
   is_correct: z.boolean(),
   rating: z.enum(['again', 'hard', 'good', 'easy']).optional(),
 });
+
+let lessonModuleCache: Map<string, string> | null = null;
+let lessonModulePromise: Promise<Map<string, string>> | null = null;
+
+async function loadLessonModules(): Promise<Map<string, string>> {
+  if (lessonModuleCache) return lessonModuleCache;
+  if (lessonModulePromise) return lessonModulePromise;
+  lessonModulePromise = (async () => {
+    const lessons = await getCollection('lessons', (l) => !l.data.draft);
+    lessonModuleCache = new Map(lessons.map((l) => [l.id, l.data.module]));
+    return lessonModuleCache;
+  })();
+  return lessonModulePromise;
+}
 
 export const POST: APIRoute = async ({ request }) => {
   const env = getEnv();
@@ -40,15 +56,25 @@ export const POST: APIRoute = async ({ request }) => {
   const parsed = Body.safeParse(body);
   if (!parsed.success) return jsonError(400, 'bad_request', 'Invalid payload');
 
-  if (!(await isKnownLesson(parsed.data.lesson_slug))) {
-    return jsonError(404, 'unknown_lesson', 'Unknown lesson slug');
-  }
-
   return withApiErrors('steps/answer', ctx.session.user.id, async () => {
+    const knownStep = resolveKnownStep(parsed.data.step_id, parsed.data.lesson_slug);
+    if (!knownStep) {
+      return jsonError(404, 'unknown_step', 'Unknown step for this lesson');
+    }
+
+    const lessonModules = await loadLessonModules();
+    const moduleSlug = lessonModules.get(parsed.data.lesson_slug);
+    if (!moduleSlug) {
+      return jsonError(404, 'unknown_lesson', 'Unknown lesson slug');
+    }
+    if (parsed.data.module_slug !== moduleSlug) {
+      return jsonError(400, 'bad_request', 'module_slug does not match lesson');
+    }
+
     const r = await recordStepAttempt(ctx.db, ctx.session.user.id, {
       stepId: parsed.data.step_id,
       lessonSlug: parsed.data.lesson_slug,
-      moduleSlug: parsed.data.module_slug,
+      moduleSlug,
       answer: parsed.data.answer,
       isCorrect: parsed.data.is_correct,
       rating: parsed.data.rating,

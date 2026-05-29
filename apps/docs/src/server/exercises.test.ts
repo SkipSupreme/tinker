@@ -1,7 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { makeTestDb, type TestDb } from '../../tests/support/d1';
 import { user as userTbl } from './schema';
-import { recordExerciseAnswer, getLatestAnswers } from './exercises';
+import {
+  EXERCISE_ANSWER_MAX_BYTES,
+  ExerciseAnswerPayloadError,
+  recordExerciseAnswer,
+  getLatestAnswers,
+  serializeExerciseAnswer,
+} from './exercises';
 
 let db: TestDb;
 const USER = 'u-exercise';
@@ -61,6 +67,32 @@ describe('recordExerciseAnswer', () => {
       isCorrect: false,
     });
     expect(otherExercise.attemptNo).toBe(1);
+  });
+
+  it('rejects oversized answer_json before writing', async () => {
+    await expect(
+      recordExerciseAnswer(db.client, USER, {
+        lessonSlug: 'derivative',
+        exerciseId: 'q1',
+        answerJson: { value: 'x'.repeat(EXERCISE_ANSWER_MAX_BYTES) },
+        isCorrect: false,
+      }),
+    ).rejects.toMatchObject({
+      name: 'ExerciseAnswerPayloadError',
+      reason: 'too_large',
+    });
+  });
+});
+
+describe('serializeExerciseAnswer', () => {
+  it('serializes bounded JSON payloads', () => {
+    expect(serializeExerciseAnswer({ value: 42 })).toBe('{"value":42}');
+  });
+
+  it('throws a typed error for oversized payloads', () => {
+    expect(() =>
+      serializeExerciseAnswer({ value: 'x'.repeat(EXERCISE_ANSWER_MAX_BYTES) }),
+    ).toThrow(ExerciseAnswerPayloadError);
   });
 });
 

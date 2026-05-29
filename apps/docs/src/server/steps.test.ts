@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { and, eq } from 'drizzle-orm';
 import { makeTestDb, type TestDb } from '../../tests/support/d1';
-import { user as userTbl, fsrsCard, stepCheck } from './schema';
+import { user as userTbl, fsrsCard, stepCheck, stepIdAlias } from './schema';
 import {
   FsrsCardNotFoundError,
   getDueCards,
@@ -300,6 +300,45 @@ describe('gradeReviewCard', () => {
     expect(reviewRow.isCorrect).toBe(false);
     expect(reviewRow.rating).toBe('again');
   });
+
+  it('accepts a canonical step id when the stored card uses an old alias', async () => {
+    const oldStepId = 'old-lesson#old-step';
+    const newStepId = 'new-lesson#new-step';
+    await db.client.insert(stepIdAlias).values({
+      oldStepId,
+      newStepId,
+      renamedAt: NOW,
+    });
+    await recordStepAttempt(
+      db.client,
+      USER,
+      {
+        stepId: oldStepId,
+        lessonSlug: LESSON,
+        moduleSlug: MODULE,
+        answer: '3/4',
+        isCorrect: true,
+      },
+      NOW,
+    );
+
+    const r = await gradeReviewCard(
+      db.client,
+      USER,
+      newStepId,
+      'good',
+      new Date(NOW.getTime() + 10 * DAY_MS),
+    );
+    expect(r.stepId).toBe(newStepId);
+
+    const checks = await db.client
+      .select()
+      .from(stepCheck)
+      .where(and(eq(stepCheck.userId, USER), eq(stepCheck.stepId, oldStepId)));
+    expect(checks).toHaveLength(2);
+    const reviewRow = checks.find((c) => c.attemptNo === 2);
+    expect(reviewRow?.rating).toBe('good');
+  });
 });
 
 describe('getDueCards', () => {
@@ -405,5 +444,36 @@ describe('getDueCards', () => {
       new Date(NOW.getTime() + 30 * DAY_MS),
     );
     expect(list).toHaveLength(2);
+  });
+
+  it('returns canonical step ids for due cards stored under old aliases', async () => {
+    const oldStepId = 'old-lesson#old-step';
+    const newStepId = 'new-lesson#new-step';
+    await db.client.insert(stepIdAlias).values({
+      oldStepId,
+      newStepId,
+      renamedAt: NOW,
+    });
+    await recordStepAttempt(
+      db.client,
+      USER,
+      {
+        stepId: oldStepId,
+        lessonSlug: LESSON,
+        moduleSlug: MODULE,
+        answer: 'x',
+        isCorrect: true,
+      },
+      NOW,
+    );
+
+    const list = await getDueCards(
+      db.client,
+      USER,
+      20,
+      new Date(NOW.getTime() + 30 * DAY_MS),
+    );
+    expect(list).toHaveLength(1);
+    expect(list[0].stepId).toBe(newStepId);
   });
 });

@@ -2,7 +2,12 @@ import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { requireSession, requireCsrf, jsonError, jsonOk } from '../../../server/middleware';
 import { checkRateLimit } from '../../../server/ratelimit';
-import { recordExerciseAnswer } from '../../../server/exercises';
+import {
+  EXERCISE_ANSWER_MAX_BYTES,
+  ExerciseAnswerPayloadError,
+  recordExerciseAnswer,
+  serializeExerciseAnswer,
+} from '../../../server/exercises';
 import { getEnv } from '../../../server/env';
 import { isKnownLesson, withApiErrors } from '../../../server/lesson-slugs';
 
@@ -42,16 +47,20 @@ export const POST: APIRoute = async ({ request }) => {
     return jsonError(404, 'unknown_lesson', 'Unknown lesson slug');
   }
 
-  // Reject non-serializable payloads up front so we don't 500 on
-  // JSON.stringify mid-write (BigInt, circular refs, etc.).
-  let serialized: string;
+  // Reject non-serializable or oversized payloads before writing. The service
+  // layer enforces the same cap for defense-in-depth.
   try {
-    serialized = JSON.stringify(parsed.data.answer_json);
-  } catch {
+    serializeExerciseAnswer(parsed.data.answer_json);
+  } catch (e) {
+    if (e instanceof ExerciseAnswerPayloadError) {
+      if (e.reason === 'too_large') {
+        return jsonError(413, 'too_large', `answer_json exceeds ${EXERCISE_ANSWER_MAX_BYTES} bytes`);
+      }
+      if (e.reason === 'missing') {
+        return jsonError(400, 'bad_request', 'answer_json is required');
+      }
+    }
     return jsonError(400, 'bad_request', 'answer_json is not JSON-serializable');
-  }
-  if (!serialized) {
-    return jsonError(400, 'bad_request', 'answer_json is required');
   }
 
   return withApiErrors('exercises/answer', ctx.session.user.id, async () => {
