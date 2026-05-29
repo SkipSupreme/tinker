@@ -32,21 +32,12 @@ try {
 
     <div class="spacer"></div>
 
+    {/* Anon-only: the "Sign in" pill. The signed-in avatar + dropdown is the
+        <UserMenu> island below — having a user-link avatar here too produced
+        two avatars side by side. data-auth-state flips to "user" for a
+        signed-in visitor (CSS hides the pill), leaving UserMenu's avatar as
+        the single account control. */}
     <div class="auth-slot" data-auth-state={user ? 'user' : 'anon'}>
-      <a
-        href="/me"
-        class="user-link"
-        aria-label="Your account"
-        data-auth-show="user"
-        data-user-link
-      >
-        <span class="user-dot" aria-hidden="true" data-user-initial>
-          {user ? (user.name || user.email).slice(0, 1).toUpperCase() : ''}
-        </span>
-        <span class="user-name" data-user-name>
-          {user ? user.name || user.email.split('@')[0] : ''}
-        </span>
-      </a>
       <span class="auth-links" data-auth-show="anon">
         <a href="/auth?mode=signin" class="auth-cta">Sign in</a>
       </span>
@@ -143,33 +134,6 @@ try {
     background: var(--cta-hover);
     border-color: var(--cta-hover);
   }
-  .user-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    color: var(--site-fg);
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 600;
-    padding: 0.3rem 0.6rem 0.3rem 0.3rem;
-    border-radius: 999px;
-    border: 1.5px solid var(--site-border);
-  }
-  .user-link:hover {
-    background: var(--site-surface);
-  }
-  .user-dot {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.6rem;
-    height: 1.6rem;
-    border-radius: 999px;
-    background: var(--ink-red);
-    color: white;
-    font-weight: 700;
-    font-size: 0.78rem;
-  }
 
   /* Mobile: collapse the nav to its essentials. "Sign in" + "Sign up"
      side-by-side eats the whole row. Keep brand + primary CTA + theme toggle. */
@@ -179,7 +143,6 @@ try {
       padding: 0.5rem 0.85rem;
     }
     .auth-link { display: none; }
-    .user-name { display: none; }
     .wordmark { font-size: 1.05rem; }
     .brand-mark { width: 36px; height: 36px; }
     .auth-cta {
@@ -196,30 +159,16 @@ try {
 <script>
   /**
    * Auth hydration. Prerendered pages bake `data-auth-state="anon"` at build
-   * time, so a logged-in visitor would otherwise see "Sign in / Sign up".
-   * We fetch the session and flip the slot if there's a user. Skipped when
-   * the server already rendered "user" (dynamic pages got it right).
-   *
-   * The visible XP counter was removed in Phase G (mastery framing replaces
-   * the points economy); awardXp / tinker:xp still fire but no longer have a
-   * visible listener.
+   * time, so a logged-in visitor would otherwise see the "Sign in" pill. Flip
+   * the slot to "user" (CSS hides the pill) when there's a session; the avatar
+   * itself is rendered by the <UserMenu> island. Reuses the shared, memoized
+   * session check so the whole page makes a single get-session request.
    */
-  type SessionResponse = { user?: { name?: string; email: string } };
+  import { getSessionUser } from '../lib/auth-state';
   const slot = document.querySelector<HTMLElement>('.auth-slot');
   if (slot && slot.dataset.authState !== 'user') {
-    fetch('/api/auth/get-session', { credentials: 'include' })
-      .then((r) => (r.ok ? r.json() as Promise<SessionResponse> : null))
-      .then((data) => {
-        const user = data?.user;
-        if (!user) return;
-        const display = user.name || user.email.split('@')[0];
-        const initial = (user.name || user.email).slice(0, 1).toUpperCase();
-        slot.querySelector<HTMLElement>('[data-user-initial]')!.textContent = initial;
-        slot.querySelector<HTMLElement>('[data-user-name]')!.textContent = display;
-        slot.dataset.authState = 'user';
-      })
-      .catch(() => {
-        /* network failure: leave anon state */
-      });
+    getSessionUser().then((user) => {
+      if (user) slot.dataset.authState = 'user';
+    });
   }
 </script>
