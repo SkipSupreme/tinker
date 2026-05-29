@@ -19,6 +19,25 @@ const STEP = 'a-fraction-is-one-number#reduce-18-over-24';
 const LESSON = 'a-fraction-is-one-number';
 const MODULE = 'fractions';
 
+async function insertFsrsCard(stepId: string, due: Date, reps = 1): Promise<void> {
+  await db.client.insert(fsrsCard).values({
+    userId: USER,
+    stepId,
+    lessonSlug: LESSON,
+    moduleSlug: MODULE,
+    knowledgeType: null,
+    due,
+    stability: 1,
+    difficulty: 5,
+    elapsedDays: 0,
+    scheduledDays: 1,
+    reps,
+    lapses: 0,
+    state: 2,
+    lastReview: NOW,
+  });
+}
+
 beforeEach(async () => {
   db = makeTestDb();
   const now = new Date();
@@ -339,6 +358,45 @@ describe('gradeReviewCard', () => {
     const reviewRow = checks.find((c) => c.attemptNo === 2);
     expect(reviewRow?.rating).toBe('good');
   });
+
+  it('grades the aliased row selected by the due queue and prunes duplicate forks', async () => {
+    const oldStepId = 'old-lesson#duplicate-step';
+    const newStepId = 'new-lesson#duplicate-step';
+
+    await insertFsrsCard(oldStepId, new Date(NOW.getTime() - 3 * DAY_MS), 8);
+    await insertFsrsCard(newStepId, new Date(NOW.getTime() - 2 * DAY_MS), 1);
+    await db.client.insert(stepIdAlias).values({
+      oldStepId,
+      newStepId,
+      renamedAt: NOW,
+    });
+
+    const queued = await getDueCards(db.client, USER, 10, NOW);
+    expect(queued.filter((c) => c.stepId === newStepId)).toHaveLength(1);
+
+    const beforeOld = db.client
+      .select()
+      .from(fsrsCard)
+      .where(and(eq(fsrsCard.userId, USER), eq(fsrsCard.stepId, oldStepId)))
+      .get();
+    expect(beforeOld).toBeTruthy();
+
+    const graded = await gradeReviewCard(db.client, USER, newStepId, 'good', NOW);
+    expect(graded.stepId).toBe(newStepId);
+
+    const oldRows = await db.client
+      .select()
+      .from(fsrsCard)
+      .where(and(eq(fsrsCard.userId, USER), eq(fsrsCard.stepId, oldStepId)));
+    const newRows = await db.client
+      .select()
+      .from(fsrsCard)
+      .where(and(eq(fsrsCard.userId, USER), eq(fsrsCard.stepId, newStepId)));
+
+    expect(oldRows).toHaveLength(1);
+    expect(oldRows[0].reps).toBeGreaterThan(beforeOld!.reps);
+    expect(newRows).toHaveLength(0);
+  });
 });
 
 describe('getDueCards', () => {
@@ -475,5 +533,22 @@ describe('getDueCards', () => {
     );
     expect(list).toHaveLength(1);
     expect(list[0].stepId).toBe(newStepId);
+  });
+
+  it('fills the requested limit after alias dedupe', async () => {
+    const oldStepId = 'old-lesson#dedupe-step';
+    const newStepId = 'new-lesson#dedupe-step';
+    await db.client.insert(stepIdAlias).values({
+      oldStepId,
+      newStepId,
+      renamedAt: NOW,
+    });
+
+    await insertFsrsCard(oldStepId, new Date(NOW.getTime() - 3 * DAY_MS), 2);
+    await insertFsrsCard(newStepId, new Date(NOW.getTime() - 2 * DAY_MS), 1);
+    await insertFsrsCard('another-due-step', new Date(NOW.getTime() - DAY_MS), 1);
+
+    const list = await getDueCards(db.client, USER, 2, NOW);
+    expect(list.map((c) => c.stepId)).toEqual([newStepId, 'another-due-step']);
   });
 });

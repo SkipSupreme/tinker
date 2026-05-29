@@ -91,7 +91,19 @@ const REVIEW_CONTEXT_SENTINEL = '{"context":"review"}';
 // >= 90% right now. Backs the Phase G mastery signal; see plan.
 const RETAINED_RETRIEVABILITY = 0.9;
 
-function readFsrsRow(row: typeof fsrsCard.$inferSelect): FsrsCardState {
+type FsrsRow = typeof fsrsCard.$inferSelect;
+
+type DueCardRow = {
+  stepId: string;
+  lessonSlug: string;
+  moduleSlug: string;
+  due: Date;
+  state: number;
+  reps: number;
+  lapses: number;
+};
+
+function readFsrsRow(row: FsrsRow): FsrsCardState {
   return {
     due: row.due,
     stability: row.stability,
@@ -114,15 +126,71 @@ async function nextAttemptNo(db: DB, userId: string, stepId: string): Promise<nu
   return (prev?.n ?? 0) + 1;
 }
 
-async function resolveDueCardAliases(db: DB, rows: Array<{
-  stepId: string;
-  lessonSlug: string;
-  moduleSlug: string;
-  due: Date;
-  state: number;
-  reps: number;
-  lapses: number;
-}>): Promise<DueCardSummary[]> {
+function isUniqueViolation(e: unknown): boolean {
+  const msg = e instanceof Error ? e.message : String(e);
+  return /UNIQUE constraint failed/i.test(msg);
+}
+
+/**
+ * Insert a step_check audit row with a computed attemptNo (MAX+1). Two
+ * concurrent submissions for the same (user, step) can compute the same
+ * attemptNo; the step_check_user_step_attempt UNIQUE index then makes the
+ * loser's insert fail, and we retry with a freshly recomputed number instead
+ * of writing a silent duplicate (or 500ing). Returns the attemptNo used.
+ */
+async function insertStepCheck(
+  db: DB,
+  row: {
+    userId: string;
+    lessonSlug: string;
+    stepId: string;
+    answerJson: string;
+    isCorrect: boolean;
+    rating: FsrsRating;
+    createdAt: Date;
+  },
+): Promise<number> {
+  for (let i = 0; ; i++) {
+    const attemptNo = await nextAttemptNo(db, row.userId, row.stepId);
+    try {
+      await db.insert(stepCheck).values({ id: crypto.randomUUID(), ...row, attemptNo });
+      return attemptNo;
+    } catch (e) {
+      if (i < 3 && isUniqueViolation(e)) continue;
+      throw e;
+    }
+  }
+}
+
+function compareFsrsRows(a: Pick<FsrsRow, 'due' | 'reps' | 'lapses' | 'stepId'>, b: Pick<FsrsRow, 'due' | 'reps' | 'lapses' | 'stepId'>): number {
+  const due = a.due.getTime() - b.due.getTime();
+  if (due !== 0) return due;
+  const reps = b.reps - a.reps;
+  if (reps !== 0) return reps;
+  const lapses = b.lapses - a.lapses;
+  if (lapses !== 0) return lapses;
+  return a.stepId.localeCompare(b.stepId);
+}
+
+async function canonicalStepId(db: DB, stepId: string): Promise<string> {
+  const alias = await db
+    .select({ newStepId: stepIdAlias.newStepId })
+    .from(stepIdAlias)
+    .where(eq(stepIdAlias.oldStepId, stepId))
+    .get();
+  return alias?.newStepId ?? stepId;
+}
+
+async function candidateStepIdsForCanonical(db: DB, canonical: string): Promise<string[]> {
+  const aliases = await db
+    .select({ oldStepId: stepIdAlias.oldStepId })
+    .from(stepIdAlias)
+    .where(eq(stepIdAlias.newStepId, canonical))
+    .orderBy(asc(stepIdAlias.oldStepId));
+  return Array.from(new Set([canonical, ...aliases.map((a) => a.oldStepId)]));
+}
+
+async function resolveDueCardAliases(db: DB, rows: DueCardRow[]): Promise<DueCardSummary[]> {
   if (rows.length === 0) return [];
 
   const aliases = await db
@@ -144,53 +212,43 @@ async function resolveDueCardAliases(db: DB, rows: Array<{
     lapses: r.lapses,
   }));
 
-  // Collapse cards that resolve to the same canonical step id to ONE entry,
-  // else /review renders two identical prompts (e.g. a pre-existing orphaned
-  // old-id card alongside its renamed new-id card, or a many-to-one merge).
-  // Callers pass rows oldest-due first, so the first occurrence is the most
-  // overdue — keep that one. In the common (no-alias) case every stepId is
-  // already unique, so this is a no-op.
-  const seen = new Set<string>();
-  const deduped: DueCardSummary[] = [];
+  const byCanonical = new Map<string, DueCardSummary>();
   for (const m of mapped) {
-    if (seen.has(m.stepId)) continue;
-    seen.add(m.stepId);
-    deduped.push(m);
+    const existing = byCanonical.get(m.stepId);
+    if (!existing || compareFsrsRows(m, existing) < 0) {
+      byCanonical.set(m.stepId, m);
+    }
   }
-  return deduped;
+  return [...byCanonical.values()].sort(compareFsrsRows);
 }
 
 async function findReviewCard(
   db: DB,
   userId: string,
   stepId: string,
-): Promise<{ row: typeof fsrsCard.$inferSelect; responseStepId: string } | null> {
-  const direct = await db
+): Promise<{ row: FsrsRow; responseStepId: string; duplicateStepIds: string[] } | null> {
+  const responseStepId = await canonicalStepId(db, stepId);
+  const candidateStepIds = await candidateStepIdsForCanonical(db, responseStepId);
+  const rows = await db
     .select()
     .from(fsrsCard)
-    .where(and(eq(fsrsCard.userId, userId), eq(fsrsCard.stepId, stepId)))
-    .get();
-  if (direct) return { row: direct, responseStepId: stepId };
+    .where(and(eq(fsrsCard.userId, userId), inArray(fsrsCard.stepId, candidateStepIds)));
 
-  const aliases = await db
-    .select({ oldStepId: stepIdAlias.oldStepId })
-    .from(stepIdAlias)
-    .where(eq(stepIdAlias.newStepId, stepId))
-    // Deterministic winner when several old ids map to one new id (a merge):
-    // without an order the SELECT is unordered and grading would advance an
-    // arbitrary one of the matching cards.
-    .orderBy(asc(stepIdAlias.oldStepId));
+  if (rows.length === 0) return null;
+  rows.sort(compareFsrsRows);
+  const [row, ...duplicates] = rows;
+  return {
+    row,
+    responseStepId,
+    duplicateStepIds: duplicates.map((r) => r.stepId),
+  };
+}
 
-  for (const alias of aliases) {
-    const row = await db
-      .select()
-      .from(fsrsCard)
-      .where(and(eq(fsrsCard.userId, userId), eq(fsrsCard.stepId, alias.oldStepId)))
-      .get();
-    if (row) return { row, responseStepId: stepId };
-  }
-
-  return null;
+async function deleteDuplicateCards(db: DB, userId: string, stepIds: string[]): Promise<void> {
+  if (stepIds.length === 0) return;
+  await db
+    .delete(fsrsCard)
+    .where(and(eq(fsrsCard.userId, userId), inArray(fsrsCard.stepId, stepIds)));
 }
 
 /**
@@ -280,17 +338,15 @@ export async function recordStepAttempt(
   // row under the new id.
   const targetStepId = found ? found.row.stepId : input.stepId;
   await upsertCard(db, userId, targetStepId, input.lessonSlug, input.moduleSlug, next);
+  if (found) await deleteDuplicateCards(db, userId, found.duplicateStepIds);
 
-  const attemptNo = await nextAttemptNo(db, userId, targetStepId);
-  await db.insert(stepCheck).values({
-    id: crypto.randomUUID(),
+  const attemptNo = await insertStepCheck(db, {
     userId,
     lessonSlug: input.lessonSlug,
     stepId: targetStepId,
     answerJson: JSON.stringify({ answer: input.answer }),
     isCorrect: input.isCorrect,
     rating,
-    attemptNo,
     createdAt: now,
   });
 
@@ -330,10 +386,9 @@ export async function gradeReviewCard(
   const { card: next } = scheduleNext(prior, rating, now);
 
   await upsertCard(db, userId, existing.stepId, existing.lessonSlug, existing.moduleSlug, next);
+  await deleteDuplicateCards(db, userId, found.duplicateStepIds);
 
-  const attemptNo = await nextAttemptNo(db, userId, existing.stepId);
-  await db.insert(stepCheck).values({
-    id: crypto.randomUUID(),
+  await insertStepCheck(db, {
     userId,
     lessonSlug: existing.lessonSlug,
     stepId: existing.stepId,
@@ -346,7 +401,6 @@ export async function gradeReviewCard(
     // fsrs_card; this column just lets us count attempts.
     isCorrect: rating !== 'again',
     rating,
-    attemptNo,
     createdAt: now,
   });
 
@@ -371,22 +425,31 @@ export async function getDueCards(
   limit: number,
   now: Date = new Date(),
 ): Promise<DueCardSummary[]> {
-  const rows = await db
-    .select({
-      stepId: fsrsCard.stepId,
-      lessonSlug: fsrsCard.lessonSlug,
-      moduleSlug: fsrsCard.moduleSlug,
-      due: fsrsCard.due,
-      state: fsrsCard.state,
-      reps: fsrsCard.reps,
-      lapses: fsrsCard.lapses,
-    })
-    .from(fsrsCard)
-    .where(and(eq(fsrsCard.userId, userId), lte(fsrsCard.due, now)))
-    .orderBy(asc(fsrsCard.due))
-    .limit(limit);
+  if (limit <= 0) return [];
+  const pageSize = Math.max(limit * 3, 25);
+  const rows: DueCardRow[] = [];
 
-  return resolveDueCardAliases(db, rows);
+  for (let offset = 0; ; offset += pageSize) {
+    const page = await db
+      .select({
+        stepId: fsrsCard.stepId,
+        lessonSlug: fsrsCard.lessonSlug,
+        moduleSlug: fsrsCard.moduleSlug,
+        due: fsrsCard.due,
+        state: fsrsCard.state,
+        reps: fsrsCard.reps,
+        lapses: fsrsCard.lapses,
+      })
+      .from(fsrsCard)
+      .where(and(eq(fsrsCard.userId, userId), lte(fsrsCard.due, now)))
+      .orderBy(asc(fsrsCard.due))
+      .limit(pageSize)
+      .offset(offset);
+
+    rows.push(...page);
+    const resolved = await resolveDueCardAliases(db, rows);
+    if (resolved.length >= limit || page.length < pageSize) return resolved.slice(0, limit);
+  }
 }
 
 /**
@@ -405,30 +468,37 @@ export async function getDueCardsForModules(
   limit: number,
   now: Date = new Date(),
 ): Promise<DueCardSummary[]> {
-  if (moduleSlugs.length === 0) return [];
+  if (moduleSlugs.length === 0 || limit <= 0) return [];
+  const pageSize = Math.max(limit * 3, 25);
+  const rows: DueCardRow[] = [];
 
-  const rows = await db
-    .select({
-      stepId: fsrsCard.stepId,
-      lessonSlug: fsrsCard.lessonSlug,
-      moduleSlug: fsrsCard.moduleSlug,
-      due: fsrsCard.due,
-      state: fsrsCard.state,
-      reps: fsrsCard.reps,
-      lapses: fsrsCard.lapses,
-    })
-    .from(fsrsCard)
-    .where(
-      and(
-        eq(fsrsCard.userId, userId),
-        inArray(fsrsCard.moduleSlug, moduleSlugs),
-        lte(fsrsCard.due, now),
-      ),
-    )
-    .orderBy(asc(fsrsCard.due))
-    .limit(limit);
+  for (let offset = 0; ; offset += pageSize) {
+    const page = await db
+      .select({
+        stepId: fsrsCard.stepId,
+        lessonSlug: fsrsCard.lessonSlug,
+        moduleSlug: fsrsCard.moduleSlug,
+        due: fsrsCard.due,
+        state: fsrsCard.state,
+        reps: fsrsCard.reps,
+        lapses: fsrsCard.lapses,
+      })
+      .from(fsrsCard)
+      .where(
+        and(
+          eq(fsrsCard.userId, userId),
+          inArray(fsrsCard.moduleSlug, moduleSlugs),
+          lte(fsrsCard.due, now),
+        ),
+      )
+      .orderBy(asc(fsrsCard.due))
+      .limit(pageSize)
+      .offset(offset);
 
-  return resolveDueCardAliases(db, rows);
+    rows.push(...page);
+    const resolved = await resolveDueCardAliases(db, rows);
+    if (resolved.length >= limit || page.length < pageSize) return resolved.slice(0, limit);
+  }
 }
 
 /**

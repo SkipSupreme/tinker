@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX `exercise_answer_user_lesson_ex_attempt` ON `exercise_answer` (`user_id`,`lesson_slug`,`exercise_id`,`attempt_no`);--> statement-breakpoint
+CREATE UNIQUE INDEX `step_check_user_step_attempt` ON `step_check` (`user_id`,`step_id`,`attempt_no`);

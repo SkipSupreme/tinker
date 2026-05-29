@@ -207,6 +207,10 @@ function harvest(slug, rawSource, out) {
           answerType: 'check',
           promptHTML: renderMarkdown(stripJsxComponents(body)),
           answer: numberAttr(tagText, 'answer') ?? null,
+          // Numeric tolerance for server-side grading; mirrors the client's
+          // `tolerance` attr (default 0.01 when unset). Lets the server
+          // recompute is_correct instead of trusting the client.
+          tolerance: numberAttr(tagText, 'tolerance') ?? null,
           answerLabel: stringAttr(tagText, 'prompt') ?? 'answer',
         };
       } else {

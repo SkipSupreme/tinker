@@ -42,7 +42,7 @@ describe('unsubscribe token', () => {
 
   it('rejects a tampered userId', async () => {
     const tok = await signUnsubscribeToken('user-123', 'secret');
-    const [, sig] = tok.split('.');
-    expect(await verifyUnsubscribeToken(`user-456.${sig}`, 'secret')).toBeNull();
+    const [, ts, sig] = tok.split('.');
+    expect(await verifyUnsubscribeToken(`user-456.${ts}.${sig}`, 'secret')).toBeNull();
   });
 });

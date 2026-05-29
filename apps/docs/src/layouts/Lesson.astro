@@ -25,13 +25,17 @@ interface Props {
       "Previously" cross-module recap panel (Phase F). */
   moduleStart?: boolean;
   /** True when this is the last lesson of its module — gates the module-end
-      "remember in 6 months" key-idea capture (Phase I). */
+      "remember in 6 months" key-idea capture (Phase I) and the module-complete
+      celebration. */
   moduleEnd?: boolean;
+  /** Title of the next module in the course, shown in the module-complete
+      celebration ("… unlocked"). Null on the course's final module. */
+  nextModuleName?: string | null;
 }
 const {
   slug, title, summary, estimatedMinutes, module, moduleHref,
   moduleTitle: moduleTitleProp, prev = null, next = null, endgameBody = null,
-  moduleStart = false, moduleEnd = false,
+  moduleStart = false, moduleEnd = false, nextModuleName = null,
 } = Astro.props;
 const moduleTitle = moduleTitleProp ?? module.replace(/-/g, ' ');
 const moduleLabel = moduleTitle;
@@ -47,6 +51,8 @@ const courseSlug = 'ml-math';
     data-lesson-slug={slug}
     data-module-slug={module}
     data-module-start={moduleStart ? 'true' : undefined}
+    data-module-end={moduleEnd ? 'true' : undefined}
+    data-next-module={nextModuleName ?? undefined}
   >
     <header class="lesson-header">
       <div class="shell">
@@ -807,9 +813,10 @@ const courseSlug = 'ml-math';
 <script>
   import { play } from '../lib/sound';
   import { awardXp, XP_AWARD } from '../lib/xp';
-  import { celebrateCorrect, celebrateLesson, celebrateWrong } from '../lib/celebrate';
+  import { celebrateCorrect, celebrateLesson, celebrateModule, celebrateWrong } from '../lib/celebrate';
   import { TINKER_EVENT } from '../lib/events';
   import { lessonUnlockedKey, lessonCompletedKey } from '../lib/storage-keys';
+  import { isAuthed } from '../lib/auth-state';
 
   type CheckData = { answer: number; tolerance: number };
 
@@ -849,35 +856,104 @@ const courseSlug = 'ml-math';
     is_correct: boolean;
     rating: FsrsRating;
   };
+  type PendingFsrsSeed = FsrsSeedPayload & {
+    user_id: string;
+    queued_at: number;
+    attempts: number;
+  };
+  type SeedPostResult = 'ok' | 'auth' | 'retry' | 'rate-limit' | 'drop';
+  type RetryUserResult =
+    | { kind: 'user'; id: string }
+    | { kind: 'anon' }
+    | { kind: 'unknown' };
+
   const FSRS_RETRY_KEY = 'tinker:fsrs-seed-retry:v1';
   const FSRS_RETRY_CAP = 200;
+  let retryUserPromise: Promise<RetryUserResult> | null = null;
 
-  function loadPendingSeeds(): FsrsSeedPayload[] {
+  function isPendingSeed(value: unknown): value is PendingFsrsSeed {
+    const v = value as Partial<PendingFsrsSeed> | null;
+    return !!v &&
+      typeof v.user_id === 'string' &&
+      typeof v.step_id === 'string' &&
+      typeof v.lesson_slug === 'string' &&
+      typeof v.module_slug === 'string' &&
+      typeof v.answer === 'string' &&
+      typeof v.is_correct === 'boolean' &&
+      (v.rating === 'again' || v.rating === 'hard' || v.rating === 'good' || v.rating === 'easy') &&
+      typeof v.queued_at === 'number' &&
+      Number.isFinite(v.queued_at) &&
+      typeof v.attempts === 'number' &&
+      Number.isFinite(v.attempts);
+  }
+
+  function seedKey(seed: PendingFsrsSeed): string {
+    return `${seed.user_id}:${seed.step_id}`;
+  }
+
+  function seedEntryId(seed: PendingFsrsSeed): string {
+    return `${seedKey(seed)}:${seed.queued_at}`;
+  }
+
+  function dedupePendingSeeds(seeds: PendingFsrsSeed[]): PendingFsrsSeed[] {
+    const byKey = new Map<string, PendingFsrsSeed>();
+    for (const seed of seeds) byKey.set(seedKey(seed), seed);
+    return [...byKey.values()].slice(-FSRS_RETRY_CAP);
+  }
+
+  function loadPendingSeeds(): PendingFsrsSeed[] {
     try {
       const raw = localStorage.getItem(FSRS_RETRY_KEY);
       const arr = raw ? JSON.parse(raw) : [];
-      return Array.isArray(arr) ? arr : [];
+      return Array.isArray(arr) ? arr.filter(isPendingSeed) : [];
     } catch {
       return [];
     }
   }
-  function savePendingSeeds(arr: FsrsSeedPayload[]): void {
+
+  function savePendingSeeds(arr: PendingFsrsSeed[]): void {
     try {
-      localStorage.setItem(FSRS_RETRY_KEY, JSON.stringify(arr.slice(-FSRS_RETRY_CAP)));
+      localStorage.setItem(FSRS_RETRY_KEY, JSON.stringify(dedupePendingSeeds(arr)));
     } catch {
       /* storage blocked; the seed is lost but the lesson UI is unaffected */
     }
   }
-  function enqueuePendingSeed(payload: FsrsSeedPayload): void {
-    // Dedup by step_id: a fresh attempt supersedes any earlier queued one.
-    const next = loadPendingSeeds().filter((p) => p.step_id !== payload.step_id);
-    next.push(payload);
-    savePendingSeeds(next);
+
+  function enqueuePendingSeed(payload: FsrsSeedPayload, userId: string): void {
+    // Dedup per signed-in user + step_id: a fresh attempt supersedes any
+    // earlier queued one, but entries never replay into another account.
+    const entry: PendingFsrsSeed = {
+      ...payload,
+      user_id: userId,
+      queued_at: Date.now(),
+      attempts: 0,
+    };
+    savePendingSeeds([...loadPendingSeeds(), entry]);
   }
 
-  // 'ok' = persisted; 'anon' = 401/403/429 (expected logged-out / rate-limited,
-  // do not retry); 'fail' = server/network error worth retrying.
-  async function postSeed(payload: FsrsSeedPayload): Promise<'ok' | 'anon' | 'fail'> {
+  async function getRetryUser(): Promise<RetryUserResult> {
+    retryUserPromise ??= (async () => {
+      try {
+        const res = await fetch('/api/me/state?course=ml-math', {
+          credentials: 'same-origin',
+          headers: { accept: 'application/json' },
+        });
+        if (res.status === 401 || res.status === 403) return { kind: 'anon' };
+        if (!res.ok) return { kind: 'unknown' };
+        const body = await res.json() as { user?: { id?: unknown } };
+        return typeof body.user?.id === 'string'
+          ? { kind: 'user', id: body.user.id }
+          : { kind: 'unknown' };
+      } catch {
+        return { kind: 'unknown' };
+      }
+    })();
+    return retryUserPromise;
+  }
+
+  // Retry only transient failures. Permanent validation/not-found errors are
+  // dropped; rate-limit responses stay queued for a later page load.
+  async function postSeed(payload: FsrsSeedPayload): Promise<SeedPostResult> {
     try {
       const res = await fetch('/api/steps/answer', {
         method: 'POST',
@@ -887,26 +963,60 @@ const courseSlug = 'ml-math';
         keepalive: true,
       });
       if (res.ok) return 'ok';
-      if (res.status === 401 || res.status === 403 || res.status === 429) return 'anon';
-      console.error('[lesson] steps/answer returned', res.status);
-      return 'fail';
+      if (res.status === 401 || res.status === 403) return 'auth';
+      if (res.status === 429) return 'rate-limit';
+      if (res.status === 408 || res.status >= 500) {
+        console.error('[lesson] steps/answer returned', res.status);
+        return 'retry';
+      }
+      console.warn('[lesson] dropping unretryable steps/answer response', res.status);
+      return 'drop';
     } catch (e) {
       console.warn('[lesson] steps/answer fetch failed', e);
-      return 'fail';
+      return 'retry';
     }
   }
 
-  // Replay seeds that failed on a prior load. Drop on success or on 'anon'
-  // (a stale/cross-session entry we must not re-attribute to another account);
-  // keep only genuine failures for the next try.
+  function bumpAttempt(seed: PendingFsrsSeed): PendingFsrsSeed {
+    return { ...seed, attempts: seed.attempts + 1 };
+  }
+
+  // Replay seeds that failed on a prior load, but only for the same signed-in
+  // user that queued them. Ownerless legacy entries are discarded by
+  // loadPendingSeeds(); replaying them would risk cross-account attribution.
   async function flushPendingSeeds(): Promise<void> {
     const pending = loadPendingSeeds();
-    if (pending.length === 0) return;
-    const stillPending: FsrsSeedPayload[] = [];
-    for (const p of pending) {
-      if ((await postSeed(p)) === 'fail') stillPending.push(p);
+    if (pending.length === 0) {
+      savePendingSeeds([]);
+      return;
     }
-    savePendingSeeds(stillPending);
+
+    const user = await getRetryUser();
+    if (user.kind !== 'user') return;
+
+    const started = new Set(pending.map(seedEntryId));
+    const stillPending: PendingFsrsSeed[] = [];
+    let rateLimited = false;
+
+    for (const p of pending) {
+      if (p.user_id !== user.id || rateLimited) {
+        stillPending.push(p);
+        continue;
+      }
+
+      const result = await postSeed(p);
+      if (result === 'retry' || result === 'auth') {
+        stillPending.push(bumpAttempt(p));
+      } else if (result === 'rate-limit') {
+        stillPending.push(bumpAttempt(p));
+        rateLimited = true;
+      }
+    }
+
+    // Preserve entries enqueued while this flush was in flight.
+    const latest = loadPendingSeeds();
+    const additions = latest.filter((p) => !started.has(seedEntryId(p)));
+    savePendingSeeds([...stillPending, ...additions]);
   }
 
   function seedFsrsCard(opts: {
@@ -925,7 +1035,10 @@ const courseSlug = 'ml-math';
       rating: opts.rating,
     };
     void postSeed(payload).then((r) => {
-      if (r === 'fail') enqueuePendingSeed(payload);
+      if (r !== 'retry' && r !== 'rate-limit') return;
+      void getRetryUser().then((user) => {
+        if (user.kind === 'user') enqueuePendingSeed(payload, user.id);
+      });
     });
   }
 
@@ -1070,6 +1183,8 @@ const courseSlug = 'ml-math';
     const panel = root.querySelector<HTMLElement>('[data-recap-panel]');
     const list = root.querySelector<HTMLElement>('[data-recap-cards]');
     if (!panel || !list) return;
+    // Cross-module recap is account history; skip (and don't 401) for anon.
+    if (!(await isAuthed())) return;
     const moduleSlug = root.dataset.moduleSlug ?? '';
 
     let res: Response;
@@ -1103,6 +1218,9 @@ const courseSlug = 'ml-math';
   async function mountKeyIdea(root: HTMLElement) {
     const moduleSlug = root.dataset.moduleSlug ?? '';
     if (!moduleSlug) return;
+    // The "remember in 6 months" key idea is saved to the account; skip the
+    // load/save wiring (and its guaranteed 401) for anonymous visitors.
+    if (!(await isAuthed())) return;
 
     const mantra = root.querySelector<HTMLElement>('[data-keyidea-mantra]');
     const mantraText = root.querySelector<HTMLElement>('[data-keyidea-mantra-text]');
@@ -1295,11 +1413,21 @@ const courseSlug = 'ml-math';
       }).catch((e) => {
         console.warn('[lesson] progress/complete fetch failed', e);
       });
-      // Route the entire endgame through the orchestrator: spring fill +
-      // math-symbol burst + XP tween + TinkerHop event + chime + vibrate +
-      // sweep-green class + aria-live announce. One call, one tuned chain.
+      // Route the entire endgame through the orchestrator: burst + XP tween +
+      // TinkerHop event + chime/anthem + vibrate + aria-live announce. One
+      // call, one tuned chain. Finishing the LAST lesson of a module fires the
+      // bigger module-complete celebration (anthem + 28-confetti burst + 100
+      // XP + "… unlocked") instead of the per-lesson one; it supersedes the
+      // lesson celebration so sound/XP don't double up.
       if (completeCard) {
-        void celebrateLesson(completeCard);
+        if (root.dataset.moduleEnd === 'true') {
+          // nodeId = module slug. celebrate.ts's SkillTreeMap glow hook
+          // (glowMasteredNode) is still stubbed; passing the slug keeps the
+          // call ready for when the map node lands.
+          void celebrateModule(completeCard, moduleSlug, root.dataset.nextModule || undefined);
+        } else {
+          void celebrateLesson(completeCard);
+        }
       } else {
         // No card in DOM (shouldn't happen); fall back to bare XP so the
         // user still gets credit for finishing the lesson.
@@ -1309,10 +1437,6 @@ const courseSlug = 'ml-math';
       setTimeout(() => {
         completeCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 240);
-      // TODO(alive-layer): wire module-complete celebrateModule when
-      // SkillTreeMap mastery hook lands. Lesson MDX needs frontmatter
-      // (e.g. `isFinalLessonOfModule: true` + `nodeId` + `nextModuleName`)
-      // before this branch can fire deterministically.
     }
 
     function advance(fromIndex: number) {
@@ -1515,16 +1639,20 @@ const courseSlug = 'ml-math';
           const stepId = step.dataset.stepId;
           const idx = Number(step.dataset.index);
           const block = step.querySelector<HTMLElement>('[data-choice-block]');
-          const answerText = picked
-            .map((o) => o.textContent?.trim() ?? '')
-            .filter(Boolean)
-            .join(' | ')
-            .slice(0, 4_000);
+          // Submit the picked option indices (source order, matching the
+          // build-time manifest's `options` order) so the server can grade
+          // is_correct authoritatively, e.g. "1,3". `options` is the live DOM
+          // order; <Choice> elements are slotted in source order and never
+          // shuffled, so index i here is index i in the manifest.
+          const answerIdx = options
+            .map((o, i) => (o.getAttribute('aria-pressed') === 'true' ? i : -1))
+            .filter((i) => i >= 0)
+            .join(',');
           if (stepId && block) {
             cancelActiveRating?.();
             cancelActiveRating = mountRatingRow(block, (rating) => {
               cancelActiveRating = null;
-              seedFsrsCard({ stepId, lessonSlug: slug, moduleSlug, answer: answerText, rating });
+              seedFsrsCard({ stepId, lessonSlug: slug, moduleSlug, answer: answerIdx, rating });
               setTimeout(() => advance(idx), RATING_ADVANCE_MS);
             });
           } else {

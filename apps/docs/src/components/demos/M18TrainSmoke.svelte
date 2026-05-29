@@ -10,7 +10,7 @@
   // parameters. M12 canonical debugging tool: protects the gate against
   // backward bugs the per-kernel CPU twins miss.
 
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import {
     Engine, M18_CONFIG, seededInitWeights, cosineLR,
     loadTinyShakespeare, getBatch, seededRng, cpu,
@@ -227,6 +227,10 @@
     return { delta: maxBadRel, ok: maxBadRel === 0, report };
   }
 
+  // Reused across re-runs so each click doesn't orphan a GPUDevice + pipelines.
+  // Freed on unmount.
+  let engine: Engine | null = null;
+
   async function run(): Promise<void> {
     errorMsg = '';
     if (!('gpu' in navigator)) {
@@ -248,7 +252,7 @@
       }
 
       phase = 'compiling';
-      const engine = await Engine.create(cfg);
+      if (!engine) engine = await Engine.create(cfg);
       const weights = seededInitWeights(cfg, SEED);
       engine.loadParameters(weights);
       engine.initTraining(BATCH);
@@ -322,6 +326,7 @@
   }
 
   onMount(() => { drawCurve(); });
+  onDestroy(() => { engine?.destroy(); engine = null; });
 
   $effect(() => { drawCurve(); });
 

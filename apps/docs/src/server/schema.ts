@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { sqliteTable, text, integer, real, primaryKey, index, unique } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, primaryKey, index, uniqueIndex, unique } from 'drizzle-orm/sqlite-core';
 
 export const user = sqliteTable('user', {
   id: text('id').primaryKey(),
@@ -78,7 +78,15 @@ export const exerciseAnswer = sqliteTable('exercise_answer', {
   isCorrect: integer('is_correct', { mode: 'boolean' }),
   attemptNo: integer('attempt_no').notNull().default(1),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-}, (t) => [index('exercise_answer_by_user_lesson').on(t.userId, t.lessonSlug)]);
+}, (t) => [
+  index('exercise_answer_by_user_lesson').on(t.userId, t.lessonSlug),
+  // attemptNo is computed as MAX(attempt_no)+1 then inserted; under concurrent
+  // submissions two inserts can pick the same number. This makes the collision
+  // a loud UNIQUE failure the service retries, instead of a silent duplicate.
+  uniqueIndex('exercise_answer_user_lesson_ex_attempt').on(
+    t.userId, t.lessonSlug, t.exerciseId, t.attemptNo,
+  ),
+]);
 
 export const bookmark = sqliteTable('bookmark', {
   id: text('id').primaryKey(),
@@ -131,6 +139,9 @@ export const stepCheck = sqliteTable('step_check', {
 }, (t) => [
   index('step_check_by_user_step').on(t.userId, t.stepId),
   index('step_check_by_user_lesson').on(t.userId, t.lessonSlug),
+  // See exercise_answer: makes a concurrent attempt_no collision a retryable
+  // UNIQUE failure rather than a silent duplicate audit row.
+  uniqueIndex('step_check_user_step_attempt').on(t.userId, t.stepId, t.attemptNo),
 ]);
 
 // FSRS-5 scheduler state. One row per (user, step). The `state` integer

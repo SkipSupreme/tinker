@@ -36,6 +36,20 @@ const next = idx >= 0 && idx < moduleSiblings.length - 1
 const moduleEntry = await getEntry('modules', module);
 const moduleTitle = moduleEntry?.data.title ?? module.replace(/-/g, ' ');
 const endgameBody = moduleEntry?.data.endgameConnection ?? null;
+
+const isModuleEnd = idx >= 0 && idx === moduleSiblings.length - 1;
+// Title of the next module in the same course (by `order`), used by the
+// module-complete celebration's "… unlocked" line. Null when this is the
+// course's final module. Only computed on the module's last lesson.
+let nextModuleName: string | null = null;
+if (isModuleEnd && moduleEntry) {
+  const courseModules = (await getCollection('modules', (m) => !m.data.draft))
+    .filter((m) => m.data.course === moduleEntry.data.course)
+    .sort((a, b) => a.data.order - b.data.order);
+  const mi = courseModules.findIndex((m) => m.id === module);
+  nextModuleName =
+    mi >= 0 && mi < courseModules.length - 1 ? courseModules[mi + 1].data.title : null;
+}
 ---
 
 <Lesson
@@ -50,7 +64,8 @@ const endgameBody = moduleEntry?.data.endgameConnection ?? null;
   next={next}
   endgameBody={endgameBody}
   moduleStart={idx === 0}
-  moduleEnd={idx >= 0 && idx === moduleSiblings.length - 1}
+  moduleEnd={isModuleEnd}
+  nextModuleName={nextModuleName}
 >
   <Content />
 </Lesson>

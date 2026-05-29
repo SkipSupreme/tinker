@@ -1,33 +1,15 @@
 <script lang="ts">
-  interface User {
-    id: string;
-    email: string;
-    name?: string | null;
-    image?: string | null;
-    role?: string;
-  }
+  import { getSessionUser, type SessionUser as User } from '../../lib/auth-state';
 
   let user = $state<User | null>(null);
   let loaded = $state(false);
   let open = $state(false);
 
   async function loadSession() {
-    try {
-      const res = await fetch('/api/auth/get-session', {
-        credentials: 'same-origin',
-      });
-      if (res.ok) {
-        const data = (await res.json()) as { user?: User } | null;
-        user = data?.user ?? null;
-      } else if (res.status !== 401) {
-        console.error('[usermenu] session fetch returned', res.status);
-      }
-    } catch (e) {
-      console.error('[usermenu] session fetch failed', e);
-      user = null;
-    } finally {
-      loaded = true;
-    }
+    // Shared, memoized get-session check (also used to gate authed-only
+    // fetches elsewhere), so the whole page makes one session request.
+    user = await getSessionUser();
+    loaded = true;
   }
 
   async function signOut() {

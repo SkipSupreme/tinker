@@ -19,6 +19,36 @@
     window.location.assign(next);
   }
 
+  /**
+   * Carry pre-signup browsing into the new session. ProgressBeacon records
+   * lesson views to localStorage `tinker:progress:v1` for logged-out visitors;
+   * on the first successful sign-in/sign-up we POST them to /api/progress/merge
+   * (the session cookie from the auth response is already set, and the
+   * same-origin fetch satisfies the CSRF Origin check) so the account reflects
+   * what they read before signing up. Non-fatal: a failure never blocks login.
+   */
+  async function mergeAnonProgress(): Promise<void> {
+    try {
+      const raw = localStorage.getItem('tinker:progress:v1');
+      if (!raw) return;
+      const parsedEntries = JSON.parse(raw) as Array<{ last_seen_at?: string }>;
+      if (!Array.isArray(parsedEntries) || parsedEntries.length === 0) return;
+      // Endpoint caps the batch at 200; send the most recently seen first.
+      const entries = [...parsedEntries]
+        .sort((a, b) => Date.parse(b.last_seen_at ?? '') - Date.parse(a.last_seen_at ?? ''))
+        .slice(0, 200);
+      const res = await fetch('/api/progress/merge', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ entries }),
+      });
+      if (res.ok) localStorage.removeItem('tinker:progress:v1');
+    } catch {
+      // Keep the entries for a later sign-in; never block the redirect.
+    }
+  }
+
   async function submit(ev: SubmitEvent) {
     ev.preventDefault();
     status = 'sending';
@@ -60,6 +90,8 @@
         console.error('[auth] unexpected status', res.status, await res.text().catch(() => ''));
         throw new Error('Something went wrong. Try again.');
       }
+      // Sync any pre-signup anonymous progress before leaving the page.
+      await mergeAnonProgress();
       window.location.assign(callbackURL);
     } catch (e) {
       status = 'error';

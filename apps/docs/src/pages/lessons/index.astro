@@ -82,25 +82,31 @@ const sortedGroups = Array.from(grouped.entries()).sort(([a], [b]) => {
 </Base>
 
 <script>
+  import { isAuthed } from '../../lib/auth-state';
+
   /**
    * Mastery framing (Phase G). This page is prerendered, so the per-user
    * "N skills retained" count can't be server-rendered; fetch it and reveal
    * the badge. Stays hidden for anon visitors, on error, and at zero so a new
-   * learner never sees a discouraging "0 skills retained".
+   * learner never sees a discouraging "0 skills retained". Gate on the cached
+   * session check so logged-out visitors don't fire a guaranteed-401 request.
    */
   const badge = document.querySelector<HTMLElement>('[data-retained]');
   if (badge) {
-    fetch('/api/me/retained', { credentials: 'same-origin' })
-      .then((r) => (r.ok ? (r.json() as Promise<{ retained?: number }>) : null))
-      .then((data) => {
+    void (async () => {
+      if (!(await isAuthed())) return;
+      try {
+        const r = await fetch('/api/me/retained', { credentials: 'same-origin' });
+        if (!r.ok) return;
+        const data = (await r.json()) as { retained?: number };
         const n = data?.retained ?? 0;
         if (n <= 0) return;
         badge.textContent = `${n} ${n === 1 ? 'skill' : 'skills'} retained`;
         badge.hidden = false;
-      })
-      .catch(() => {
-        /* anon / network failure: leave the badge hidden */
-      });
+      } catch {
+        /* network failure: leave the badge hidden */
+      }
+    })();
   }
 </script>
 

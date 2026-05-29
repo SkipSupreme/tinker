@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { isAuthed } from '../../lib/auth-state';
+
   let { lessonSlug, courseSlug, moduleSlug } = $props<{
     lessonSlug: string;
     courseSlug: string;
@@ -77,8 +79,15 @@
   }
 
   async function emit() {
-    const storedServerSide = await postAuthed();
-    if (!storedServerSide) recordAnon();
+    // Skip the authed POST entirely for logged-out visitors (it would just
+    // 401 and log console noise); record locally instead. postAuthed still
+    // guards 401/403 itself as a safety net for an expired session.
+    if (await isAuthed()) {
+      const storedServerSide = await postAuthed();
+      if (!storedServerSide) recordAnon();
+    } else {
+      recordAnon();
+    }
   }
 
   let timer: ReturnType<typeof setTimeout> | undefined;

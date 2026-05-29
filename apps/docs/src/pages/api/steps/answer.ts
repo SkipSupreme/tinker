@@ -6,7 +6,7 @@ import { checkRateLimit } from '../../../server/ratelimit';
 import { recordStepAttempt } from '../../../server/steps';
 import { getEnv } from '../../../server/env';
 import { withApiErrors } from '../../../server/lesson-slugs';
-import { resolveKnownStep } from '../../../server/step-manifest';
+import { resolveKnownStep, gradeStepAnswer } from '../../../server/step-manifest';
 
 export const prerender = false;
 
@@ -71,12 +71,18 @@ export const POST: APIRoute = async ({ request }) => {
       return jsonError(400, 'bad_request', 'module_slug does not match lesson');
     }
 
+    // Grade authoritatively from the manifest so a client can't persist a
+    // truthful-looking is_correct for a wrong answer. Falls back to the
+    // client value only when the step has no gradeable ground truth.
+    const graded = gradeStepAnswer(knownStep, parsed.data.answer);
+    const isCorrect = graded ?? parsed.data.is_correct;
+
     const r = await recordStepAttempt(ctx.db, ctx.session.user.id, {
       stepId: parsed.data.step_id,
       lessonSlug: parsed.data.lesson_slug,
       moduleSlug,
       answer: parsed.data.answer,
-      isCorrect: parsed.data.is_correct,
+      isCorrect,
       rating: parsed.data.rating,
     });
     return jsonOk({

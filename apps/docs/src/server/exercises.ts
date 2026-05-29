@@ -50,31 +50,42 @@ export async function recordExerciseAnswer(
   s: ExerciseSubmission,
 ): Promise<{ id: string; attemptNo: number }> {
   const serializedAnswer = serializeExerciseAnswer(s.answerJson);
-  // Find the highest attemptNo for this (user, lesson, exercise)
-  const prev = await db
-    .select({ n: max(exerciseAnswer.attemptNo) })
-    .from(exerciseAnswer)
-    .where(
-      and(
-        eq(exerciseAnswer.userId, userId),
-        eq(exerciseAnswer.lessonSlug, s.lessonSlug),
-        eq(exerciseAnswer.exerciseId, s.exerciseId),
-      ),
-    )
-    .get();
-  const attemptNo = (prev?.n ?? 0) + 1;
-  const id = crypto.randomUUID();
-  await db.insert(exerciseAnswer).values({
-    id,
-    userId,
-    lessonSlug: s.lessonSlug,
-    exerciseId: s.exerciseId,
-    answerJson: serializedAnswer,
-    isCorrect: s.isCorrect,
-    attemptNo,
-    createdAt: new Date(),
-  });
-  return { id, attemptNo };
+  const createdAt = new Date();
+  // attemptNo is MAX+1; under concurrent submissions two inserts can collide on
+  // it. The exercise_answer_user_lesson_ex_attempt UNIQUE index turns that into
+  // a retryable error rather than a silent duplicate audit row.
+  for (let i = 0; ; i++) {
+    const prev = await db
+      .select({ n: max(exerciseAnswer.attemptNo) })
+      .from(exerciseAnswer)
+      .where(
+        and(
+          eq(exerciseAnswer.userId, userId),
+          eq(exerciseAnswer.lessonSlug, s.lessonSlug),
+          eq(exerciseAnswer.exerciseId, s.exerciseId),
+        ),
+      )
+      .get();
+    const attemptNo = (prev?.n ?? 0) + 1;
+    const id = crypto.randomUUID();
+    try {
+      await db.insert(exerciseAnswer).values({
+        id,
+        userId,
+        lessonSlug: s.lessonSlug,
+        exerciseId: s.exerciseId,
+        answerJson: serializedAnswer,
+        isCorrect: s.isCorrect,
+        attemptNo,
+        createdAt,
+      });
+      return { id, attemptNo };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (i < 3 && /UNIQUE constraint failed/i.test(msg)) continue;
+      throw e;
+    }
+  }
 }
 
 export async function getLatestAnswers(
