@@ -83,6 +83,12 @@
   --max-shell: 1120px;
   --max-hero: 1200px;
 
+  /* Height of the sticky site header (Nav.astro). Used as scroll-padding so
+     scrollIntoView({block:'start'}) and anchor jumps don't tuck the target
+     under the nav. Set to the taller desktop nav (44px mark + 0.65rem×2 pad +
+     1px border ≈ 66px); the mobile nav is shorter, so this safely clears both. */
+  --nav-height: 66px;
+
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
@@ -164,6 +170,10 @@ html {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* Keep scroll targets clear of the sticky nav. Lesson step advances call
+     scrollIntoView({block:'start'}); without this the heading lands at y=0,
+     hidden behind the header. +0.5rem of breathing room above the target. */
+  scroll-padding-top: calc(var(--nav-height) + 0.5rem);
 }
 
 body {

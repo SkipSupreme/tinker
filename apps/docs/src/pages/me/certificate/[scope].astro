@@ -130,7 +130,15 @@ const dateStr = cert.completedAt.toLocaleDateString('en-US', {
         margin: 0;
       }
       .bar {
+        /* width:100% + box-sizing is load-bearing: global.css sets
+           `body { display:flex; flex-direction:column }`, and a flex item with
+           `margin:0 auto` shrinks to its content instead of stretching — which
+           collapsed space-between and made the back link touch the Print pill.
+           An explicit width restores the full row; auto margins then only
+           center the capped 820px on wide screens. */
+        width: 100%;
         max-width: 820px;
+        box-sizing: border-box;
         margin: 0 auto;
         padding: 1.25rem 1.5rem 0;
         display: flex;
