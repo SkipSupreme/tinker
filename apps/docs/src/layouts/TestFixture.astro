@@ -35,11 +35,13 @@ const { title } = Astro.props;
       /* Neutralize the global sticky-nav scroll offset. global.css sets
          html { scroll-padding-top } so lesson headings clear the real site
          nav; fixtures have no nav, and on short device viewports (iPhone
-         project, 3x DPR) that offset shifts where Playwright scrolls the
+         project) that offset shifts where Playwright scrolls the
          taller-than-viewport fixture into view, re-anti-aliasing axis-label
-         text and tripping the visual baseline. Pin to 0 for determinism. */
+         text and tripping the visual baseline. !important because Vite
+         injects global.css after this inline block, so an equal-specificity
+         html rule here would otherwise lose the cascade. */
       html {
-        scroll-padding-top: 0;
+        scroll-padding-top: 0 !important;
       }
       body {
         font-family: ui-sans-serif, system-ui, sans-serif;
