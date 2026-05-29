@@ -57,7 +57,7 @@ function emit<T>(detail: T): void {
   window.dispatchEvent(new CustomEvent(TINKER_EVENT.xp, { detail }));
 }
 
-export function getXp(): number {
+function getXp(): number {
   return readInt(LS_KEY.xp);
 }
 

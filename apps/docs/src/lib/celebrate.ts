@@ -17,7 +17,7 @@ import { TINKER_EVENT } from './events';
 
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-export function announce(message: string) {
+function announce(message: string) {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(
     new CustomEvent(TINKER_EVENT.announce, { detail: { message } }),
@@ -26,8 +26,8 @@ export function announce(message: string) {
 
 // Module-scoped Spring/Tween instances, one per surface so multiple
 // concurrent celebrations don't fight each other.
-export const progressSpring = new Spring(0, { stiffness: 0.12, damping: 0.4 });
-export const scoreTween = new Tween(0, { duration: 900, easing: cubicOut });
+const progressSpring = new Spring(0, { stiffness: 0.12, damping: 0.4 });
+const scoreTween = new Tween(0, { duration: 900, easing: cubicOut });
 
 export async function celebrateCorrect(checkBtn: HTMLElement) {
   play('ding');
