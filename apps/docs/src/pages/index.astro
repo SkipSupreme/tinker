@@ -225,6 +225,11 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
   .band-butter   { background: var(--band-butter); }
   .band-white    { background: var(--band-white); }
   .band-onyx {
+    /* Fallback for engines without color-mix() (iOS Safari < 16.2): the whole
+       multi-layer background shorthand below is invalid there and gets dropped,
+       so declare the solid band first to keep the section from rendering with
+       no background. Modern engines apply the radial-accent layers. */
+    background: var(--band-onyx);
     background:
       radial-gradient(circle at 25% 30%, color-mix(in srgb, var(--ink-red) 22%, transparent), transparent 55%),
       radial-gradient(circle at 80% 80%, color-mix(in srgb, var(--ink-coral) 14%, transparent), transparent 55%),
@@ -277,14 +282,17 @@ import EmbeddingPluck from '../components/demos/EmbeddingPluck.svelte';
   }
   /* On phones the mascot column was eating the whole above-fold viewport
      before the headline showed. Cap the mascot at a comfortable thumbnail
-     size and keep the floating-math decoration clipped to its container. */
+     size. Do NOT clip here: the mascot's .tinker-glow is an inset:-10% +
+     blur(18px) halo that must feather past the 200px box. overflow:hidden
+     used to crop it to a hard rectangular edge ("glow ends abruptly" on iOS
+     Safari). The parent .band already has overflow:hidden, so the glow stays
+     within the section and never triggers horizontal page scroll. */
   @media (max-width: 640px) {
     .hero { padding: 1.25rem 1rem 1.5rem; }
     .hero-mascot {
       min-height: 0;
       max-width: 200px;
       margin: 0 auto;
-      overflow: hidden;
     }
   }
 

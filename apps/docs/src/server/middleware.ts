@@ -1,9 +1,6 @@
 import { createAuth, getSession, type AuthEnv, type SessionContext } from './auth';
 import { getDb, type DB } from './db';
 
-const CSRF_COOKIE_PATTERN = /(?:^|;\s*)__Secure-tinker\.csrf_token=([^;]+)/;
-const CSRF_DEV_COOKIE_PATTERN = /(?:^|;\s*)tinker\.csrf_token=([^;]+)/;
-
 export interface SessionedContext {
   session: SessionContext;
   db: DB;
@@ -27,29 +24,29 @@ export async function requireSession(
   return { session, db: getDb(env.DB), env, auth };
 }
 
+/**
+ * CSRF protection for every state-changing request.
+ *
+ * This used to attempt a double-submit token (a `*.csrf_token` cookie matched
+ * against an `x-tinker-csrf` header), but Better Auth 1.6 never mints that
+ * cookie and no client ever sends that header, so the token branch was dead
+ * code guarded by a green-but-unreachable test. The real, OWASP-endorsed
+ * defense is the SameSite=Lax session cookie plus this server-side
+ * Origin/Referer check, which fails closed. Keep this as the single, honest
+ * entry point so any future weakening of requireSameOrigin is caught by its
+ * dedicated tests rather than hidden behind a defunct token path.
+ */
 export function requireCsrf(request: Request): Response | null {
-  const cookieHeader = request.headers.get('cookie') ?? '';
-  const match =
-    cookieHeader.match(CSRF_COOKIE_PATTERN) ?? cookieHeader.match(CSRF_DEV_COOKIE_PATTERN);
-  const csrfCookie = match?.[1];
-  const csrfHeader = request.headers.get('x-tinker-csrf');
-  if (csrfCookie && csrfHeader && timingSafeEqual(csrfCookie, csrfHeader)) {
-    return null;
-  }
-
-  // Better Auth 1.6 does not mint the csrf_token cookie this app originally
-  // expected. Fall back to Origin/Referer validation so same-origin fetches
-  // keep working while cross-site form/script attempts are still rejected.
   return requireSameOrigin(request, new URL(request.url).origin);
 }
 
 /**
- * Origin check for HTML form POSTs that can't easily attach an x-tinker-csrf
- * header (welcome.astro, me.astro). The double-submit CSRF token covers JSON
- * endpoints; this covers traditional form submits as belt-and-suspenders on
- * top of the session cookie's SameSite=Lax setting.
+ * Server-side Origin/Referer check — the app's primary CSRF defense. Called by
+ * requireCsrf for all JSON API routes, and directly by the HTML form POSTs in
+ * welcome.astro / me.astro. Layered on top of the session cookie's
+ * SameSite=Lax setting; fails closed.
  *
- * Returns 403 if Origin/Referer doesn't match PUBLIC_SITE_URL. GET is
+ * Returns 403 if Origin/Referer doesn't match PUBLIC_SITE_URL. GET/HEAD are
  * permitted without an Origin (browsers omit it on top-level navigations).
  */
 export function requireSameOrigin(request: Request, publicSiteUrl: string): Response | null {
@@ -74,23 +71,25 @@ export function requireSameOrigin(request: Request, publicSiteUrl: string): Resp
   return jsonError(403, 'forbidden', 'Origin/Referer required for state-changing request');
 }
 
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let mismatch = 0;
-  for (let i = 0; i < a.length; i++) mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return mismatch === 0;
-}
+// Authenticated JSON often carries PII (e.g. /api/me/state returns the user's
+// email). no-store keeps it out of the browser disk cache and any heuristic
+// intermediary cache; these are credentialed same-origin fetches that should
+// never be reused.
+const JSON_HEADERS = {
+  'content-type': 'application/json',
+  'cache-control': 'no-store',
+} as const;
 
 export function jsonError(status: number, code: string, message: string): Response {
   return new Response(JSON.stringify({ error: { code, message } }), {
     status,
-    headers: { 'content-type': 'application/json' },
+    headers: { ...JSON_HEADERS },
   });
 }
 
 export function jsonOk<T>(data: T, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'content-type': 'application/json' },
+    headers: { ...JSON_HEADERS },
   });
 }

@@ -835,9 +835,80 @@ const courseSlug = 'ml-math';
   // Beat between picking a rating and advancing, so the tap registers visually.
   const RATING_ADVANCE_MS = 320;
 
-  // POST the seed to /api/steps/answer. Fire-and-forget on the same contract as
-  // progress/complete: anonymous visitors get 401 (no session) and we ignore
-  // it, since localStorage already drives the local lesson UI.
+  // Seed the FSRS card via /api/steps/answer. The lesson UI never blocks on
+  // this POST (localStorage drives the local flow), but a transient server
+  // failure used to silently drop the card from the spaced-repetition queue
+  // forever — the learner is told it counted, yet the skill never enters
+  // "N skills retained". So genuine failures are persisted to localStorage and
+  // replayed on the next lesson load. 401/403 (anon) is expected and ignored.
+  type FsrsSeedPayload = {
+    step_id: string;
+    lesson_slug: string;
+    module_slug: string;
+    answer: string;
+    is_correct: boolean;
+    rating: FsrsRating;
+  };
+  const FSRS_RETRY_KEY = 'tinker:fsrs-seed-retry:v1';
+  const FSRS_RETRY_CAP = 200;
+
+  function loadPendingSeeds(): FsrsSeedPayload[] {
+    try {
+      const raw = localStorage.getItem(FSRS_RETRY_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch {
+      return [];
+    }
+  }
+  function savePendingSeeds(arr: FsrsSeedPayload[]): void {
+    try {
+      localStorage.setItem(FSRS_RETRY_KEY, JSON.stringify(arr.slice(-FSRS_RETRY_CAP)));
+    } catch {
+      /* storage blocked; the seed is lost but the lesson UI is unaffected */
+    }
+  }
+  function enqueuePendingSeed(payload: FsrsSeedPayload): void {
+    // Dedup by step_id: a fresh attempt supersedes any earlier queued one.
+    const next = loadPendingSeeds().filter((p) => p.step_id !== payload.step_id);
+    next.push(payload);
+    savePendingSeeds(next);
+  }
+
+  // 'ok' = persisted; 'anon' = 401/403/429 (expected logged-out / rate-limited,
+  // do not retry); 'fail' = server/network error worth retrying.
+  async function postSeed(payload: FsrsSeedPayload): Promise<'ok' | 'anon' | 'fail'> {
+    try {
+      const res = await fetch('/api/steps/answer', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+        keepalive: true,
+      });
+      if (res.ok) return 'ok';
+      if (res.status === 401 || res.status === 403 || res.status === 429) return 'anon';
+      console.error('[lesson] steps/answer returned', res.status);
+      return 'fail';
+    } catch (e) {
+      console.warn('[lesson] steps/answer fetch failed', e);
+      return 'fail';
+    }
+  }
+
+  // Replay seeds that failed on a prior load. Drop on success or on 'anon'
+  // (a stale/cross-session entry we must not re-attribute to another account);
+  // keep only genuine failures for the next try.
+  async function flushPendingSeeds(): Promise<void> {
+    const pending = loadPendingSeeds();
+    if (pending.length === 0) return;
+    const stillPending: FsrsSeedPayload[] = [];
+    for (const p of pending) {
+      if ((await postSeed(p)) === 'fail') stillPending.push(p);
+    }
+    savePendingSeeds(stillPending);
+  }
+
   function seedFsrsCard(opts: {
     stepId: string;
     lessonSlug: string;
@@ -845,27 +916,21 @@ const courseSlug = 'ml-math';
     answer: string;
     rating: FsrsRating;
   }) {
-    fetch('/api/steps/answer', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        step_id: opts.stepId,
-        lesson_slug: opts.lessonSlug,
-        module_slug: opts.moduleSlug,
-        answer: opts.answer,
-        is_correct: true,
-        rating: opts.rating,
-      }),
-      keepalive: true,
-    }).then((res) => {
-      if (!res.ok && res.status !== 401 && res.status !== 403 && res.status !== 429) {
-        console.error('[lesson] steps/answer returned', res.status);
-      }
-    }).catch((e) => {
-      console.warn('[lesson] steps/answer fetch failed', e);
+    const payload: FsrsSeedPayload = {
+      step_id: opts.stepId,
+      lesson_slug: opts.lessonSlug,
+      module_slug: opts.moduleSlug,
+      answer: opts.answer,
+      is_correct: true,
+      rating: opts.rating,
+    };
+    void postSeed(payload).then((r) => {
+      if (r === 'fail') enqueuePendingSeed(payload);
     });
   }
+
+  // Drain any previously-failed seeds once per lesson load (non-blocking).
+  void flushPendingSeeds();
 
   // Mount the Again/Hard/Good/Easy chips inside `container`. Calls `onPick`
   // exactly once: on a chip click, or on the default-to-"good" timeout.
@@ -1161,15 +1226,30 @@ const courseSlug = 'ml-math';
     // reappears on reload of an already-finished module-end lesson.
     const keyIdeaCapture = root.querySelector<HTMLElement>('[data-keyidea-capture]');
 
-    const saved = Number.parseInt(localStorage.getItem(storageKey) ?? '0', 10);
+    // Guard storage reads: Safari Private Browsing / blocked site data throws
+    // on access. An unguarded read here would abort initLesson() entirely
+    // (steps never wired); an unguarded write in persist() would abort
+    // advance() mid-flight and freeze the lesson. Degrade to in-memory progress.
+    let saved = 0;
+    let lessonCompleteFired = false;
+    try {
+      saved = Number.parseInt(localStorage.getItem(storageKey) ?? '0', 10);
+      lessonCompleteFired = localStorage.getItem(completionKey) === '1';
+    } catch {
+      /* storage blocked; treat as a fresh, uncompleted lesson */
+    }
     let unlocked = Number.isFinite(saved) ? Math.max(0, Math.min(saved, total)) : 0;
-    let lessonCompleteFired = localStorage.getItem(completionKey) === '1';
     // Disarms the currently-mounted confidence-rating row (if any) so its
     // default-to-"good" timeout can't fire after a reset or re-answer.
     let cancelActiveRating: (() => void) | null = null;
 
     function persist() {
-      localStorage.setItem(storageKey, String(unlocked));
+      try {
+        localStorage.setItem(storageKey, String(unlocked));
+      } catch {
+        // Storage blocked/quota: keep advancing in-memory rather than letting
+        // the throw abort advance() and freeze the lesson on a correct answer.
+      }
     }
 
     function render() {

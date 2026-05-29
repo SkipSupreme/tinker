@@ -11,6 +11,7 @@ interface Frontmatter {
   description?: string;
   prose?: boolean;
   fullWidth?: boolean;
+  noindex?: boolean;
 }
 
 export interface Props extends Frontmatter {
@@ -25,6 +26,12 @@ const description =
   'Rigorous, visual, spaced-repetition-backed learning for adults.';
 const prose = Astro.props.prose ?? fm.prose ?? false;
 const fullWidth = Astro.props.fullWidth ?? fm.fullWidth ?? false;
+// Keep the internal /dev/ audit surface (widget lab, engine smokes, harnesses)
+// out of search indexes. It's already excluded from the sitemap; this also
+// stops a stray inbound link from getting it crawled. Pages can opt in
+// explicitly via the `noindex` prop too.
+const noindex =
+  Astro.props.noindex ?? fm.noindex ?? Astro.url.pathname.startsWith('/dev/');
 const mainClass = [prose ? 'prose' : '', fullWidth ? 'full-width' : ''].filter(Boolean).join(' ');
 
 const titleWithSuffix = title === 'Tinker' ? title : `${title} · Tinker`;
@@ -36,6 +43,7 @@ const titleWithSuffix = title === 'Tinker' ? title : `${title} · Tinker`;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
     <meta name="generator" content={Astro.generator} />
     <meta property="og:title" content={titleWithSuffix} />
     <meta property="og:description" content={description} />

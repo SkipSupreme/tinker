@@ -459,6 +459,23 @@ export class EngineCore {
     this.trainCtx = null;
   }
 
+  /**
+   * Tear down the engine and its GPUDevice. Destroying the device frees every
+   * buffer / texture / pipeline it owns, so this is the single call a component
+   * needs in onDestroy. Idempotent and safe to call mid-run (any in-flight
+   * queue work is abandoned). After destroy() the engine must not be reused.
+   *
+   * Without this, an unmounted widget's device lingers until GC reclaims the
+   * JS handle (non-deterministic), and same-page widget toggling or any future
+   * SPA/view-transition routing would accumulate live devices toward the
+   * browser's per-page cap.
+   */
+  destroy(): void {
+    try { this.disposeTrainCtx(); } catch { /* already torn down */ }
+    try { this.disposeParams(); } catch { /* already torn down */ }
+    try { this.device.destroy(); } catch { /* device already lost */ }
+  }
+
   /** Allocate persistent training buffers + grads + AdamW state. */
   initTraining(batch: number): void {
     // Free the previous training context (if any) before allocating a new one.

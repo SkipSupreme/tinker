@@ -116,10 +116,9 @@ Tokens live in `apps/docs/src/styles/global.css`. Use the CSS variable, never th
 
 | Var | Hex | Role |
 |---|---|---|
-| `--band-onyx` | `#0b0d12` | Dark hero, closing CTA, premium sections. |
+| `--band-onyx` | `#fff4ec` light / `#08090b` dark | Theme-aware hero + closing CTA surface. Light mode is warm cream (pairs with the red mascot); dark mode is near-black. global.css is the source of truth. |
 | `--band-white` | `#fdfdfc` | Primary light surface. |
 | `--band-cream` | `#faf6ef` | Warm-light section. |
-| `--band-lavender` | `#ecebfb` | Cool-light section. Pairs well with sea + pink accents. |
 | `--band-mint` | `#e6f3e8` | Success / approval section. |
 | `--band-sky` | `#e6eff8` | Reflective / who-it's-for section. |
 | `--band-butter` | `#fbf2dc` | Quote / pull-out section. |
@@ -437,3 +436,5 @@ This pattern is **homepage-hero-only** by DESIGN.md decree (mascot does not appe
 | **2026-04-24 (pivot v2)** | **Mascot: owl → apple. Primary color: violet → red.** | User: "I've flattened it out because the owl looked too much like Duolingo. AI uses purple way too much, it's the AI slop color." New asset is a flat cartoon apple in `public/logo.png` (1024×1536 with apple + Tinker! wordmark + PLAY/LEARN/GROW subtitle). `--ink-red` (#e6396a) replaces `--ink-violet` everywhere. The mascot is **deliberately not an owl** — Duolingo owns that register; the apple is the older "teacher's apple" symbol. |
 | 2026-04-24 (pivot v2) | Confetti: dots → math symbols | User: "make the confetti like math symbols and shit". `lib/confetti.ts` now bursts π / ∫ / ∂ / ∇ / ∞ / ∑ / √ / Δ / x / + / = / etc. in Fraunces italic, palette teal/pink/orange (no purple). Hero static decorations are also six floating math symbols above the apple. Reinforces the "math is play" identity. |
 | 2026-04-24 (pivot v2) | Owl-specific Mascot interactions retired | Eye tracking, blink, head tilt, "settles to nap" assumed owl physiology (eyes, pupils, head/body separation). The flat apple has none of those. Replaced with idle bob, sparkle pulse, cursor-aware tilt of the whole apple, click bounce + math-symbol burst. Mascot Interactivity section in this file rewritten accordingly. |
+| 2026-05-29 (audit) | `--band-onyx` is now theme-aware: light `#fff4ec` (warm cream), dark `#08090b` | Pre-launch readiness audit corrected token drift. The 2026-04-24 entry above recorded the original near-black `#0b0d12`; the live token was reworked so light mode pairs warm cream with the red mascot. global.css is the source of truth. |
+| 2026-05-29 (audit) | Removed orphaned `--band-lavender` (`#ecebfb`) | It was a lavender/purple surface band that violated the no-purple rule, was never defined in global.css, and was referenced by no component. Dropped from the doc to stop it being a trap for future authors. Use `--band-sky` for a cool-light section. |

@@ -13,7 +13,7 @@
   //   • A plain-language verdict block above the SHA dump.
   //   • Surface chrome matches RunnerPanel (--demo-card / --demo-card-border).
 
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import {
     Engine, M18_CONFIG, seededInitWeights, cosineLR,
     loadTinyShakespeare, getBatch, seededRng,
@@ -226,6 +226,8 @@
   }
 
   onMount(() => { drawCurve(); });
+  // Free the GPUDevice on unmount instead of waiting for GC.
+  onDestroy(() => { engine?.destroy(); engine = null; });
   $effect(() => { drawCurve(); });
 
   const phaseLabel = $derived(({

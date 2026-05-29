@@ -27,11 +27,13 @@ export const GET: APIRoute = async ({ request }) => {
 
   return withApiErrors('review/queue', ctx.session.user.id, async () => {
     const cards = await getDueCards(ctx.db, ctx.session.user.id, limit);
-    // TODO(phase-e): clients will need prompt + hint text for each due card,
-    // but the queue endpoint returns IDs only (no MDX rendering at request
-    // time). Phase E will produce a build-time manifest mapping step_id ->
-    // { promptHTML, hintHTML, answerType }; the /review UI reads that
-    // manifest, not this endpoint, for prompt content.
+    // This endpoint returns due-card IDs only — no prompt/hint text. The
+    // build-time manifest that supplies prompt content (src/generated/
+    // step-prompts.json, built by scripts/gen-step-prompts.mjs) already exists,
+    // and the /review page resolves due cards server-side via getDueCards and
+    // joins to that manifest itself, so it does not call this endpoint. This
+    // route is retained only as an IDs-only JSON surface for future/external
+    // clients; the /review UI does not depend on it.
     return jsonOk({
       cards: cards.map((c) => ({
         stepId: c.stepId,

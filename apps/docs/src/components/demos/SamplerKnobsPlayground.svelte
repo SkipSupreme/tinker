@@ -422,6 +422,8 @@
 
   onDestroy(() => {
     cancelToken.cancelled = true;
+    engine?.destroy();
+    engine = null;
   });
 
   // Redraw the histogram whenever the sliders change (and we have cached logits).

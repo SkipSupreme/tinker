@@ -569,7 +569,12 @@
 
   onDestroy(() => {
     if (visHandler) document.removeEventListener('visibilitychange', visHandler);
+    // Cancel any in-flight run before destroying the device so its queued work
+    // doesn't fault on a destroyed device, then free the GPUDevice eagerly
+    // instead of waiting for GC.
     cancelToken.cancelled = true;
+    engine?.destroy();
+    engine = null;
   });
 
   $effect(() => { drawCurve(); });

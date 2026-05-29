@@ -257,7 +257,6 @@ const dateStr = cert.completedAt.toLocaleDateString('en-US', {
         font-weight: 700;
       }
       .fridge {
-        margin: 0;
         color: var(--site-fg-muted);
         font-size: 0.9rem;
         line-height: 1.6;
@@ -273,7 +272,7 @@ const dateStr = cert.completedAt.toLocaleDateString('en-US', {
 
       @media print {
         .no-print { display: none !important; }
-        body { background: #fff; }
+        body { background: white; }
         .sheet { margin: 0; padding: 0; max-width: none; }
         .cert { border: none; border-radius: 0; padding: 0; }
         @page { size: A4; margin: 22mm; }

@@ -9,7 +9,7 @@
   //
   // It is the "Slice 2 didn't break the math" assertion, made tangible.
 
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { Engine, M18_CONFIG, debugInitWeights, cpuForward, cpu } from '../../lib/m18/engine';
 
   const cfg = M18_CONFIG;
@@ -31,6 +31,10 @@
   let elapsedMs: number = $state(0);
   let errorMsg: string = $state('');
 
+  // Reused across re-runs so clicking "re-run" doesn't spawn (and orphan) a
+  // fresh GPUDevice + 21 compiled pipelines each time. Freed on unmount.
+  let engine: Engine | null = null;
+
   function buildBatch(): { tokens: Int32Array; weights: ReturnType<typeof debugInitWeights> } {
     const tokens = new Int32Array(N);
     // A deterministic, structured batch: stride 7 mod V across both batches.
@@ -49,12 +53,14 @@
     status = 'compiling';
     const t0 = performance.now();
     try {
-      const adapterRaw = await navigator.gpu.requestAdapter();
-      if (!adapterRaw) throw new Error('No WebGPU adapter.');
-      const info = (adapterRaw as unknown as { info?: { vendor?: string; architecture?: string } }).info;
-      adapter = [info?.vendor, info?.architecture].filter(Boolean).join(' / ') || 'WebGPU adapter';
-      const device = await adapterRaw.requestDevice();
-      const engine = Engine.fromDevice(device, cfg);
+      if (!engine) {
+        const adapterRaw = await navigator.gpu.requestAdapter();
+        if (!adapterRaw) throw new Error('No WebGPU adapter.');
+        const info = (adapterRaw as unknown as { info?: { vendor?: string; architecture?: string } }).info;
+        adapter = [info?.vendor, info?.architecture].filter(Boolean).join(' / ') || 'WebGPU adapter';
+        const device = await adapterRaw.requestDevice();
+        engine = Engine.fromDevice(device, cfg);
+      }
 
       const { tokens, weights } = buildBatch();
       engine.loadParameters(weights);
@@ -98,6 +104,7 @@
   }
 
   onMount(() => { run(); });
+  onDestroy(() => { engine?.destroy(); engine = null; });
 
   const passSoftmax = $derived(status === 'done' && softmaxRowsOk === softmaxRowsChecked);
   const passDrift = $derived(status === 'done' && wgslVsCpuMax < 1e-3);

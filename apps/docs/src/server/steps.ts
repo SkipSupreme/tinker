@@ -134,7 +134,7 @@ async function resolveDueCardAliases(db: DB, rows: Array<{
     .where(inArray(stepIdAlias.oldStepId, rows.map((r) => r.stepId)));
   const byOldId = new Map(aliases.map((a) => [a.oldStepId, a.newStepId]));
 
-  return rows.map((r) => ({
+  const mapped: DueCardSummary[] = rows.map((r) => ({
     stepId: byOldId.get(r.stepId) ?? r.stepId,
     lessonSlug: r.lessonSlug,
     moduleSlug: r.moduleSlug,
@@ -143,6 +143,21 @@ async function resolveDueCardAliases(db: DB, rows: Array<{
     reps: r.reps,
     lapses: r.lapses,
   }));
+
+  // Collapse cards that resolve to the same canonical step id to ONE entry,
+  // else /review renders two identical prompts (e.g. a pre-existing orphaned
+  // old-id card alongside its renamed new-id card, or a many-to-one merge).
+  // Callers pass rows oldest-due first, so the first occurrence is the most
+  // overdue — keep that one. In the common (no-alias) case every stepId is
+  // already unique, so this is a no-op.
+  const seen = new Set<string>();
+  const deduped: DueCardSummary[] = [];
+  for (const m of mapped) {
+    if (seen.has(m.stepId)) continue;
+    seen.add(m.stepId);
+    deduped.push(m);
+  }
+  return deduped;
 }
 
 async function findReviewCard(
@@ -160,7 +175,11 @@ async function findReviewCard(
   const aliases = await db
     .select({ oldStepId: stepIdAlias.oldStepId })
     .from(stepIdAlias)
-    .where(eq(stepIdAlias.newStepId, stepId));
+    .where(eq(stepIdAlias.newStepId, stepId))
+    // Deterministic winner when several old ids map to one new id (a merge):
+    // without an order the SELECT is unordered and grading would advance an
+    // arbitrary one of the matching cards.
+    .orderBy(asc(stepIdAlias.oldStepId));
 
   for (const alias of aliases) {
     const row = await db
@@ -246,24 +265,28 @@ export async function recordStepAttempt(
   input: StepAttemptInput,
   now: Date = new Date(),
 ): Promise<StepAttemptResult> {
-  const existing = await db
-    .select()
-    .from(fsrsCard)
-    .where(and(eq(fsrsCard.userId, userId), eq(fsrsCard.stepId, input.stepId)))
-    .get();
-
-  const prior: FsrsCardState = existing ? readFsrsRow(existing) : seedCard(now);
+  // Resolve aliases the same way the /review path does: if this step was
+  // renamed and the learner already has a mature card under the OLD id, reuse
+  // that card instead of seeding a fresh state=0 card under the new id (which
+  // would orphan months of retention history and produce a duplicate review
+  // card). findReviewCard does direct-then-reverse-alias lookup.
+  const found = await findReviewCard(db, userId, input.stepId);
+  const prior: FsrsCardState = found ? readFsrsRow(found.row) : seedCard(now);
   const rating: FsrsRating = input.rating ?? (input.isCorrect ? 'good' : 'again');
   const { card: next } = scheduleNext(prior, rating, now);
 
-  await upsertCard(db, userId, input.stepId, input.lessonSlug, input.moduleSlug, next);
+  // Write under the existing card's stored id when one was found, so a
+  // post-rename re-attempt updates the mature card rather than forking a new
+  // row under the new id.
+  const targetStepId = found ? found.row.stepId : input.stepId;
+  await upsertCard(db, userId, targetStepId, input.lessonSlug, input.moduleSlug, next);
 
-  const attemptNo = await nextAttemptNo(db, userId, input.stepId);
+  const attemptNo = await nextAttemptNo(db, userId, targetStepId);
   await db.insert(stepCheck).values({
     id: crypto.randomUUID(),
     userId,
     lessonSlug: input.lessonSlug,
-    stepId: input.stepId,
+    stepId: targetStepId,
     answerJson: JSON.stringify({ answer: input.answer }),
     isCorrect: input.isCorrect,
     rating,
@@ -272,7 +295,7 @@ export async function recordStepAttempt(
   });
 
   return {
-    stepId: input.stepId,
+    stepId: found ? found.responseStepId : input.stepId,
     rating,
     due: next.due,
     state: next.state,

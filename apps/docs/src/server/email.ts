@@ -103,9 +103,11 @@ async function importHmacKey(secret: string): Promise<CryptoKey> {
 /**
  * Unsubscribe tokens expire after 90 days. The token-shape is
  * `${userId}.${ts}.${sig}` where the signed payload is `${userId}|${ts}`.
- * Pre-expiry tokens (no `ts` segment) are accepted forever — kept for the
- * one-time migration window after this expiry change landed. Remove the
- * legacy branch once it's clear no live emails carry the old shape.
+ * The pre-2026-05-27 legacy 2-segment shape (`${userId}.${sig}`, no timestamp)
+ * was accepted forever, which let a single leaked old link be replayed to flip
+ * a user's marketing opt-out indefinitely. That branch has been removed: only
+ * timestamped, expiring tokens are honored. A subscriber holding a stale legacy
+ * link just hits the unsubscribe page's account-link fallback instead.
  */
 const UNSUB_TOKEN_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 
@@ -121,22 +123,8 @@ export async function verifyUnsubscribeToken(
   secret: string,
 ): Promise<string | null> {
   const parts = token.split('.');
-  // Legacy 2-segment shape: ${userId}.${sig} — pre-2026-05-27 emails.
-  if (parts.length === 2) {
-    const [userId, sigB64] = parts;
-    if (!userId || !sigB64) return null;
-    try {
-      const key = await importHmacKey(secret);
-      const ok = await crypto.subtle.verify(
-        'HMAC', key, b64UrlToBytes(sigB64), enc.encode(userId),
-      );
-      return ok ? userId : null;
-    } catch (e) {
-      console.error('[unsub] legacy token verify threw:', e);
-      return null;
-    }
-  }
-  // Current 3-segment shape: ${userId}.${ts}.${sig}
+  // Only the timestamped 3-segment shape is honored: ${userId}.${ts}.${sig}.
+  // (The legacy untimestamped 2-segment shape was removed — see TTL note above.)
   if (parts.length !== 3) return null;
   const [userId, tsStr, sigB64] = parts;
   if (!userId || !tsStr || !sigB64) return null;

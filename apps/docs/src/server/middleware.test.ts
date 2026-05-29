@@ -2,19 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { requireCsrf, requireSameOrigin } from './middleware';
 
 describe('requireCsrf', () => {
-  it('allows a valid double-submit token when present', () => {
-    const req = new Request('https://learntinker.com/api/progress/view', {
-      method: 'POST',
-      headers: {
-        cookie: '__Secure-tinker.csrf_token=abc123',
-        'x-tinker-csrf': 'abc123',
-      },
-    });
-
-    expect(requireCsrf(req)).toBeNull();
-  });
-
-  it('falls back to same-origin validation when no csrf cookie exists', () => {
+  // CSRF is enforced purely by the same-origin check (the double-submit token
+  // path was dead code and has been removed). These tests guard the ONLY
+  // defense, so a regression that weakens it fails loudly.
+  it('allows a same-origin state-changing request', () => {
     const req = new Request('https://learntinker.com/api/progress/view', {
       method: 'POST',
       headers: {
@@ -33,6 +24,16 @@ describe('requireCsrf', () => {
         origin: 'https://evil.example',
         'content-type': 'application/json',
       },
+    });
+
+    const res = requireCsrf(req);
+    expect(res?.status).toBe(403);
+  });
+
+  it('rejects a state-changing request with neither Origin nor Referer (fails closed)', () => {
+    const req = new Request('https://learntinker.com/api/progress/view', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
     });
 
     const res = requireCsrf(req);

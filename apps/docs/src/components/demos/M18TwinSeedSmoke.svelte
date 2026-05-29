@@ -10,7 +10,7 @@
   // under half a minute, the determinism property doesn't need a converged
   // model to demonstrate.
 
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import {
     Engine, M18_CONFIG, seededInitWeights, cosineLR,
     loadTinyShakespeare, getBatch, seededRng,
@@ -205,6 +205,8 @@
   }
 
   onMount(() => { drawCurve(); });
+  // Free the GPUDevice on unmount instead of waiting for GC.
+  onDestroy(() => { engine?.destroy(); engine = null; });
   $effect(() => { drawCurve(); });
 
   const phaseLabel = $derived(({

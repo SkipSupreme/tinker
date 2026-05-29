@@ -309,6 +309,8 @@
     if (sampleTimer) clearTimeout(sampleTimer);
     if (userScrollResetTimer) clearTimeout(userScrollResetTimer);
     if (rafId !== null) cancelAnimationFrame(rafId);
+    engine?.destroy();
+    engine = null;
   });
 
   const phaseLabel = $derived(({

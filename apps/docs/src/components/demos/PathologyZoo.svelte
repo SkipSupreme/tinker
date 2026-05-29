@@ -328,7 +328,11 @@
   }
 
   onMount(() => { drawCurve(); });
-  onDestroy(() => { cancelToken.cancelled = true; });
+  onDestroy(() => {
+    cancelToken.cancelled = true;
+    engine?.destroy();
+    engine = null;
+  });
   $effect(() => { drawCurve(); });
 
   const activeDescriptor = $derived(activePreset ? PRESETS.find((p) => p.key === activePreset) : null);
