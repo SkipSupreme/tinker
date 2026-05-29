@@ -32,6 +32,15 @@ const { title } = Astro.props;
         padding: 0;
         background: #fff;
       }
+      /* Neutralize the global sticky-nav scroll offset. global.css sets
+         html { scroll-padding-top } so lesson headings clear the real site
+         nav; fixtures have no nav, and on short device viewports (iPhone
+         project, 3x DPR) that offset shifts where Playwright scrolls the
+         taller-than-viewport fixture into view, re-anti-aliasing axis-label
+         text and tripping the visual baseline. Pin to 0 for determinism. */
+      html {
+        scroll-padding-top: 0;
+      }
       body {
         font-family: ui-sans-serif, system-ui, sans-serif;
         color: #111;
