@@ -1034,12 +1034,18 @@ const courseSlug = 'ml-math';
       is_correct: true,
       rating: opts.rating,
     };
-    void postSeed(payload).then((r) => {
+    // Skip the POST for logged-out visitors. It would 401 (expected, ignored
+    // server-side), but the browser still surfaces a red "Failed to load
+    // resource: 401" on every correct answer. Gating on the memoized session
+    // check mirrors ProgressBeacon and lib/auth-state.ts; postSeed still maps
+    // 401/403 to 'auth' as a safety net for a session that expired mid-lesson.
+    void (async () => {
+      if (!(await isAuthed())) return;
+      const r = await postSeed(payload);
       if (r !== 'retry' && r !== 'rate-limit') return;
-      void getRetryUser().then((user) => {
-        if (user.kind === 'user') enqueuePendingSeed(payload, user.id);
-      });
-    });
+      const user = await getRetryUser();
+      if (user.kind === 'user') enqueuePendingSeed(payload, user.id);
+    })();
   }
 
   // Drain any previously-failed seeds once per lesson load (non-blocking).
