@@ -38,7 +38,10 @@ export function createAuth(env: AuthEnv) {
     trustedOrigins: [env.PUBLIC_SITE_URL],
     emailAndPassword: { enabled: true, autoSignIn: true },
     advanced: {
-      cookiePrefix: '__Secure-tinker',
+      // Just 'tinker': Better Auth auto-prepends '__Secure-' when
+      // useSecureCookies is on (HTTPS), so a '__Secure-' here would double it
+      // into '__Secure-__Secure-tinker.session_token'.
+      cookiePrefix: 'tinker',
       useSecureCookies: isHttps,
       defaultCookieAttributes: {
         sameSite: 'lax',
