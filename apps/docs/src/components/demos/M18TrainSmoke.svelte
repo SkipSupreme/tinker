@@ -241,8 +241,12 @@
     phase = 'loading';
     const t0 = performance.now();
     try {
-      // Reference CSV.
-      const csv = await fetch('/m18/nanogpt-reference.csv').then((r) => r.text());
+      // Reference CSV. Guard r.ok: a 404 body would parse into NaN rows, and
+      // since NaN !== NaN, every checkEnvelope() lookup misses and short-circuits
+      // to { ok: true } — the smoke test would vacuously "pass" with no reference.
+      const refRes = await fetch('/m18/nanogpt-reference.csv');
+      if (!refRes.ok) throw new Error(`reference CSV fetch failed: ${refRes.status}`);
+      const csv = await refRes.text();
       refRows.length = 0; refRows.push(...parseRefCsv(csv));
 
       // Corpus.
