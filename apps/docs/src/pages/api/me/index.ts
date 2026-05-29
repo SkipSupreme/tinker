@@ -50,9 +50,14 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
       const code = e && typeof e === 'object' && 'name' in e ? (e as { name?: string }).name : 'Error';
       console.error(`[me] account-deleted email failed: ${code} status=${status ?? 'unknown'}`);
     });
-    const waitUntil = (locals as { cfContext?: { waitUntil?: (promise: Promise<unknown>) => void } })
-      .cfContext?.waitUntil;
-    if (waitUntil) waitUntil(accountDeletedEmail);
+    // Call waitUntil bound to its execution context. Pulling it into a bare
+    // local and invoking it detached throws "Illegal invocation: incorrect
+    // `this`" on Cloudflare Workers — and because the user row is already
+    // deleted above, that surfaced as a 500 on a SUCCESSFUL deletion (the UI
+    // reports failure on a delete that actually went through).
+    const cfContext = (locals as { cfContext?: { waitUntil?: (promise: Promise<unknown>) => void } })
+      .cfContext;
+    if (cfContext?.waitUntil) cfContext.waitUntil(accountDeletedEmail);
     else await accountDeletedEmail;
   }
 
