@@ -2,7 +2,8 @@
   import { onDestroy } from 'svelte';
   import { Mafs, Coordinates, MovablePoint, Point } from 'svelte-mafs';
 
-  import { TINKER_HERO_EVENT } from '../../lib/events';
+  import { TINKER_HERO_EVENT, emitHeroEvent } from '../../lib/events';
+  import type { TinkerHeroEventName } from '../../lib/events';
 
   interface Props {
     /** Initial selected character. */
@@ -23,10 +24,10 @@
     return stageEl.closest('[data-hero-region]');
   }
 
-  function dispatchHero<T>(name: string, detail: T) {
+  function dispatchHero<T>(name: TinkerHeroEventName, detail: T) {
     const target = heroRegion ?? findHeroRegion();
     if (!target) return;
-    target.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: false }));
+    emitHeroEvent(target, name, detail);
   }
 
   // Normalize Mafs viewBox coords to [0,1] hero-region space.
@@ -85,6 +86,25 @@
   // In hero mode the loss pill tints coral once the visitor has dragged a
   // letter meaningfully off its cluster. Baseline noise loss is ~0.002.
   const lossBad = $derived(currentLoss > 0.02);
+
+  // Success milestone: the visitor pulled a letter out of its cluster (loss
+  // climbed past the "bad" line) and then brought the layout back to a tight,
+  // low-loss state — the "I re-trained it" moment. That's what earns the
+  // apple's celebratory burst. Hysteresis (bad > 0.02, recovered < 0.008)
+  // keeps it from flapping on jitter; re-arm after each success so a fresh
+  // pull-and-recover fires again. Keyed on currentLoss (all letters), so it
+  // reacts no matter which dot the visitor grabbed.
+  let lossWasBad = $state(false);
+  $effect(() => {
+    if (!hero) return;
+    const l = currentLoss;
+    if (l > 0.02) {
+      lossWasBad = true;
+    } else if (lossWasBad && l < 0.008) {
+      lossWasBad = false;
+      dispatchHero(TINKER_HERO_EVENT.success, { milestone: 'recovered' });
+    }
+  });
 
   // Two-way bind for the selected point so dragging updates state.
   const selX = $derived(positions[selected]?.[0] ?? 0);

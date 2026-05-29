@@ -30,7 +30,6 @@
     "katex": "^0.17.0",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
-    "resend": "^6.12.4",
     "svelte": "^5.55.9",
     "svelte-mafs": "workspace:*",
     "ts-fsrs": "5.4.1",
