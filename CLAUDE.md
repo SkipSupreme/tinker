@@ -25,6 +25,18 @@ Specifics:
 - Deploy: `pnpm dlx wrangler@latest deploy` from `apps/docs/`
 - Production: https://learntinker.com
 
+## Gotchas
+
+### Dark mode and the Safari browser chrome (toolbar/address bar)
+
+Safari 26+ (iOS 26 / macOS Tahoe) **ignores the `theme-color` meta tag**. It tints the browser chrome from CSS instead: the `background-color` of the topmost fixed/sticky element near the viewport edge, falling back to the `<body>` background. So the toolbar color is driven by our CSS, not a meta tag. Three rules keep it working (all already in place; don't undo them):
+
+1. **Keep `.site-header` (the nav) transparent with no `backdrop-filter`.** The frosted glass lives on `.site-header::before` (an absolutely-positioned child, which Safari's tint sampler ignores). A translucent background on the nav itself makes Safari sample a see-through color and the toolbar goes light. See `apps/docs/src/components/Nav.astro`.
+2. **Keep an opaque, theme-aware `background-color: var(--site-bg)` on `<body>`** (in `global.css`). That is Safari's fallback target, and it must flip with `[data-theme]`.
+3. **Never "fix" the chrome via `theme-color` JS or a hidden sampler element behind the nav.** Both were tried and both fail. The `theme-color` meta + observer in `Base.astro` are only for Chrome/Edge/Firefox-Android/Safari <26.
+
+Known limitation, not a bug: iOS 26 Safari samples the toolbar **at initial render** and does **not** re-sample on a JS theme toggle (Apple by design). So the in-page toggle won't repaint the toolbar instantly; a reload/navigation (which re-runs initial render with the persisted theme) shows the correct color. `Base.astro` has a best-effort nudge for the live toggle. Real toolbar behavior can only be verified on a device (Chromium/Playwright confirms the CSS, not the chrome).
+
 ## Skill routing
 
 When the user's request matches an available gstack skill, invoke it using the Skill tool as your FIRST action. Do not answer directly, do not use other tools first.
