@@ -326,6 +326,18 @@
                       {/each}
                     </ol>
                   </div>
+                {:else if m.anchor === 'm0'}
+                  <a class="mod-head mod-head-link" href="/diagnostic">
+                    <span class="mod-num">M{m.order}</span>
+                    <span class="mod-body">
+                      <span class="mod-title">{m.title}</span>
+                      <span class="mod-summary">{m.summary}</span>
+                      <span class="mod-meta">
+                        <span class="placement-tag">Placement · ~5 min</span>
+                        <span class="placement-go">Take it&nbsp;→</span>
+                      </span>
+                    </span>
+                  </a>
                 {:else}
                   <div class="mod-head mod-head-static">
                     <span class="mod-num">M{m.order}</span>
@@ -642,10 +654,17 @@
     transition: transform 150ms ease, border-color 160ms ease, box-shadow 160ms ease;
   }
   .mod-head-static { cursor: default; }
+  .mod-head-link { text-decoration: none; }
   .mod-head:hover:not(.mod-head-static) {
     transform: translateX(2px);
     border-color: color-mix(in srgb, var(--arc) 55%, transparent);
     box-shadow: 0 14px 28px -20px color-mix(in srgb, var(--arc) 70%, transparent);
+  }
+  .placement-go {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--cta-hover);
   }
   .mod-num {
     font-family: var(--font-display);

@@ -168,6 +168,22 @@ export const fsrsCard = sqliteTable('fsrs_card', {
   index('fsrs_card_by_user_module_due').on(t.userId, t.moduleSlug, t.due),
 ]);
 
+// Result of the M0 adaptive placement diagnostic. One row per (user, course):
+// "where this learner should start." Retaking upserts (latest wins). Not a
+// gate — the learner can start anywhere; this only sets the recommended entry.
+// strandScores is a JSON blob ({ strands, frontier }) kept for later difficulty
+// calibration once there's response data; entryModule/entryLevel are the
+// columns the app actually reads.
+export const placement = sqliteTable('placement', {
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  courseSlug: text('course_slug').notNull(),
+  entryModule: text('entry_module').notNull(),
+  entryLevel: text('entry_level').notNull(),
+  strandScores: text('strand_scores').notNull(),
+  itemsAnswered: integer('items_answered').notNull(),
+  takenAt: integer('taken_at', { mode: 'timestamp_ms' }).notNull(),
+}, (t) => [primaryKey({ columns: [t.userId, t.courseSlug] })]);
+
 export const keyIdea = sqliteTable('key_idea', {
   userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
   moduleSlug: text('module_slug').notNull(),

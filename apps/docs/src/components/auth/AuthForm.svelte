@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { LS_KEY } from '../../lib/storage-keys';
+
   type Mode = 'signin' | 'signup';
 
   let {
@@ -49,6 +51,30 @@
     }
   }
 
+  /**
+   * Carry a pre-signup placement result into the new account. A logged-out
+   * learner who takes the diagnostic gets their result stashed in localStorage
+   * (LS_KEY.placement, already in the /api/placement payload shape); on the
+   * first sign-in/up we POST it so the account remembers where they should
+   * start. Non-fatal: a failure never blocks login, and the key is kept for a
+   * later attempt.
+   */
+  async function mergeAnonPlacement(): Promise<void> {
+    try {
+      const raw = localStorage.getItem(LS_KEY.placement);
+      if (!raw) return;
+      const res = await fetch('/api/placement', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'content-type': 'application/json' },
+        body: raw,
+      });
+      if (res.ok) localStorage.removeItem(LS_KEY.placement);
+    } catch {
+      // Keep it for a later sign-in; never block the redirect.
+    }
+  }
+
   async function submit(ev: SubmitEvent) {
     ev.preventDefault();
     status = 'sending';
@@ -92,6 +118,7 @@
       }
       // Sync any pre-signup anonymous progress before leaving the page.
       await mergeAnonProgress();
+      await mergeAnonPlacement();
       window.location.assign(callbackURL);
     } catch (e) {
       status = 'error';

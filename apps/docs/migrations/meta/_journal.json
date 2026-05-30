@@ -43,6 +43,13 @@
       "when": 1780074886245,
       "tag": "0005_classy_hobgoblin",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1780114726255,
+      "tag": "0006_supreme_sage",
+      "breakpoints": true
     }
   ]
 }

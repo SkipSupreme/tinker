@@ -1,0 +1,63 @@
+---
+export const prerender = true;
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import Diagnostic from '../components/diagnostic/Diagnostic.svelte';
+
+/**
+ * /diagnostic — the M0 adaptive placement test. The engine + item bank are
+ * client-side (lib/diagnostic); this page only resolves, at build time, the
+ * real first lesson of each possible entry module so the result screen links
+ * to the right place even if a lesson is later renamed.
+ *
+ * Entry modules mirror lib/diagnostic/items.ts LEVELS + CLEARED_ALL.
+ */
+const ENTRY_MODULES = [
+  'm1-pre-algebra',
+  'm2-algebra',
+  'm3-trigonometry',
+  'm5-calculus',
+  'm8-probability',
+  'm10-optimization',
+];
+
+const allModules = await getCollection('modules');
+const allLessons = await getCollection('lessons', (l) => !l.data.draft);
+const moduleById = new Map(allModules.map((m) => [m.id, m]));
+
+function firstLesson(moduleId: string) {
+  return allLessons
+    .filter((l) => l.data.module === moduleId)
+    .sort((a, b) => (a.data.order ?? 0) - (b.data.order ?? 0))[0];
+}
+
+const modules: Record<
+  string,
+  { id: string; num: number; title: string; firstLessonSlug: string; firstLessonTitle: string; anchor: string }
+> = {};
+for (const id of ENTRY_MODULES) {
+  const m = moduleById.get(id);
+  const fl = firstLesson(id);
+  if (!m || !fl) continue;
+  modules[id] = {
+    id,
+    num: m.data.order,
+    title: m.data.title,
+    firstLessonSlug: fl.id,
+    firstLessonTitle: fl.data.title,
+    anchor: id.split('-')[0],
+  };
+}
+---
+
+<Base title="Find your starting point">
+  <main class="diagnostic-page">
+    <Diagnostic client:load modules={modules} />
+  </main>
+</Base>
+
+<style>
+  .diagnostic-page {
+    padding: 3rem 1.5rem 5rem;
+  }
+</style>

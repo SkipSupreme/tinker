@@ -32,7 +32,7 @@ Per-module work units: one research fire, one conversion pass, one editing pass,
 
 | Module | Prompt block | Research brief | Lessons | Module status |
 |---|---|---|---|---|
-| m0-diagnostic | n/a (placement diagnostic) | n/a | n/a | planned |
+| m0-diagnostic | n/a (placement diagnostic) | n/a | n/a (adaptive engine) | shipped |
 | m1-pre-algebra | yes | yes | 5 | drafting |
 | m2-algebra | yes | yes | 6 | drafting |
 | m3-trigonometry | yes | yes | 5 | drafting |
@@ -61,6 +61,7 @@ Per-module work units: one research fire, one conversion pass, one editing pass,
 - **m12-backpropagation** is in `drafting` with all 5 lessons landed: `draw-the-graph`, `walk-it-backward`, `build-the-value-class`, `from-scalars-to-tensors`, `check-it-break-it-fix-it`. New widgets: GraphForgeBackprop (with edgeInspector folded in), TopoSortWalkthrough, ValueClassBuilder (Pyodide-driven, lazy-loads ~10 MB), BroadcastReducer, GradientCheckBench, ForwardVsReverseRaceTrack. The brief named seven widgets in §4; the 7→6 collapse was deliberate — `edgeInspector` was implemented as a click-an-edge mode of `GraphForgeBackprop` rather than a separate component.
 - **m18-capstone** shipped in five slices over 2026-04-29 to 2026-05-26 (commits 8541ddb through 31d2314). Five lessons (press-start, watch-it-learn, your-checkpoint, now-make-it-talk, the-credits-roll), five widgets (runnerPanel, pathologyZoo, seedScrubber, samplerKnobsPlayground, creditsRollPanel), and the reference checkpoint at `apps/docs/public/m18/reference.bin` (seed `hamlet`, 2000 iters, val NLL 2.178). The course closes on itself per design.
 - **m14 through m18** are fully shipped. The course was built from both ends toward the middle, which is why the foundation arc (m1–m13) still has gaps that read as "drafting" in this table.
+- **m0-diagnostic** is shipped, but it is NOT a lesson module — it is an adaptive placement test (route `/diagnostic`). Design + research grounding in `docs/plans/2026-05-29-m0-diagnostic-placement-design.md`. The engine/item bank are pure TS in `apps/docs/src/lib/diagnostic/` (`items.ts`, `engine.ts` + tests); a binary search for the learner's frontier over five ordered levels with prerequisite propagation, erring low. Entry points: primary CTA on `/welcome` and the M0 node on the Course Atlas. Persists to a `placement` table (migration `0006`, `server/placement.ts`, `api/placement.ts`) with anon→account merge in `AuthForm.svelte`. To re-tune: edit the level→module map in `items.ts` (`LEVELS`/`CLEARED_ALL`) and the mini-probe rule in `engine.ts` (`decideLevel`).
 
 ---
 

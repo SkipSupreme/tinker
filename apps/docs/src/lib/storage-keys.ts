@@ -9,6 +9,9 @@ export const LS_KEY = {
   xp: 'tinker:xp',
   soundMuted: 'tinker:sound-muted',
   stuckLastShown: 'tinker:stuck-last-shown',
+  /** Placement result for a logged-out learner; merged to the account on
+   *  sign-in/up by AuthForm, then cleared. Stores the /api/placement payload. */
+  placement: 'tinker:placement',
 } as const;
 
 export const lessonUnlockedKey = (slug: string) => `tinker:lesson:${slug}:unlocked`;

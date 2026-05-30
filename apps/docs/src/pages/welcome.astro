@@ -42,7 +42,8 @@ if (Astro.request.method === 'POST') {
     .update(userProfile)
     .set({ marketingOptIn: optIn, onboardedAt: new Date() })
     .where(eq(userProfile.userId, session.user.id));
-  return Astro.redirect('/courses/ml-math');
+  // Both buttons complete onboarding; only the destination differs.
+  return Astro.redirect(form.get('next') === 'course' ? '/courses/ml-math' : '/diagnostic');
 }
 
 if (existing?.onboardedAt) return Astro.redirect('/');
@@ -53,14 +54,25 @@ if (existing?.onboardedAt) return Astro.redirect('/');
     <h1>You're in.</h1>
     <p class="lede">
       One course is live: <a href="/courses/ml-math">Math for Machine Learning</a>.
-      Eighteen modules, from single-variable calculus to a transformer you train yourself in your browser.
+      Nineteen modules, from arithmetic to a transformer you train yourself in your browser.
+    </p>
+    <p class="sub">
+      Not sure where to begin? A short adaptive check finds your starting point so you
+      skip what you already know — usually under a dozen questions, no grade.
     </p>
     <form method="POST">
       <label class="opt-in">
         <input type="checkbox" name="marketing_opt_in" value="on" />
         <span>Email me when new modules drop. Unsubscribe any time.</span>
       </label>
-      <button type="submit">Start learning</button>
+      <div class="actions">
+        <button type="submit" name="next" value="diagnostic" class="primary">
+          Find your starting point
+        </button>
+        <button type="submit" name="next" value="course" class="ghost">
+          Browse the full map instead
+        </button>
+      </div>
     </form>
   </section>
 </Base>
@@ -76,8 +88,10 @@ if (existing?.onboardedAt) return Astro.redirect('/');
     font-size: 2rem;
     margin: 0 0 0.75rem;
   }
-  .lede { color: var(--site-fg-muted); margin: 0 0 2rem; }
+  .lede { color: var(--site-fg-muted); margin: 0 0 1rem; }
+  .sub { color: var(--site-fg-muted); margin: 0 0 2rem; font-size: 0.95rem; line-height: 1.55; }
   form { display: flex; flex-direction: column; gap: 1.25rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
   .opt-in {
     display: flex;
     gap: 0.65rem;
@@ -90,15 +104,29 @@ if (existing?.onboardedAt) return Astro.redirect('/');
     cursor: pointer;
   }
   .opt-in input { margin-top: 0.25rem; }
-  button {
-    align-self: flex-start;
+  .primary {
     padding: 0.7rem 1.4rem;
-    background: var(--site-fg);
-    color: var(--site-bg);
+    background: var(--cta);
+    color: var(--cta-fg);
     border: none;
     border-radius: var(--radius-md);
     font-weight: 600;
     cursor: pointer;
+    transition: background-color 140ms ease, transform 140ms ease;
   }
-  button:hover { transform: translateY(-1px); }
+  .primary:hover { background: var(--cta-hover); transform: translateY(-1px); }
+  .ghost {
+    padding: 0.7rem 1.1rem;
+    background: transparent;
+    color: var(--site-fg-muted);
+    border: 1px solid var(--site-border);
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 140ms ease, border-color 140ms ease;
+  }
+  .ghost:hover { color: var(--site-fg); border-color: var(--site-fg); }
+  @media (prefers-reduced-motion: reduce) {
+    .primary:hover { transform: none; }
+  }
 </style>
