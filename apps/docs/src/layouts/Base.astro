@@ -66,20 +66,45 @@ const titleWithSuffix = title === 'Tinker' ? title : `${title} · Tinker`;
     />
     <title>{titleWithSuffix}</title>
 
-    {/* FOUC-free theme init + browser-chrome (theme-color) sync. BOTH must run
-        before first paint, so this CANNOT depend on global.css being parsed
-        yet — Astro injects that stylesheet AFTER this inline script, so
-        getComputedStyle('--site-bg') is empty here. We set theme-color from
-        literal values instead; iOS Safari only registers a theme-color that
-        has content at first paint, then it honors later updates. The two
-        values mirror --site-bg in global.css — keep them in sync. */}
+    {/* FOUC-free theme init + browser-chrome sync. Runs before first paint, so
+        it CANNOT depend on global.css being parsed yet (Astro injects that
+        stylesheet AFTER this inline script). On INITIAL render the chrome color
+        comes from CSS: Safari < 26 reads the theme-color meta we set here;
+        Safari 26 reads the <body> background (the sticky nav is transparent on
+        purpose — see Nav.astro / global.css). The hard part is the LIVE toggle:
+        iOS 26 Safari samples the toolbar at render and, by Apple's design, does
+        NOT re-sample on JS-driven theme changes, so flipping data-theme restyles
+        the page but leaves the toolbar at its load-time color. nudgeChrome() is
+        a best-effort re-sample trigger; the reliable path is a reload/navigation,
+        which re-runs initial render with the persisted theme. THEME_COLORS
+        mirror --site-bg in global.css — keep them in sync. */}
     <script is:inline>
       (function () {
         var THEME_COLORS = { light: '#fdfdfc', dark: '#0e0f10' };
+        function currentTheme() {
+          return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+        }
         function syncChrome() {
-          var t = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
           var m = document.querySelector('meta[name="theme-color"]');
-          if (m) m.setAttribute('content', THEME_COLORS[t]);
+          if (m) m.setAttribute('content', THEME_COLORS[currentTheme()]);
+        }
+        // Best-effort nudge for iOS 26: a plain JS color change won't make Safari
+        // re-derive the toolbar, but momentarily inserting a NEW fixed element at
+        // the viewport's top edge (in the new theme color) is a render-tree change
+        // — the kind of input Safari samples — which can push it to re-derive.
+        // We pull it back out after two frames; the <body> background then keeps
+        // the toolbar correct. Guards on body (the initial call runs in <head>).
+        function nudgeChrome() {
+          if (!document.body) return;
+          var n = document.createElement('div');
+          n.setAttribute('aria-hidden', 'true');
+          n.style.cssText =
+            'position:fixed;top:0;left:0;right:0;height:8px;z-index:2147483647;' +
+            'pointer-events:none;background:' + THEME_COLORS[currentTheme()];
+          document.body.appendChild(n);
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () { n.remove(); });
+          });
         }
         var saved;
         try { saved = localStorage.getItem('theme'); } catch (_) {}
@@ -87,11 +112,14 @@ const titleWithSuffix = title === 'Tinker' ? title : `${title} · Tinker`;
         // prefers-color-scheme is intentionally ignored).
         document.documentElement.dataset.theme =
           saved === 'dark' || saved === 'light' ? saved : 'light';
-        // Color the address/status bar before paint.
+        // Initial render: just set the meta (no nudge — first paint samples fine).
         syncChrome();
-        // Re-sync the meta ONLY (never touches data-theme, so no observer
-        // loop) whenever the theme toggle flips data-theme.
-        new MutationObserver(syncChrome).observe(document.documentElement, {
+        // On every toggle (data-theme flip): re-sync the meta AND nudge Safari to
+        // re-derive the chrome. Never touches data-theme, so no observer loop.
+        new MutationObserver(function () {
+          syncChrome();
+          nudgeChrome();
+        }).observe(document.documentElement, {
           attributes: true,
           attributeFilter: ['data-theme'],
         });
