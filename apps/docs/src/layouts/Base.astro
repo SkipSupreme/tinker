@@ -42,10 +42,12 @@ const titleWithSuffix = title === 'Tinker' ? title : `${title} · Tinker`;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    {/* Browser chrome (iOS Safari address/status bar) color. Left contentless
-        on purpose: the inline script below sets it from the active theme's
-        --site-bg token so global.css stays the single source of truth, and
-        re-syncs it on every theme toggle. */}
+    {/* Browser chrome color for browsers that still honor theme-color: Chrome,
+        Edge, Firefox-Android, and Safari < 26. Safari 26+ IGNORES this meta and
+        instead samples a page element's background-color (see .ua-chrome-tint in
+        global.css + the body background). Left contentless on purpose: the
+        inline script below fills it from the active theme's --site-bg token so
+        global.css stays the single source of truth, and re-syncs on toggle. */}
     <meta name="theme-color" />
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content="noindex" />}
@@ -105,6 +107,11 @@ const titleWithSuffix = title === 'Tinker' ? title : `${title} · Tinker`;
     </script>
   </head>
   <body>
+    {/* Safari 26 derives the browser toolbar tint from the topmost full-width
+        fixed/sticky element's background-color (ignoring theme-color). The real
+        nav is translucent, so this opaque, theme-aware strip is what Safari
+        samples. Hidden behind the nav; see .ua-chrome-tint in global.css. */}
+    <div class="ua-chrome-tint" aria-hidden="true"></div>
     <a class="skip-link" href="#main">Skip to main content</a>
     <Nav />
     <main id="main" class={mainClass}>
