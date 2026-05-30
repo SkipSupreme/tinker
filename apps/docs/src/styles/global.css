@@ -182,31 +182,14 @@ body {
   display: flex;
   flex-direction: column;
   /* Safari 26 (macOS Tahoe / iOS 26) ignores the theme-color meta tag and
-     instead derives the browser chrome color from CSS: a full-width fixed/
-     sticky element at the viewport edge, else the BODY background-color. html's
-     background is NOT consulted for chrome, so body needs its own opaque,
-     theme-aware background. This also covers iOS 26's bottom toolbar (body is
-     the fallback there too). Mirrors html's --site-bg — zero visual change. */
+     instead derives the browser chrome color from CSS: the topmost fixed/sticky
+     element near the viewport edge, falling back to the BODY background-color.
+     html's background is NOT consulted for chrome. The sticky nav is left
+     transparent on purpose (its glass lives on .site-header::before, which the
+     tint sampler ignores), so Safari falls back to THIS body background. Mirrors
+     html's --site-bg — zero visual change. Also covers iOS 26's bottom toolbar,
+     where body is the fallback too. */
   background-color: var(--site-bg);
-}
-
-/* Safari 26 browser-chrome sampler. Safari reads the background-color of the
-   topmost full-width fixed/sticky element for its toolbar tint. Our real nav
-   (.site-header) is translucent for the frosted-glass blur, and Safari can't
-   resolve a semi-transparent color into the opaque toolbar — so we give it a
-   dedicated OPAQUE strip to sample instead. It's 6px tall and sits at z-index 0
-   behind the nav (z-index 10), so it's never visible: its color is var(--site-bg),
-   identical to what shows behind the translucent nav anyway. Flips with the
-   theme because --site-bg is keyed off [data-theme]. Harmless in every other
-   browser (purely presentational, hidden, pointer-events:none). */
-.ua-chrome-tint {
-  position: fixed;
-  inset-block-start: 0;
-  inset-inline: 0;
-  height: 6px;
-  z-index: 0;
-  background-color: var(--site-bg);
-  pointer-events: none;
 }
 
 img,

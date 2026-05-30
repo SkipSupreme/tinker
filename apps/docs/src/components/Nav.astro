@@ -54,9 +54,27 @@ try {
     position: sticky;
     top: 0;
     z-index: 10;
-    background: color-mix(in srgb, var(--site-bg) 92%, transparent);
-    backdrop-filter: saturate(180%) blur(8px);
+    /* The frosted-glass background + blur live on ::before (an absolutely-
+       positioned child), NOT here. Safari 26 derives the browser toolbar tint
+       from the topmost fixed/sticky element's background-color, and a
+       translucent one (which the glass needs) produces an unpredictable, often
+       light toolbar in dark mode. Leaving THIS sticky element transparent with
+       no backdrop-filter gives Safari nothing to sample, so it falls back to
+       the <body> background (var(--site-bg)) and the chrome follows the theme.
+       Safari's tint sampler ignores absolute children, so the glass on ::before
+       stays invisible to it while users still see it. */
+    background: transparent;
     border-bottom: 1px solid var(--site-border);
+  }
+  .site-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: color-mix(in srgb, var(--site-bg) 92%, transparent);
+    /* -webkit- prefix is required for the blur to render in Safari at all. */
+    -webkit-backdrop-filter: saturate(180%) blur(8px);
+    backdrop-filter: saturate(180%) blur(8px);
   }
   .shell {
     max-width: var(--max-shell);
