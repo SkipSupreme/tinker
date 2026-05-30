@@ -29,7 +29,6 @@
     order: number;
     title: string;
     summary: string;
-    status: 'planned' | 'drafting' | 'shipped';
     minutes: number;
     keystone: boolean;
     lessons: AtlasLesson[];
@@ -283,12 +282,7 @@
           {#each arc.modules as m (m.id)}
             {@const done = moduleDone(m)}
             {@const mastered = progressLoaded && m.lessons.length > 0 && done === m.lessons.length}
-            <li
-              class={`mod status-${m.status}`}
-              class:keystone={m.keystone}
-              class:mastered
-              id={m.anchor}
-            >
+            <li class="mod" class:keystone={m.keystone} class:mastered id={m.anchor}>
               <div class="spine" aria-hidden="true"><span class="node"></span></div>
 
               <div class="mod-card">
@@ -302,7 +296,6 @@
                       </span>
                       <span class="mod-summary">{m.summary}</span>
                       <span class="mod-meta">
-                        <span class={`chip chip-${m.status}`}>{m.status}</span>
                         <span>{m.lessons.length} lessons</span>
                         <span class="dot">·</span>
                         <span>~{m.minutes} min</span>
@@ -339,7 +332,7 @@
                     <span class="mod-body">
                       <span class="mod-title">{m.title}</span>
                       <span class="mod-summary">{m.summary}</span>
-                      <span class="mod-meta"><span class={`chip chip-${m.status}`}>{m.status}</span></span>
+                      <span class="mod-meta"><span class="placement-tag">Optional · placement</span></span>
                     </span>
                   </div>
                 {/if}
@@ -614,14 +607,11 @@
     height: 15px;
     margin-top: 1.5rem;
     border-radius: 999px;
-    background: var(--demo-card);
+    background: color-mix(in srgb, var(--arc) 70%, var(--demo-card));
     border: 2.5px solid var(--arc);
     flex: none;
     transition: transform 160ms ease, box-shadow 200ms ease;
   }
-  .mod.status-shipped .node { background: var(--cta); border-color: var(--cta-hover); }
-  .mod.status-drafting .node { background: color-mix(in srgb, var(--arc) 75%, var(--demo-card)); }
-  .mod.status-planned .node { border-style: dashed; opacity: 0.7; }
   .mod.keystone .node {
     width: 21px;
     height: 21px;
@@ -657,7 +647,6 @@
     border-color: color-mix(in srgb, var(--arc) 55%, transparent);
     box-shadow: 0 14px 28px -20px color-mix(in srgb, var(--arc) 70%, transparent);
   }
-  .mod.status-planned .mod-head { opacity: 0.82; }
   .mod-num {
     font-family: var(--font-display);
     font-style: italic;
@@ -710,18 +699,14 @@
   }
   .mod-meta .dot { opacity: 0.5; }
   .done-count { color: var(--cta-hover); font-weight: 600; }
-  .chip {
-    font-family: var(--font-game);
-    font-weight: 700;
-    font-size: 0.62rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+  .placement-tag {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--site-fg-muted);
+    border: 1px dashed color-mix(in srgb, var(--arc) 45%, transparent);
     border-radius: 999px;
-    padding: 0.12rem 0.5rem;
+    padding: 0.1rem 0.55rem;
   }
-  .chip-shipped { background: color-mix(in srgb, var(--cta) 18%, transparent); color: var(--cta-hover); }
-  .chip-drafting { background: color-mix(in srgb, var(--ink-sun) 20%, transparent); color: color-mix(in srgb, var(--ink-sun) 78%, var(--site-fg)); }
-  .chip-planned { background: color-mix(in srgb, var(--site-fg) 9%, transparent); color: var(--site-fg-muted); }
 
   .mod-progress {
     margin-top: 0.5rem;
