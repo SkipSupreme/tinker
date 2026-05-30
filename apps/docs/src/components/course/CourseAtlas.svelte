@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { isAuthed } from '../../lib/auth-state';
 
   /**
    * The Course Atlas: "The Climb".
@@ -157,14 +158,17 @@
     prefersReduced =
       typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Mastery glow for logged-in learners.
+    // Mastery glow for logged-in learners. Gate on the memoized session check
+    // (get-session returns 200 {user:null} for anon) so logged-out visitors
+    // skip the /api/me/state call entirely — no request, no 401 console noise.
     void (async () => {
       try {
+        if (!(await isAuthed())) return; // anon: stay in anon view, fire nothing
         const res = await fetch('/api/me/state?course=ml-math', {
           credentials: 'same-origin',
           headers: { accept: 'application/json' },
         });
-        if (!res.ok) return; // 401/403 anon, or transient: stay in anon view
+        if (!res.ok) return; // transient/expired session: stay in anon view
         const body = (await res.json()) as { progress?: Record<string, ProgressRow> };
         progress = body.progress ?? {};
         progressLoaded = true;
