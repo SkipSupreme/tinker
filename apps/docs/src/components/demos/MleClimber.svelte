@@ -125,7 +125,9 @@
   }
   function onDrag(e: PointerEvent) {
     if (!dragging) return;
-    const svg = (e.currentTarget as Element).ownerSVGElement;
+    // Handlers live on the root <svg>, whose ownerSVGElement is null per spec.
+    const el = e.currentTarget as Element;
+    const svg = el instanceof SVGSVGElement ? el : el.ownerSVGElement;
     if (!svg) return;
     const r = svg.getBoundingClientRect();
     const xLocal = ((e.clientX - r.left) / r.width) * W;
