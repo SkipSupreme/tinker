@@ -8,7 +8,10 @@
   --site-accent-fg: #ffffff;
   --site-code-bg: #f5f5f2;
   --site-code-fg: #17181a;
-  --site-focus: #2f6fed;
+  /* Focus ring rides the sea-blue ink so keyboard focus stays on-palette
+     (the old #2f6fed/#8aa7f6 pair read template-blue in light and lavender
+     in dark — purple is banned). */
+  --site-focus: var(--ink-sea);
   --site-error: #b91c1c;
   --site-error-bg: #fef2f2;
 
@@ -37,10 +40,13 @@
   --band-dark-fg: #17181a;
   --band-dark-muted: #585a60;
 
-  /* CTA: kelly green pill. */
+  /* CTA: kelly green pill. --cta-edge is the darker "shelf" under pressable
+     buttons (Duolingo-style physical depth): resting buttons sit on it via
+     box-shadow 0 4px 0, and :active collapses it as the button travels down. */
   --cta: #22c55e;
   --cta-hover: #16a34a;
   --cta-fg: #0a1a10;
+  --cta-edge: #15803d;
 
   /* Always-cream foreground for white text on saturated colored backgrounds
      (chip badges, active mode buttons, etc). Stays cream in BOTH themes,
@@ -79,6 +85,17 @@
   --font-wordmark: "Nunito", "Fraunces", ui-sans-serif, system-ui, sans-serif;
   --font-game:     "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
 
+  /* Spacing scale (DESIGN.md §Spacing, base unit 4px). Use these instead of
+     bespoke rem values for padding/margin/gap in components. */
+  --space-2xs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+
   --max-prose: 68ch;
   --max-shell: 1120px;
   --max-hero: 1200px;
@@ -105,7 +122,7 @@
   --site-accent-fg: #0e0f10;
   --site-code-bg: #16171a;
   --site-code-fg: #ededec;
-  --site-focus: #8aa7f6;
+  --site-focus: var(--ink-sea);
 
   /* Pastel bands in dark mode: hold onto a hint of each hue so the sections
      still read as distinct, but sit on a near-black base for long reads. */

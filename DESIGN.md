@@ -144,6 +144,9 @@ Dark-theme variants for each band are defined in `:root[data-theme="dark"]` in t
 | `--cta` | `#22c55e` | Primary CTA pill. Completion fill. "Ding!" visual pulse. |
 | `--cta-hover` | `#16a34a` | Hover on CTA. |
 | `--cta-fg` | `#0a1a10` | Text on green CTA. |
+| `--cta-edge` | `#15803d` | The darker "shelf" under pressable buttons (box-shadow `0 4px 0`). Resting buttons sit on it; `:active` collapses it while the button travels down 4px, so the press reads as physical depth. Both themes. |
+
+**Pressable button recipe (primary CTA):** pill radius, `box-shadow: 0 4px 0 var(--cta-edge)`, hover lifts 1px and brightens to `--cta-hover`, active translates down 4px and zeroes the shelf. Secondary buttons use the same mechanics with `--demo-card` fill and `--site-border` shelf. Focus ring comes from the global `:focus-visible` (sea blue).
 
 ### Text
 
@@ -198,7 +201,7 @@ Four faces. Google Fonts loaded in `Base.astro`. If a new face is needed, add to
 
 ## Spacing
 
-Base unit: `4px`. Comfortable density.
+Base unit: `4px`. Comfortable density. Implemented as `--space-2xs` … `--space-3xl` custom properties in `global.css`; use the variables, not bespoke rem values.
 
 | Token | px |
 |---|---|
@@ -438,3 +441,4 @@ This pattern is **homepage-hero-only** by DESIGN.md decree (mascot does not appe
 | 2026-04-24 (pivot v2) | Owl-specific Mascot interactions retired | Eye tracking, blink, head tilt, "settles to nap" assumed owl physiology (eyes, pupils, head/body separation). The flat apple has none of those. Replaced with idle bob, sparkle pulse, cursor-aware tilt of the whole apple, click bounce + math-symbol burst. Mascot Interactivity section in this file rewritten accordingly. |
 | 2026-05-29 (audit) | `--band-onyx` is now theme-aware: light `#fff4ec` (warm cream), dark `#08090b` | Pre-launch readiness audit corrected token drift. The 2026-04-24 entry above recorded the original near-black `#0b0d12`; the live token was reworked so light mode pairs warm cream with the red mascot. global.css is the source of truth. |
 | 2026-05-29 (audit) | Removed orphaned `--band-lavender` (`#ecebfb`) | It was a lavender/purple surface band that violated the no-purple rule, was never defined in global.css, and was referenced by no component. Dropped from the doc to stop it being a trap for future authors. Use `--band-sky` for a cool-light section. |
+| 2026-06-11 (homepage polish) | Added `--cta-edge` + pressable-button recipe; spacing scale implemented as `--space-*` tokens; focus ring re-pointed at `--ink-sea` | Homepage design review. Buttons gain Duolingo-style physical press depth. The old focus colors (`#2f6fed` light, `#8aa7f6` dark) were off-palette template blue, and the dark one read lavender, violating the no-purple rule. `--site-accent` (body link blue) is still off-palette and remains an open item. |
