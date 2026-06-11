@@ -28,7 +28,7 @@ test.describe("homepage hero", () => {
 
   test("hero CTAs render above the fold", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator(".hero a.btn.primary").first()).toContainText("Sign up");
+    await expect(page.locator(".hero a.btn.primary").first()).toContainText("Start learning for free");
     await expect(page.locator(".hero a.btn.secondary").first()).toContainText("Explore the course");
   });
 
