@@ -358,7 +358,7 @@
     padding: clamp(0.85rem, 2vw, 1.4rem);
     color: var(--site-fg);
     box-shadow:
-      0 1px 0 rgba(0,0,0,0.04),
+      var(--shadow-hairline),
       0 24px 48px -28px color-mix(in srgb, var(--ink-sea) 50%, transparent);
   }
   .head {
@@ -463,10 +463,11 @@
   }
   .widget-hero .stage {
     background: var(--demo-stage);
-    border-radius: 16px;
+    /* 20px: the DESIGN.md widget-card radius. */
+    border-radius: 20px;
     border: 1px solid color-mix(in srgb, var(--ink-sea) 16%, transparent);
     box-shadow:
-      0 1px 0 rgba(0,0,0,0.04),
+      var(--shadow-hairline),
       0 32px 56px -36px color-mix(in srgb, var(--ink-sea) 60%, transparent);
     overflow: hidden;
   }
@@ -552,7 +553,8 @@
     background: transparent;
     color: var(--site-fg-muted);
     border-radius: 999px;
-    padding: 0.35rem 0.8rem;
+    min-height: 44px;
+    padding: 0.4rem 1rem;
     font-family: var(--font-mono);
     font-size: 0.76rem;
     font-weight: 600;

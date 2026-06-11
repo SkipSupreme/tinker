@@ -437,7 +437,8 @@
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
-    padding: 0.4rem 0.85rem;
+    min-height: 44px;
+    padding: 0.5rem 0.95rem;
     border: 1px solid transparent;
     border-radius: var(--radius-pill);
     background: transparent;
@@ -540,7 +541,8 @@
     background: transparent;
     border: 1px solid color-mix(in srgb, var(--ink-red) 30%, transparent);
     border-radius: var(--radius-pill);
-    padding: 0.4rem 0.95rem;
+    min-height: 44px;
+    padding: 0.5rem 1rem;
     cursor: pointer;
     transition: background 160ms ease, border-color 160ms ease;
   }
@@ -777,7 +779,8 @@
     grid-template-columns: 1.9rem 1fr auto auto;
     align-items: baseline;
     gap: 0.7rem;
-    padding: 0.55rem 0.85rem;
+    min-height: 44px;
+    padding: 0.6rem 0.85rem;
     border: 1px solid color-mix(in srgb, var(--site-fg) 9%, transparent);
     border-radius: var(--radius-md, 8px);
     background: color-mix(in srgb, var(--site-bg) 60%, transparent);

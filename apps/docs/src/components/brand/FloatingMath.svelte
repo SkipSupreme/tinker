@@ -37,7 +37,7 @@
   }
   .sym {
     position: absolute;
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: var(--font-display);
     font-style: italic;
     font-weight: 600;
     font-size: clamp(2rem, 4vw, 3.25rem);
