@@ -51,7 +51,12 @@
   }
 
   function start() {
-    session = createSession({ items: shuffle(ITEMS) });
+    // Shuffle each item's choices as well as the run order: the bank is
+    // authored correct-answer-first, so without this "always pick option 1"
+    // aces the placement.
+    session = createSession({
+      items: shuffle(ITEMS).map((it) => ({ ...it, choices: shuffle(it.choices) })),
+    });
     current = nextItem(session);
     selected = null;
     phase = 'asking';
