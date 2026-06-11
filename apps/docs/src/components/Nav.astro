@@ -32,6 +32,8 @@ try {
 
     <div class="spacer"></div>
 
+    <a href="/lessons" class="nav-link">Course</a>
+
     {/* Anon-only: the "Sign in" pill. The signed-in avatar + dropdown is the
         <UserMenu> island below — having a user-link avatar here too produced
         two avatars side by side. data-auth-state flips to "user" for a
@@ -127,19 +129,41 @@ try {
     align-items: center;
     gap: 0.5rem;
   }
-  .auth-cta {
-    color: var(--cta-fg);
-    background: var(--cta);
+  /* Course: quiet text link into the curriculum, present on every page so
+     the marketing nav passes the trunk test (a way IN that isn't auth). */
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 0.85rem;
+    color: var(--site-fg);
     text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 650;
-    padding: 0.4rem 0.85rem;
-    border-radius: 999px;
-    border: 1.5px solid var(--cta);
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1;
+    border-radius: var(--radius-pill);
+  }
+  .nav-link:hover { background: var(--site-surface); }
+
+  /* Sign in: outline pill. Deliberately NOT green — green is reserved for
+     the page's single conversion CTA (DESIGN.md: one CTA color per page). */
+  .auth-cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 1rem;
+    color: var(--site-fg);
+    background: transparent;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid color-mix(in srgb, var(--site-fg) 25%, transparent);
   }
   .auth-cta:hover {
-    background: var(--cta-hover);
-    border-color: var(--cta-hover);
+    background: var(--site-surface);
+    border-color: color-mix(in srgb, var(--site-fg) 45%, transparent);
   }
 
   /* Mobile: collapse the nav to its essentials. "Sign in" + "Sign up"
@@ -151,9 +175,13 @@ try {
     }
     .wordmark { font-size: 1.05rem; }
     .brand-mark { width: 36px; height: 36px; }
+    .nav-link {
+      font-size: 0.9rem;
+      padding: 0 0.6rem;
+    }
     .auth-cta {
-      font-size: 0.85rem;
-      padding: 0.35rem 0.7rem;
+      font-size: 0.9rem;
+      padding: 0 0.8rem;
     }
   }
 
