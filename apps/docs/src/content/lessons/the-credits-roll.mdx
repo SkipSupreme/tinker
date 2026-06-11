@@ -14,6 +14,8 @@ conceptsCovered:
 ---
 
 import Step from '../../components/lesson/Step.astro';
+import StepChoice from '../../components/lesson/StepChoice.astro';
+import Choice from '../../components/lesson/Choice.astro';
 import CreditsRollPanel from '../../components/demos/CreditsRollPanel.svelte';
 
 <Step title="Read the code">
@@ -35,6 +37,19 @@ There is no module after this one. There is the model, the artifact, and the nex
 
 Push the button again. Watch it learn. Then close this tab and go read a paper.
 </Step>
+
+<StepChoice
+  id="the-credits-roll#what-you-built"
+  title="Name the artifact"
+  single
+  hint="A trained model is code that defines the computation plus weights that set the behavior."
+>
+When this course says you built a tiny transformer, what is the actual artifact?
+
+<Choice>A prompt template wrapped around someone else's hosted model.</Choice>
+<Choice correct>Source code that defines the computation, plus learned weights you can save and reload.</Choice>
+<Choice>A static lookup table with every possible Shakespeare-like sentence prewritten.</Choice>
+</StepChoice>
 
 <Step title="Where to next">
 Three honest pointers, none of them about Tinker.

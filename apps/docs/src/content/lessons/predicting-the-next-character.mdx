@@ -118,15 +118,10 @@ You sample text from it like this. Start with `·`. Look at row `·`. That row, 
 That's the entire algorithm. Counting builds the table; sampling reads from it. There are no parameters to learn beyond what counting gives you, and there are no neural networks anywhere. We will spend the next few lessons making this model strictly better, but the *shape* will not change much: we will always be predicting the next token from a row of probabilities.
 </Step>
 
-<StepCheck
-  id="predicting-the-next-character#bigram-row-m-prob-a"
-  title="Read a probability off the matrix"
-  prompt="P(a | m) = "
-  answer={0.5}
-  tolerance={0.001}
-  hint="Look at row m. Two cells are nonzero: m→m and m→a. The row sum is 2."
->
-Here's a tiny corpus of four names: `emma`, `olivia`, `ava`, `ada`. Click the row for `m` in the matrix below, and read off the probability of the next character being `a`.
+<Step title="A tiny row by sight">
+Here's a tiny corpus of four names: `emma`, `olivia`, `ava`, `ada`. In this corpus, the row for `m` has exactly two observed next-character counts: `m → m` once and `m → a` once.
+
+Click the row for `m` in the matrix below to see the same thing visually.
 
 <BigramHeatmap
   client:visible
@@ -137,7 +132,20 @@ Here's a tiny corpus of four names: `emma`, `olivia`, `ava`, `ada`. Click the ro
   hint="Row m has only one source name (emma). Two bigrams: m→m and m→a."
 />
 
-Express your answer as a decimal.
+The two bars in that row have equal mass. The check below asks you to turn that visual fact into a probability.
+</Step>
+
+<StepCheck
+  id="predicting-the-next-character#bigram-row-m-prob-a"
+  title="Read a probability off the matrix"
+  prompt="P(a | m) = "
+  answer={0.5}
+  tolerance={0.001}
+  hint="Look at row m. Two cells are nonzero: m→m and m→a. The row sum is 2."
+>
+In the tiny corpus `emma`, `olivia`, `ava`, `ada`, the row for `m` has exactly two observed next-character counts: `m → m` once and `m → a` once.
+
+**What is $P(a \mid m)$?** Express your answer as a decimal.
 </StepCheck>
 
 <Step title="Why this matters past this lesson">

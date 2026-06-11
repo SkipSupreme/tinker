@@ -21,7 +21,7 @@ import ResidualGradientFlow from '../../components/demos/ResidualGradientFlow.sv
 import WarmupStabilizer from '../../components/demos/WarmupStabilizer.svelte';
 
 <Step title="The degradation problem">
-Around 2014–2015, papers kept reporting the same uncomfortable result. You'd train a 20-layer network on ImageNet. It worked. You'd add more layers (30, 50, 56) and the loss got *worse*. Not just worse on the test set: worse on the *training* set. Adding capacity to the model was making it dumber.
+Around 2014–2015, papers kept reporting the same uncomfortable result. You'd train a 20-layer network on ImageNet. It worked. You'd add more layers (30, 50, 56) and the loss got *worse*. Not just worse on the test set: worse on the *training* set. Adding capacity to the model was making optimization harder, not easier.
 
 Predict before you read further: what should happen if you take a working 20-layer network and stack 36 more identity-like layers on top? Surely the network can learn to make the extra layers do nothing useful and recover the 20-layer performance.
 

@@ -103,6 +103,14 @@ Drag the dot. The coral line is the tangent. The readout shows the slope whereve
 What's the slope doing as you sweep across? Climbing where the sine is climbing, zero at the peaks and troughs, going negative on the way down. The curve the slope traces *is* $\cos(x)$. Sine and cosine hand off to each other through differentiation. This is the kind of identity that makes physicists cry tears of joy. Welcome to the club.
 </Step>
 
+<Step title="Try the same trick on a cubic">
+The limit trick does not care which curve you point it at.
+
+For $f(x) = x^3$, drag the secant near $x = 2$ and watch where the slope heads. You do not need the full power rule yet. You are pattern-hunting: $x^2$ turned into $2x$, so $x^3$ should turn into $3x^2$.
+
+<SecantToTangent client:visible fn="cubic" startP={2} />
+</Step>
+
 <StepCheck
   id="what-is-a-derivative#x-cubed-slope-at-2"
   title="One you haven't seen."
@@ -111,11 +119,7 @@ What's the slope doing as you sweep across? Climbing where the sine is climbing,
   tolerance={0.5}
   hint="Same trick. Imagine sliding h to zero on f(x) = x³ at x = 2. Or guess the pattern from f'(x) = 2x for x²: maybe f'(x) for x³ is 3x²?"
 >
-You found $f'(x) = 2x$ for $x^2$ by limit-shrinking. The trick doesn't care which curve you point it at.
+You found $f'(x) = 2x$ for $x^2$ by limit-shrinking. For $x^3$, the same pattern-hunting move gives $f'(x) = 3x^2$.
 
 For $f(x) = x^3$, **what's the slope at $x = 2$?**
-
-Drag the secant in your head. Or use the widget if your head isn't up for it today.
-
-<SecantToTangent client:visible fn="cubic" startP={2} />
 </StepCheck>

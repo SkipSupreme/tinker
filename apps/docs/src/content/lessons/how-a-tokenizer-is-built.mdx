@@ -135,5 +135,5 @@ The tokenizer in the widget is a small one, trained on a paragraph of Shakespear
 
 When the model is asked "how many R's in strawberry," it sees `[496, 675, 15717]` (three integers) and is asked to perform a counting operation on the *characters of those tokens*, an operation the embedding layer does not expose. Letter-counting tasks are off-distribution. So is reversing strings. So is ASCII-art. So is multi-digit arithmetic, partly because BPE merges multi-digit numbers into chunks unevenly (`123` might be one token, `1234` might be two: `12` and `34`).
 
-This is the price of subword tokenization. It is not the model being dumb. It is the model being given different inputs than the inputs the question demands. Next lesson: how the model uses these inputs to learn.
+This is the price of subword tokenization. It is not the model being careless. It is the model being given different inputs than the inputs the question demands. Next lesson: how the model uses these inputs to learn.
 </Step>

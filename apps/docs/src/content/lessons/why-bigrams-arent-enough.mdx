@@ -19,7 +19,7 @@ import StepCheck from '../../components/lesson/StepCheck.astro';
 import MlpContextDial from '../../components/demos/MlpContextDial.svelte';
 import EmbeddingPluck from '../../components/demos/EmbeddingPluck.svelte';
 
-<Step title="The bigram is dumb">
+<Step title="The bigram is forgetful">
 Sample some text from our trained bigram and you get gems like `enny.`, `ax.`, `liona.`, `xrnxg.`. The model recognizes that `e` is followed by some characters more than others. Beyond that: nothing.
 
 Specifically, the bigram is amnesiac about everything except *the previous character.* It doesn't know that `tho` looks more like the start of an English word than `xrn`. It doesn't know that after `quee` the next letter is almost surely `n`. It can't tell `the cat sat on the` from `wxqg vbz mtl pxc q ne`; both end in the same character, so both produce identical predictions for the next one.
