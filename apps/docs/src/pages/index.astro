@@ -117,9 +117,6 @@ const totals = {
     <FloatingMath client:visible />
     <div class="shell">
       <div class="hero-grid" data-hero-region>
-        <div class="hero-mascot">
-          <Tinker client:visible size="clamp(180px, 26vw, 280px)" />
-        </div>
         <div class="hero-copy">
           <h1 class="hero-headline">
             <span class="line">Learn by playing</span>
@@ -131,12 +128,20 @@ const totals = {
             of every modern AI model. Tinker teaches the math underneath
             machine learning by letting you touch it.
           </p>
-          <div class="hero-widget">
-            <EmbeddingPluck client:load hero={true} />
-          </div>
           <div class="cta-row">
             <a class="btn primary" href="/signup">Sign up, it's free</a>
             <a class="btn secondary" href="/lessons">Explore the course</a>
+          </div>
+          <p class="hero-note">
+            {totals.lessons} interactive lessons · free in your browser
+          </p>
+        </div>
+        <div class="hero-stage">
+          <div class="hero-mascot">
+            <Tinker client:visible size="clamp(110px, 13vw, 160px)" />
+          </div>
+          <div class="hero-widget">
+            <EmbeddingPluck client:load hero={true} />
           </div>
         </div>
       </div>
@@ -245,6 +250,10 @@ const totals = {
     position: relative;
     overflow: hidden;
   }
+  /* DESIGN.md §Spacing: tighter band padding under 380px. */
+  @media (max-width: 380px) {
+    .band { padding: clamp(2rem, 6vw, 3rem) 1rem; }
+  }
   .band-cream    { background: var(--band-cream); }
   .band-white    { background: var(--band-white); }
   .band-onyx {
@@ -268,47 +277,40 @@ const totals = {
   .shell.tall { text-align: center; padding: 1rem 0 2rem; }
 
   /* === Hero ===
-     Padding kept tight so the CTAs sit above the fold on a 1280×900 viewport.
-     Previously top:4rem / bottom:5.5rem made the hero 965px and pushed the
-     CTAs below 900. */
-  .hero { padding: 1rem 1.25rem 1.5rem; }
+     One viewport, one composition: copy + CTAs on the left (always above the
+     fold), the live widget as the stage on the right with the mascot perched
+     on its top edge. min() caps the svh stretch so ultrawide monitors don't
+     inflate the band into a void. */
+  .hero {
+    display: flex;
+    align-items: center;
+    min-height: min(calc(100svh - var(--nav-height)), 760px);
+    padding: clamp(1.5rem, 3vw, 3rem) 1.25rem clamp(2rem, 4vw, 3.5rem);
+  }
+  .hero .shell { width: 100%; }
   .hero-grid {
-    /* Apple on the left, copy on the right. align-items:start anchors the
-       mascot at the top of the headline instead of floating in the middle
-       of a 700px-tall copy column (which is what happened with center). */
     display: grid;
-    grid-template-columns: minmax(220px, 1fr) minmax(0, 1.25fr);
-    gap: clamp(2rem, 5vw, 5rem);
-    align-items: start;
+    grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: center;
   }
   @media (max-width: 900px) {
     .hero-grid {
       grid-template-columns: 1fr;
-      gap: 1.25rem;
+      gap: 1.5rem;
     }
-    /* Mascot is first in source order, so it naturally stacks above copy
-       on mobile, so no `order` override is needed. */
+    /* Copy is first in source order: headline, lede, and CTAs stack above
+       the widget stage on phones, so the primary action stays in reach. */
   }
-  /* On phones the mascot column was eating the whole above-fold viewport
-     before the headline showed. Cap the mascot at a comfortable thumbnail
-     size. Do NOT clip here: the mascot's .tinker-glow is an inset:-10% +
-     blur(18px) halo that must feather past the 200px box. overflow:hidden
-     used to crop it to a hard rectangular edge ("glow ends abruptly" on iOS
-     Safari). The parent .band already has overflow:hidden, so the glow stays
-     within the section and never triggers horizontal page scroll. */
   @media (max-width: 640px) {
-    .hero { padding: 1.25rem 1rem 1.5rem; }
-    .hero-mascot {
-      min-height: 0;
-      max-width: 200px;
-      margin: 0 auto;
-    }
+    .hero { padding: 1.25rem 1rem 2rem; }
   }
 
   .hero-headline {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: clamp(2.4rem, 6.5vw, 5rem);
+    /* Locked Display token (DESIGN.md §Typography scale). */
+    font-size: clamp(2.1rem, 5.5vw, 4.25rem);
     line-height: 1;
     letter-spacing: -0.025em;
     margin: 0 0 1.4rem;
@@ -400,34 +402,45 @@ const totals = {
     }
   }
 
-  /* === Hero mascot ===
-     The interactive <Tinker /> component handles its own glow, idle bob,
-     hover-tilt, click bounce, and reduced-motion fallback. We just give
-     it a positioned container so the XP floater can anchor to it. */
-  .hero-mascot {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 280px;
-    /* Center the mascot against the full copy column instead of pinning it
-       to the top. With align-items:start on the grid the apple floated up by
-       the eyebrow with a large void beneath it; centering balances the row. */
-    align-self: center;
+  /* Microproof line under the CTAs: the one stat that matters, computed
+     from the content collections (never hand-maintained). */
+  .hero-note {
+    margin: 0;
+    font-family: var(--font-game);
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: color-mix(in srgb, var(--band-dark-fg) 65%, transparent);
   }
 
-  /* === Hero widget container ===
-     EmbeddingPluck in hero mode lives between the lede and the CTA row.
-     The widget itself handles its border, shadow, and stage styling.
-     Capped narrower than the copy column so the CTAs stay above the fold
-     on a 1280×900 viewport. */
-  .hero-widget {
-    margin: 0.4rem 0 1rem;
+  /* === Hero stage: widget card + perched mascot ===
+     The stage reserves headroom (padding-top) so the apple can overlap the
+     card's top edge without clipping against the band's overflow:hidden.
+     <Tinker /> handles its own glow, idle bob, hover-tilt, click bounce,
+     and reduced-motion fallback. */
+  .hero-stage {
+    position: relative;
     width: 100%;
-    max-width: 460px;
+    max-width: 480px;
+    margin-left: auto;
+    padding-top: clamp(64px, 7vw, 92px);
+    min-width: 0;
+  }
+  .hero-mascot {
+    position: absolute;
+    top: clamp(64px, 7vw, 92px);
+    right: clamp(12px, 5%, 28px);
+    transform: translateY(-68%);
+    z-index: 2;
+  }
+  .hero-widget {
+    width: 100%;
   }
   @media (max-width: 900px) {
-    .hero-widget { margin: 0.6rem auto 1rem; max-width: 100%; }
+    .hero-stage {
+      margin: 0 auto;
+      max-width: 480px;
+    }
   }
 
   .kicker {
