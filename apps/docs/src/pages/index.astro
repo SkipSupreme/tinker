@@ -84,7 +84,7 @@ const totals = {
 
 <Base
   title="Tinker"
-  description="Play with ideas. Learn for real. Grow fast. Mini lessons, instant feedback, and joyful wins for curious kids, teens, and grown-ups."
+  description="Learn the math underneath machine learning by playing with it. Interactive lessons from f(x) = x² all the way to a transformer you train in your browser. Free."
   fullWidth
 >
   <!-- Pre-hydration capture for hero events. The widget hydrates as a
@@ -123,13 +123,12 @@ const totals = {
             <span class="line">with the <span class="ink-red"><em>math.</em></span></span>
           </h1>
           <p class="lede">
-            Drag a letter. Watch the constellation react. That's not a
-            decoration. It's the core idea behind embeddings, the foundation
-            of every modern AI model. Tinker teaches the math underneath
-            machine learning by letting you touch it.
+            Every lesson is something you grab, drag, and break until it
+            clicks. Start at f(x) = x². Finish by training a real
+            transformer in your browser.
           </p>
           <div class="cta-row">
-            <a class="btn primary" href="/signup">Sign up, it's free</a>
+            <a class="btn primary" href="/signup">Start learning for free</a>
             <a class="btn secondary" href="/lessons">Explore the course</a>
           </div>
           <p class="hero-note">
@@ -155,7 +154,7 @@ const totals = {
     <div class="shell">
       <p class="kicker kicker-red">What you'll actually build</p>
       <h2 class="proof-headline">
-        Three moments. <em>Pick the one you want first.</em>
+        Three builds. Start with the one you came for.
       </h2>
 
       <ol class="proof-grid">
@@ -222,21 +221,22 @@ const totals = {
     </div>
   </section>
 
-  <!-- Closing CTA: dark hero band, premium feel. The work is the pitch. -->
+  <!-- Closing CTA: escalate, don't echo the hero. Concrete arc: first
+       lesson is small, the capstone is yours. Secondary routes to the M0
+       placement so "where do I start?" never blocks the signup. -->
   <section class="band band-onyx closing-band">
     <div class="shell tall">
       <h2 class="closing-headline">
-        There's a math underneath every model.
-        <em class="closing-em">You can touch it.</em>
+        The first lesson takes fifteen minutes.
+        <em class="closing-em">The capstone is a GPT you trained.</em>
       </h2>
       <p class="closing-sub">
-        Five arcs, nineteen modules, ninety-two lessons, free in your browser.
-        From <code class="closing-code">f(x) = x²</code> to a transformer you
-        train yourself on the GPU in your laptop.
+        All {totals.lessons} lessons run free in your browser, on the GPU
+        you already have. No install, no setup, no video lectures.
       </p>
       <div class="cta-row closing-cta-row">
-        <a class="btn primary" href="/signup">Sign up, it's free</a>
-        <a class="btn secondary" href="/lessons">Explore the course</a>
+        <a class="btn primary" href="/signup">Start learning for free</a>
+        <a class="btn secondary" href="/diagnostic">Find your level · ~5 min</a>
       </div>
     </div>
   </section>
@@ -604,15 +604,6 @@ const totals = {
     line-height: 1.55;
     color: color-mix(in srgb, var(--band-dark-fg) 75%, transparent);
     max-width: 44ch;
-  }
-  .closing-code {
-    font-family: var(--font-mono);
-    font-size: 0.92em;
-    padding: 0.05em 0.4em;
-    border-radius: 5px;
-    background: color-mix(in srgb, var(--band-dark-fg) 10%, transparent);
-    color: var(--band-dark-fg);
-    white-space: nowrap;
   }
   .closing-cta-row {
     justify-content: center;
