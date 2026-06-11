@@ -246,7 +246,6 @@ const totals = {
     overflow: hidden;
   }
   .band-cream    { background: var(--band-cream); }
-  .band-butter   { background: var(--band-butter); }
   .band-white    { background: var(--band-white); }
   .band-onyx {
     /* Fallback for engines without color-mix() (iOS Safari < 16.2): the whole
@@ -260,8 +259,6 @@ const totals = {
       var(--band-onyx);
     color: var(--band-dark-fg);
   }
-  .band-quiet { padding: clamp(4rem, 9vw, 7rem) 1.25rem; }
-
   .shell {
     max-width: var(--max-hero);
     margin: 0 auto;
@@ -283,18 +280,6 @@ const totals = {
     grid-template-columns: minmax(220px, 1fr) minmax(0, 1.25fr);
     gap: clamp(2rem, 5vw, 5rem);
     align-items: start;
-  }
-  /* Eyebrow chip above the headline: uppercase kicker per DESIGN.md
-     (0.75rem, 0.14em letter-spacing). Without these styles it was
-     rendering as plain 16px Inter body text. */
-  .eyebrow {
-    margin: 0 0 0.6rem;
-    font-family: var(--font-game);
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: var(--ink-red);
   }
   @media (max-width: 900px) {
     .hero-grid {
@@ -338,13 +323,6 @@ const totals = {
     /* Per-verb color set via .ink-red/coral/sun spans. */
   }
   .ink-red    { color: var(--ink-red); }
-  .ink-coral  { color: var(--ink-coral); }
-  .ink-sun    { color: var(--ink-sun); }
-  .ink-sun-italic {
-    color: var(--ink-sun);
-    font-style: italic;
-  }
-  .nowrap { white-space: nowrap; }
 
   .lede {
     font-size: clamp(1.05rem, 1.55vw, 1.25rem);
@@ -353,19 +331,13 @@ const totals = {
     max-width: 36ch;
     margin: 0 0 1.25rem;
   }
-  .lede.dark {
-    color: var(--band-dark-muted);
-    margin-left: auto;
-    margin-right: auto;
-    max-width: 38ch;
-  }
 
   /* CTA pair */
   .cta-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
-    margin: 0 0 1rem;
+    gap: 0.65rem;
+    margin: 0 0 0.85rem;
   }
   .btn {
     display: inline-flex;
@@ -378,6 +350,8 @@ const totals = {
     font-size: 1.02rem;
     text-decoration: none;
     line-height: 1;
+    text-align: center;
+    white-space: normal;
     border: 1.5px solid transparent;
     cursor: pointer;
     transition: transform 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
@@ -407,21 +381,6 @@ const totals = {
     background: color-mix(in srgb, var(--band-dark-fg) 6%, transparent);
     border-color: color-mix(in srgb, var(--band-dark-fg) 55%, transparent);
   }
-
-  .reassurance {
-    list-style: none;
-    padding: 0;
-    margin: 0.5rem 0 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1rem;
-    font-family: var(--font-game);
-    font-size: 0.82rem;
-    color: color-mix(in srgb, var(--band-dark-fg) 65%, transparent);
-  }
-  .reassurance li { display: inline-flex; align-items: center; gap: 0.4rem; }
-  .reassurance li span { opacity: 0.55; }
-  .reassurance li:first-child span { display: none; }
 
   /* === Hero mascot ===
      The interactive <Tinker /> component handles its own glow, idle bob,
@@ -453,115 +412,6 @@ const totals = {
     .hero-widget { margin: 0.6rem auto 1rem; max-width: 100%; }
   }
 
-  /* Floating math symbols above the apple. Tinker is math-as-play, so the
-     ambient decoration is the alphabet of math itself. Confetti palette
-     (teal/pink/orange) per DESIGN.md. */
-  .confetti {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-  }
-  .sym {
-    position: absolute;
-    font-family: var(--font-display), serif;
-    font-style: italic;
-    font-weight: 600;
-    line-height: 1;
-    user-select: none;
-    text-shadow: 0 2px 8px color-mix(in srgb, currentColor 30%, transparent);
-  }
-  .sym-pi      { top: 10%; right: 28%; color: var(--ink-teal);   font-size: 2.4rem; transform: rotate(-12deg); animation: sym-drift 7s ease-in-out infinite; }
-  .sym-int     { top: 4%;  right: 16%; color: var(--ink-pink);   font-size: 2.8rem; transform: rotate(8deg);   animation: sym-drift 8s ease-in-out infinite reverse; }
-  .sym-partial { top: 16%; right: 8%;  color: var(--ink-orange); font-size: 2.2rem; transform: rotate(-4deg);  animation: sym-drift 6.5s ease-in-out infinite; }
-  .sym-infty   { top: 30%; right: 4%;  color: var(--ink-teal);   font-size: 2rem;   transform: rotate(14deg);  animation: sym-drift 9s ease-in-out infinite reverse; }
-  .sym-delta   { top: 4%;  right: 38%; color: var(--ink-orange); font-size: 1.9rem; transform: rotate(-18deg); animation: sym-drift 7.5s ease-in-out infinite; }
-  .sym-sigma   { top: 22%; right: 38%; color: var(--ink-pink);   font-size: 2.1rem; transform: rotate(6deg);   animation: sym-drift 8.5s ease-in-out infinite reverse; }
-
-  @keyframes sym-drift {
-    0%, 100% { translate: 0 0; }
-    50%      { translate: -4px -8px; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .sym { animation: none; }
-  }
-
-  /* === XP floater === */
-  .xp-floater {
-    position: absolute;
-    bottom: 8%;
-    right: 4%;
-    z-index: 2;
-    background: color-mix(in srgb, var(--ink-sun) 18%, var(--band-onyx));
-    color: var(--ink-sun);
-    border: 1.5px solid color-mix(in srgb, var(--ink-sun) 45%, transparent);
-    border-radius: var(--radius-pill);
-    padding: 0.55rem 1rem;
-    font-family: var(--font-game);
-    font-weight: 700;
-    font-size: 0.92rem;
-    line-height: 1;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    box-shadow: 0 14px 24px -10px color-mix(in srgb, var(--ink-sun) 55%, transparent);
-    animation: xp-pop 4s ease-in-out infinite;
-  }
-  .xp-amount { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
-  .xp-msg {
-    color: color-mix(in srgb, var(--ink-sun) 80%, var(--on-color-fg));
-    font-weight: 600;
-    font-size: 0.85rem;
-  }
-  .xp-confetti {
-    position: absolute;
-    inset: -16px -10px -16px -10px;
-    pointer-events: none;
-  }
-  .xp-confetti .bit {
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    border-radius: 999px;
-    opacity: 0;
-    animation: xp-burst 4s ease-in-out infinite;
-  }
-  .xp-confetti .b1 { top: -4px;  left: 10%; background: var(--ink-teal);   animation-delay: 0s; }
-  .xp-confetti .b2 { top: -8px;  left: 35%; background: var(--ink-pink);   animation-delay: 0.1s; }
-  .xp-confetti .b3 { top: -2px;  left: 60%; background: var(--ink-orange); animation-delay: 0.2s; }
-  .xp-confetti .b4 { bottom: -4px; left: 20%; background: var(--ink-red); animation-delay: 0.3s; }
-  .xp-confetti .b5 { bottom: -6px; left: 55%; background: var(--ink-teal);   animation-delay: 0.15s; }
-  .xp-confetti .b6 { bottom: -2px; left: 80%; background: var(--ink-pink);   animation-delay: 0.25s; }
-
-  @keyframes xp-pop {
-    0%, 70%, 100% { transform: scale(1); }
-    74%           { transform: scale(1.06); }
-    78%           { transform: scale(1); }
-  }
-  @keyframes xp-burst {
-    0%, 65%, 100% { opacity: 0; transform: translate(0, 0); }
-    70%           { opacity: 1; }
-    85%           { opacity: 0.9; transform: translate(var(--bx, 8px), var(--by, -10px)); }
-    95%           { opacity: 0; transform: translate(calc(var(--bx, 8px) * 1.5), calc(var(--by, -10px) * 1.5)); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .xp-floater { animation: none; }
-    .xp-confetti .bit { display: none; }
-  }
-
-  /* Mobile: shrink XP floater so it doesn't crowd the mascot. */
-  @media (max-width: 600px) {
-    .xp-floater {
-      bottom: 6%;
-      right: 6%;
-      font-size: 0.82rem;
-      padding: 0.45rem 0.85rem;
-    }
-    .xp-msg { display: none; }
-  }
-
-  /* === Lesson tiles === */
-  .tiles-band { padding: clamp(3rem, 6vw, 5rem) 1.25rem; }
   .kicker {
     font-family: var(--font-game);
     text-transform: uppercase;
@@ -571,40 +421,6 @@ const totals = {
     margin: 0 0 0.85rem;
   }
   .kicker-red { color: var(--ink-red); }
-  .kicker-sea    { color: var(--ink-sea); }
-
-  .tiles-headline {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: clamp(1.7rem, 3.4vw, 2.4rem);
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    margin: 0 0 1.75rem;
-    text-wrap: balance;
-  }
-  .tiles-headline em {
-    font-style: italic;
-    color: var(--ink-red);
-    font-weight: 700;
-  }
-
-  .tiles {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
-  }
-  .tiles-single {
-    grid-template-columns: minmax(280px, 520px);
-    justify-content: center;
-  }
-  .tiles-footnote {
-    margin: 1.5rem auto 0;
-    text-align: center;
-    font-family: var(--font-mono);
-    font-size: 0.84rem;
-    color: var(--site-fg-muted);
-    max-width: 36ch;
-  }
 
   /* === Proof band: three things you'll actually build. === */
   .proof-band { padding: clamp(3rem, 6vw, 5rem) 1.25rem; }
@@ -769,232 +585,5 @@ const totals = {
   }
   .closing-cta-row {
     justify-content: center;
-  }
-  .tile {
-    display: block;
-    background: var(--demo-card);
-    border: 1.5px solid var(--demo-card-border, var(--site-border));
-    border-radius: 18px;
-    padding: 1.1rem 1.15rem 1.15rem;
-    text-decoration: none;
-    color: var(--site-fg);
-    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
-    position: relative;
-  }
-  .tile-open {
-    cursor: pointer;
-  }
-  .tile-open:hover {
-    transform: translateY(-3px);
-    border-color: color-mix(in srgb, var(--ink-red) 40%, transparent);
-    box-shadow: 0 18px 32px -16px color-mix(in srgb, var(--ink-red) 55%, transparent);
-  }
-  .tile-soon {
-    opacity: 0.92;
-  }
-
-  .tile-chip {
-    display: inline-block;
-    font-family: var(--font-game);
-    font-weight: 700;
-    font-size: 0.7rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 0.3rem 0.65rem;
-    border-radius: 999px;
-    margin: 0 0 0.7rem;
-  }
-  .chip-red { background: color-mix(in srgb, var(--ink-red) 18%, transparent); color: var(--ink-red); }
-  .chip-pink   { background: color-mix(in srgb, var(--ink-pink) 22%, transparent);   color: color-mix(in srgb, var(--ink-pink) 75%, var(--site-fg)); }
-  .chip-teal   { background: color-mix(in srgb, var(--ink-teal) 22%, transparent);   color: color-mix(in srgb, var(--ink-teal) 65%, var(--site-fg)); }
-  .chip-orange { background: color-mix(in srgb, var(--ink-orange) 22%, transparent); color: color-mix(in srgb, var(--ink-orange) 70%, var(--site-fg)); }
-
-  .tile-title {
-    font-family: var(--font-display);
-    font-weight: 650;
-    font-size: 1.2rem;
-    line-height: 1.15;
-    margin: 0 0 0.4rem;
-    letter-spacing: -0.01em;
-  }
-  .tile-desc {
-    font-size: 0.92rem;
-    line-height: 1.45;
-    color: var(--site-fg-muted);
-    margin: 0 0 0.85rem;
-  }
-  .tile-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-family: var(--font-game);
-    font-weight: 700;
-    font-size: 0.78rem;
-    letter-spacing: 0.04em;
-    color: var(--site-fg-muted);
-  }
-  .tile-cta {
-    color: var(--ink-red);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-  }
-
-  /* === Demo sections === */
-  .demo-band { padding: clamp(3rem, 6vw, 5rem) 1.25rem; }
-  .demo-section {
-    display: grid;
-    grid-template-columns: 1fr minmax(0, 1.15fr);
-    gap: clamp(2rem, 5vw, 4.5rem);
-    align-items: center;
-  }
-  .demo-section.reverse {
-    grid-template-columns: minmax(0, 1.15fr) 1fr;
-  }
-  .demo-section.reverse .demo-copy { order: 2; }
-  .demo-section.reverse .demo-stage { order: 1; }
-  @media (max-width: 900px) {
-    .demo-section,
-    .demo-section.reverse { grid-template-columns: 1fr; }
-    .demo-section.reverse .demo-copy,
-    .demo-section.reverse .demo-stage { order: initial; }
-  }
-  .demo-stage { min-width: 0; }
-
-  .display {
-    font-family: var(--font-display);
-    font-weight: 700;
-    line-height: 1.05;
-    letter-spacing: -0.02em;
-    margin: 0 0 1.25rem;
-    font-size: clamp(2rem, 4.5vw, 3.5rem);
-    text-wrap: balance;
-  }
-  .display.huge {
-    font-size: clamp(3rem, 9vw, 6.5rem);
-    margin-bottom: 2rem;
-    text-wrap: balance;
-  }
-  .display.manifesto {
-    font-size: clamp(1.75rem, 4.5vw, 3.5rem);
-    font-weight: 600;
-    line-height: 1.15;
-    max-width: 28ch;
-    text-wrap: balance;
-  }
-  .display em {
-    font-style: italic;
-    font-weight: 600;
-    color: var(--ink-red);
-  }
-  .prose-text {
-    font-size: 1.05rem;
-    line-height: 1.6;
-    color: var(--site-fg);
-    max-width: 36rem;
-    margin: 0;
-  }
-  .manifesto-sub {
-    max-width: 46rem;
-    margin: 1.25rem 0 0;
-    color: var(--site-fg-muted);
-    font-size: 1.08rem;
-  }
-
-  .cta-row {
-    display: flex;
-    gap: 0.65rem;
-    flex-wrap: wrap;
-    margin: 0 0 0.85rem;
-  }
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.95rem 1.6rem;
-    border-radius: var(--radius-pill);
-    font: inherit;
-    font-weight: 700;
-    font-size: 1.02rem;
-    text-decoration: none;
-    line-height: 1;
-    border: 1.5px solid transparent;
-    cursor: pointer;
-    transition: transform 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
-    text-align: center;
-    white-space: normal;
-  }
-  .btn.primary {
-    background: var(--cta);
-    color: var(--cta-fg);
-    border-color: var(--cta);
-    box-shadow: 0 10px 22px -8px color-mix(in srgb, var(--cta) 70%, transparent);
-  }
-  .btn.secondary {
-    background: transparent;
-    color: var(--band-dark-fg);
-    border-color: color-mix(in srgb, var(--band-dark-fg) 30%, transparent);
-  }
-  .btn.primary:hover {
-    background: var(--cta-hover);
-    border-color: var(--cta-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 14px 26px -8px color-mix(in srgb, var(--cta) 80%, transparent);
-  }
-  .btn.secondary:hover {
-    background: color-mix(in srgb, var(--band-dark-fg) 6%, transparent);
-    border-color: color-mix(in srgb, var(--band-dark-fg) 55%, transparent);
-    transform: translateY(-1px);
-  }
-  .form-note {
-    font-size: 0.92rem;
-    color: var(--site-fg-muted);
-    margin: 0.25rem 0 0;
-    max-width: 36rem;
-  }
-  .form-note a { color: var(--site-fg); }
-
-  .pitch {
-    padding: 2.75rem 0;
-    border-top: 1px solid var(--site-border);
-  }
-  .pitch-grid {
-    list-style: none;
-    padding: 0;
-    margin: 1.5rem 0 0;
-    display: grid;
-    gap: 1.25rem;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  }
-  .pitch-grid li {
-    padding: 1.25rem 1.25rem 1rem;
-    border: 1px solid var(--site-border);
-    border-radius: var(--radius-lg);
-    background: var(--site-surface);
-  }
-  .pitch-grid h3 {
-    font-family: var(--font-body);
-    font-size: 1.02rem;
-    margin: 0 0 0.4rem;
-  }
-  .pitch-grid em {
-    font-style: italic;
-    color: var(--site-accent);
-    font-weight: 600;
-  }
-  .pitch-grid p {
-    margin: 0;
-    color: var(--site-fg-muted);
-    font-size: 0.92rem;
-    line-height: 1.5;
-  }
-
-  .sr-only {
-    position: absolute;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
   }
 </style>
