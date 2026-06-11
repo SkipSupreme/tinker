@@ -158,42 +158,48 @@ const totals = {
       </h2>
 
       <ol class="proof-grid">
-        <li class="proof-card">
-          <div class="proof-num"><span>12</span></div>
-          <h3 class="proof-title">Backprop, from scratch</h3>
-          <p class="proof-desc">
-            Build micrograd one node at a time. Watch the gradient flow
-            backward through a tanh, see how <code>loss.backward()</code>
-            actually works. The keystone module of the course.
-          </p>
-          <a class="proof-link" href="#m12">
-            Module 12 · Backpropagation →
+        <li>
+          <a class="proof-item" href="#m12" style="--proof-accent: var(--ink-red)">
+            <span class="proof-num" aria-hidden="true">12</span>
+            <h3 class="proof-title">Backprop, from scratch</h3>
+            <p class="proof-desc">
+              Build micrograd one node at a time. Watch the gradient flow
+              backward through a tanh, see how <code>loss.backward()</code>
+              actually works. The keystone module of the course.
+            </p>
+            <span class="proof-link">
+              Module 12 · Backpropagation <span class="proof-arrow">→</span>
+            </span>
           </a>
         </li>
 
-        <li class="proof-card">
-          <div class="proof-num"><span>15</span></div>
-          <h3 class="proof-title">Attention, as a soft dictionary</h3>
-          <p class="proof-desc">
-            The thing you played with up top is an embedding, the
-            foundation of attention. Drag a query vector, watch it pivot
-            toward the right keys. Build the math behind the T in GPT.
-          </p>
-          <a class="proof-link" href="#m15">
-            Module 15 · Attention →
+        <li>
+          <a class="proof-item" href="#m15" style="--proof-accent: var(--ink-orange)">
+            <span class="proof-num" aria-hidden="true">15</span>
+            <h3 class="proof-title">Attention, as a soft dictionary</h3>
+            <p class="proof-desc">
+              The thing you played with up top is an embedding, the
+              foundation of attention. Drag a query vector, watch it pivot
+              toward the right keys. Build the math behind the T in GPT.
+            </p>
+            <span class="proof-link">
+              Module 15 · Attention <span class="proof-arrow">→</span>
+            </span>
           </a>
         </li>
 
-        <li class="proof-card">
-          <div class="proof-num"><span>18</span></div>
-          <h3 class="proof-title">A real transformer, in your browser</h3>
-          <p class="proof-desc">
-            Capstone: 4 layers, 4 heads, ~200k params. Trains in ~5
-            minutes on WebGPU. Generates Shakespeare-flavored nonsense.
-            Yours to keep.
-          </p>
-          <a class="proof-link" href="#m18">
-            Module 18 · Capstone →
+        <li>
+          <a class="proof-item" href="#m18" style="--proof-accent: var(--ink-pink)">
+            <span class="proof-num" aria-hidden="true">18</span>
+            <h3 class="proof-title">A real transformer, in your browser</h3>
+            <p class="proof-desc">
+              Capstone: 4 layers, 4 heads, ~200k params. Trains in ~5
+              minutes on WebGPU. Generates Shakespeare-flavored nonsense.
+              Yours to keep.
+            </p>
+            <span class="proof-link">
+              Module 18 · Capstone <span class="proof-arrow">→</span>
+            </span>
           </a>
         </li>
       </ol>
@@ -467,46 +473,43 @@ const totals = {
     max-width: 20ch;
     text-wrap: balance;
   }
-  .proof-headline em { font-style: italic; color: var(--ink-coral); font-weight: 700; }
+  /* Editorial columns, not cards: each build is the whole anchor, opened by
+     an arc-colored rule and signed by its module number as a ghost numeral.
+     --proof-accent is set inline per item to the module's arc ink. */
   .proof-grid {
     list-style: none;
     margin: 0; padding: 0;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 1.25rem;
+    gap: clamp(1.5rem, 4vw, 3rem);
   }
-  .proof-card {
+  .proof-item {
     position: relative;
-    padding: 1.5rem 1.4rem 1.4rem;
-    border: 1.5px solid var(--site-border);
-    border-radius: 20px;
-    background: var(--site-bg);
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
-    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
-  }
-  .proof-card:hover {
-    transform: translateY(-3px);
-    border-color: color-mix(in srgb, var(--ink-red) 40%, transparent);
-    box-shadow: 0 18px 32px -16px color-mix(in srgb, var(--ink-red) 35%, transparent);
+    gap: var(--space-sm);
+    height: 100%;
+    padding-top: var(--space-md);
+    border-top: 3px solid var(--proof-accent);
+    text-decoration: none;
+    color: var(--site-fg);
   }
   .proof-num {
     position: absolute;
-    top: 1rem;
-    right: 1.2rem;
+    top: var(--space-sm);
+    right: 0;
     font-family: var(--font-display);
     font-style: italic;
     font-weight: 800;
     font-size: 3rem;
     line-height: 1;
-    color: color-mix(in srgb, var(--ink-red) 18%, transparent);
+    color: color-mix(in srgb, var(--proof-accent) 22%, transparent);
     pointer-events: none;
+    transition: color 140ms ease;
   }
-  .proof-num span { display: inline-block; }
   .proof-title {
     font-family: var(--font-display);
-    font-weight: 650;
+    font-weight: 700;
     font-size: 1.25rem;
     line-height: 1.15;
     letter-spacing: -0.01em;
@@ -523,20 +526,29 @@ const totals = {
     background: var(--demo-stage);
     color: var(--site-fg);
     padding: 0.05em 0.35em;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     font-size: 0.88em;
   }
   .proof-link {
     margin-top: auto;
-    padding-top: 0.4rem;
-    color: var(--ink-red);
+    padding-top: var(--space-sm);
     font-family: var(--font-mono);
-    font-size: 0.84rem;
+    font-size: 0.95rem;
     font-weight: 600;
-    text-decoration: none;
-    border-top: 1px dashed color-mix(in srgb, var(--site-fg) 14%, transparent);
+    /* 60/40 mix toward body ink keeps every arc accent ≥4.5:1 on the band. */
+    color: color-mix(in srgb, var(--proof-accent) 60%, var(--site-fg));
   }
-  .proof-link:hover { color: var(--ink-coral); }
+  .proof-arrow {
+    display: inline-block;
+    transition: transform 140ms ease;
+  }
+  .proof-item:hover .proof-num {
+    color: color-mix(in srgb, var(--proof-accent) 45%, transparent);
+  }
+  .proof-item:hover .proof-arrow { transform: translateX(4px); }
+  .proof-item:hover .proof-title {
+    color: color-mix(in srgb, var(--proof-accent) 60%, var(--site-fg));
+  }
 
   /* === Atlas band: the whole course as an interactive climb. === */
   .atlas-band { padding: clamp(3rem, 6vw, 5rem) 1.25rem; }
