@@ -987,4 +987,9 @@
     font-size: 0.84rem; color: var(--site-fg-muted);
     line-height: 1.55;
   }
+  /* Ambient status pulses pause under reduced motion (DESIGN.md: idle/ambient
+     loops stop; one-shot user feedback stays). */
+  @media (prefers-reduced-motion: reduce) {
+    .dot-booting, .dot-training, .dot-paused.dot-bg { animation: none; }
+  }
 </style>

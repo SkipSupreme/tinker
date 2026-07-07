@@ -905,4 +905,9 @@
       font-size: 0.66rem;
     }
   }
+  /* Ambient status pulses pause under reduced motion (DESIGN.md: idle/ambient
+     loops stop; one-shot user feedback stays). */
+  @media (prefers-reduced-motion: reduce) {
+    .pulse-ring { animation: none; }
+  }
 </style>

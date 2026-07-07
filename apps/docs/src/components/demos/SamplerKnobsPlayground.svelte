@@ -726,4 +726,9 @@
     border-radius: 10px;
     color: var(--ink-red); font-size: 0.86rem;
   }
+  /* Ambient status pulses pause under reduced motion (DESIGN.md: idle/ambient
+     loops stop; one-shot user feedback stays). */
+  @media (prefers-reduced-motion: reduce) {
+    .dot-loading, .dot-generating { animation: none; }
+  }
 </style>
