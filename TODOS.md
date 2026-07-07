@@ -59,3 +59,14 @@ All `color-no-hex` violations resolved (2026-04-30):
 - `TestFixture.astro`: `stylelint-disable color-no-hex` with rationale (Playwright fixtures need theme-stable colors)
 
 `pnpm lint:css` now exits 0. New token added to global.css: `--on-color-fg: #fdfdfc;` (theme-stable foreground for white text on saturated backgrounds).
+
+## Design-review deferrals (2026-07-06 /design-review run)
+
+Full report: `~/.gstack/projects/SkipSupreme-tinker/designs/design-audit-20260706/design-audit-learntinker-com.md`. 17 findings fixed and verified live (scores B+ → A-, slop A- → A); these remain:
+
+- **[medium/color]** Recolor `components/fixtures/*.svelte` off-palette hex (incl. purple `#9333ea`) to tokens **and regenerate the linux Playwright pixel baselines in the same PR** — colors are pinned test data, so this can't be patched piecemeal. Public exposure already cut (sitemap excludes `/examples/`).
+- **[medium/spacing]** Systemic magic-number spacing (~223 raw px values) + ad-hoc breakpoints across components. Assign to the design-system redo, not piecemeal patches.
+- **[medium/interaction]** `UserMenu.svelte` `role="menu"` needs Escape-to-close + arrow-key focus movement (JS change; write a regression test with it).
+- **[medium/color]** `ChainRuleComposition.svelte` pill text is `--ink-red` on an 18% tint (≈3.5:1). Same class of bug as the fixed /lessons status chips — do a contrast sweep of lesson-demo chips/pills and apply the `color-mix(45% accent, --site-fg)` pattern.
+- **[polish/motion]** Raw animation durations (140–720ms) outside widgets; tokenize during the redo.
+- Note: the "M18 canvas charts hardcode light-mode colors" theme in the QA P2 list above is now partially addressed — `M18TrainSmoke.svelte`'s run curve reads `--ink-sea` via a tokenColor bridge (2026-07-06); its axis/reference-curve rgba values and the other M18 canvases still need the same treatment.
