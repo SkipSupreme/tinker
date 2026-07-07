@@ -102,6 +102,13 @@
     /* Small translucent halo on the fill itself so the hit target visually
        matches the logical one. */
     fill-opacity: 0.9;
+    /* Invisible hit-area extension. A transparent stroke still counts for
+       pointer-events: visiblePainted, and non-scaling-stroke keeps it in
+       screen px: the default 20px dot + 12px ring each side = 44px touch
+       target (Widget Quality Bar invariant 6) with zero rendered pixels. */
+    stroke: transparent;
+    stroke-width: 24;
+    vector-effect: non-scaling-stroke;
   }
 
   .mafs-movable-point:focus,
