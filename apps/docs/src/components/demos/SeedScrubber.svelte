@@ -167,7 +167,7 @@
     const inkSea    = tokenColor('--ink-sea',    '#2a9fd6');
     const inkOrange = tokenColor('--ink-orange', '#ff9f43');
     const inkRed    = tokenColor('--ink-red',    '#e6396a');
-    const fg        = tokenColor('--site-fg',    '#1d1e22');
+    const fg        = tokenColor('--site-fg',    '#17181a');
 
     const pad = { l: 42, r: 14, t: 14, b: 28 };
     const x0 = pad.l, y0 = h - pad.b;

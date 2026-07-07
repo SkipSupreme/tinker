@@ -145,7 +145,7 @@
     const w = histCanvas.width, h = histCanvas.height;
     ctx.clearRect(0, 0, w, h);
 
-    const fg = tokenColor('--site-fg', '#1d1e22');
+    const fg = tokenColor('--site-fg', '#17181a');
     const muted = `color-mix(in srgb, ${fg} 55%, transparent)`;
     const axis = `color-mix(in srgb, ${fg} 20%, transparent)`;
 
