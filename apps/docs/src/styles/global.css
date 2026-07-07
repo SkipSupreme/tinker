@@ -4,7 +4,10 @@
   --site-fg-muted: #585a60;
   --site-border: #e4e4e0;
   --site-surface: #f5f5f2;
-  --site-accent: #2f6fed;
+  /* Link/accent ink: sea-blue from the palette, deepened toward body ink so
+     body links clear 4.5:1 on light surfaces (raw --ink-sea is ~2.9:1).
+     Replaces the off-palette template blue #2f6fed (DESIGN.md open item). */
+  --site-accent: color-mix(in srgb, var(--ink-sea) 70%, var(--site-fg));
   --site-accent-fg: #ffffff;
   --site-code-bg: #f5f5f2;
   --site-code-fg: #17181a;
@@ -118,7 +121,9 @@
   --site-fg-muted: #9a9a98;
   --site-border: #27272a;
   --site-surface: #18181a;
-  --site-accent: #8aa7f6;
+  /* Dark links ride raw --ink-sea (#5db4e0, ~8:1 on the near-black bg);
+     the old #8aa7f6 read lavender, and purple is banned. */
+  --site-accent: var(--ink-sea);
   --site-accent-fg: #0e0f10;
   --site-code-bg: #16171a;
   --site-code-fg: #ededec;
