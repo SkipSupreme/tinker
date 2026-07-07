@@ -54,6 +54,7 @@
     place-items: center;
     width: 2.25rem;
     height: 2.25rem;
+    position: relative;
     padding: 0;
     background: transparent;
     border: 1px solid var(--site-border);
@@ -65,6 +66,12 @@
   .sound-toggle:hover {
     background: var(--site-surface);
     border-color: var(--site-fg-muted);
+  }
+  /* Invisible hit-area extension: 36px visual, 44px touch target. */
+  .sound-toggle::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
   }
   .icon { grid-area: 1 / 1; transition: opacity 120ms ease, transform 180ms ease; }
   .sound-toggle[data-muted="false"] .icon-on { opacity: 1; transform: scale(1); }

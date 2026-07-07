@@ -101,14 +101,27 @@
     cursor: pointer;
     display: grid;
     place-items: center;
-    overflow: hidden;
+    position: relative;
     padding: 0;
     font-weight: 600;
     font-size: 0.9rem;
     transition: border-color 120ms ease;
   }
   .avatar-btn:hover { border-color: var(--site-fg-muted); }
-  .avatar-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* Invisible hit-area extension: 32px visual, 44px touch target.
+     (Clipping lives on the img so this pseudo-element isn't cut off.) */
+  .avatar-btn::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+  }
+  .avatar-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 50%;
+  }
   .menu {
     position: absolute;
     top: calc(100% + 0.5rem);
