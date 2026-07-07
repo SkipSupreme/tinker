@@ -138,17 +138,16 @@
   </p>
 
   <form onsubmit={submit} novalidate>
-    <label for="auth-email" class="sr-only">Email address</label>
+    <label for="auth-email" class="field-label">Email</label>
     <input
       id="auth-email"
       type="email"
       autocomplete="email"
       required
       bind:value={email}
-      placeholder="Email"
       disabled={status === 'sending'}
     />
-    <label for="auth-password" class="sr-only">Password</label>
+    <label for="auth-password" class="field-label">Password</label>
     <input
       id="auth-password"
       type="password"
@@ -156,17 +155,15 @@
       required
       minlength={8}
       bind:value={password}
-      placeholder="Password"
       disabled={status === 'sending'}
     />
     {#if isSignup}
-      <label for="auth-name" class="sr-only">Display name (optional)</label>
+      <label for="auth-name" class="field-label">Display name (optional)</label>
       <input
         id="auth-name"
         type="text"
         autocomplete="nickname"
         bind:value={name}
-        placeholder="Display name (optional)"
         disabled={status === 'sending'}
       />
     {/if}
@@ -215,6 +212,14 @@
     font-size: 0.95rem;
   }
   form { display: flex; flex-direction: column; gap: 0.5rem; }
+  /* Visible labels: placeholders vanish on input, labels don't. */
+  .field-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--site-fg-muted);
+    margin: 0.35rem 0 -0.15rem;
+  }
+  .field-label:first-of-type { margin-top: 0; }
   input {
     width: 100%;
     padding: 0.7rem 0.85rem;
@@ -266,9 +271,4 @@
     text-align: center;
   }
   .alt a { color: var(--site-fg); }
-  .sr-only {
-    position: absolute;
-    width: 1px; height: 1px; padding: 0; margin: -1px;
-    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
-  }
 </style>
