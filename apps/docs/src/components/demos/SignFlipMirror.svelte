@@ -451,7 +451,7 @@
   }
 
   /* ── mobile ───────────────────────────────────────────────────────────── */
-  @media (max-width: 639px) {
+  @media (max-width: 640px) {
     .readout-row {
       grid-template-columns: 80px 1fr;
     }
