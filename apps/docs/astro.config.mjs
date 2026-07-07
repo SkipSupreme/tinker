@@ -19,6 +19,7 @@ export default defineConfig({
       // either require auth, return JSON, or are internal QA fixtures.
       filter: (page) =>
         !page.includes('/dev/') &&
+        !page.includes('/examples/') &&
         !page.includes('/admin') &&
         !page.includes('/api/') &&
         !page.includes('/me') &&
