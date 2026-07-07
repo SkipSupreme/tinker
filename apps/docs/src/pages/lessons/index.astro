@@ -191,18 +191,21 @@ const sortedGroups = Array.from(grouped.entries()).sort(([a], [b]) => {
   .status {
     border-radius: 999px;
     padding: 0.05rem 0.55rem;
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     font-weight: 600;
     text-transform: lowercase;
     letter-spacing: 0.04em;
   }
+  /* Chip text mixes the accent toward body ink so it clears 4.5:1 on the
+     accent-tinted pill in both themes (raw --cta / --ink-sun sit under 2.3:1
+     on light surfaces). */
   .status-shipped {
     background: color-mix(in srgb, var(--cta) 16%, transparent);
-    color: var(--cta);
+    color: color-mix(in srgb, var(--cta) 45%, var(--site-fg));
   }
   .status-drafting {
     background: color-mix(in srgb, var(--ink-sun) 18%, transparent);
-    color: var(--ink-sun);
+    color: color-mix(in srgb, var(--ink-sun) 45%, var(--site-fg));
   }
   .status-planned {
     background: color-mix(in srgb, var(--site-fg) 8%, transparent);
