@@ -85,6 +85,10 @@ Tinker is **never a static PNG**. The mascot has idle behavior, reacts to the us
 
 All interactivity respects `prefers-reduced-motion: reduce` — bobbing and cursor-tilt are disabled. The click bounce still fires because it's a deliberate user response, not ambient motion. The math-symbol confetti is a no-op under reduced motion.
 
+### Accessory ink
+
+Accessory overlays (Konami sunglasses, graduation caps) draw in `--mascot-ink` (`#1a1a1a`), a theme-independent near-black defined once in `global.css`. It never flips with `[data-theme]` because the mascot's own palette is constant; only the canvas around it adapts.
+
 ### Rules
 
 - Tinker is always rendered from the approved source asset (`/logo.png`). No re-drawing, no filter swaps, no AI regens that drift the character.

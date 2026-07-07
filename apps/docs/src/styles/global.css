@@ -16,6 +16,9 @@
      in dark — purple is banned). */
   --site-focus: var(--ink-sea);
   --site-error: #b91c1c;
+  /* Mascot accessory ink (sunglasses, grad caps). Theme-independent: the
+     mascot's palette is constant; only the canvas adapts (DESIGN.md). */
+  --mascot-ink: #1a1a1a;
   --site-error-bg: #fef2f2;
 
   /* Shadow scale. Token-based so dark mode can swap to deeper inks without

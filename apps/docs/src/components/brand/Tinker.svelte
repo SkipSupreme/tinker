@@ -349,9 +349,9 @@
   {#if eggs.sunglasses}
     <svg class="acc acc-sunglasses" viewBox="0 0 432 477" aria-hidden="true">
       <g transform="translate(140, 200)">
-        <rect x="0"  y="0" width="60" height="36" rx="14" fill="#1a1a1a" />
-        <rect x="92" y="0" width="60" height="36" rx="14" fill="#1a1a1a" />
-        <rect x="58" y="14" width="36" height="6"            fill="#1a1a1a" />
+        <rect x="0"  y="0" width="60" height="36" rx="14" fill="var(--mascot-ink)" />
+        <rect x="92" y="0" width="60" height="36" rx="14" fill="var(--mascot-ink)" />
+        <rect x="58" y="14" width="36" height="6"            fill="var(--mascot-ink)" />
       </g>
     </svg>
   {/if}
@@ -366,8 +366,8 @@
   {#each Array.from({ length: Math.min(completedCourses, 5) }) as _, i (i)}
     <svg class="acc acc-grad" viewBox="0 0 432 477" aria-hidden="true">
       <g transform="translate({90 + i * 50}, 380)">
-        <rect x="0"  y="6"  width="34" height="6" fill="#1a1a1a" />
-        <polygon points="-4,6 38,6 17,-4" fill="#1a1a1a" />
+        <rect x="0"  y="6"  width="34" height="6" fill="var(--mascot-ink)" />
+        <polygon points="-4,6 38,6 17,-4" fill="var(--mascot-ink)" />
       </g>
     </svg>
   {/each}
