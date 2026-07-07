@@ -45,7 +45,7 @@
   <!-- Inner function: y = g(x) = sin(x) -->
   <div class="stage">
     <div class="stage-label">
-      <span class="pill pill-violet">inner</span>
+      <span class="pill pill-red">inner</span>
       <span class="formula">
         <em>g</em>(<em>x</em>) = sin <em>x</em>
       </span>
@@ -93,7 +93,7 @@
   <dl class="readout" aria-live="polite">
     <div class="row">
       <dt><em>g</em>′(<em>x</em>)</dt>
-      <dd class="val violet">{fmt(gpx)}</dd>
+      <dd class="val red">{fmt(gpx)}</dd>
       <dt class="sub">rate of the inner</dt>
     </div>
     <div class="op">×</div>
@@ -177,7 +177,7 @@
     letter-spacing: 0.1em;
     font-weight: 700;
   }
-  .pill-violet { background: color-mix(in srgb, var(--ink-red) 18%, transparent); color: var(--ink-red); }
+  .pill-red { background: color-mix(in srgb, var(--ink-red) 18%, transparent); color: var(--ink-red); }
   .pill-sea    { background: color-mix(in srgb, var(--ink-sea) 18%, transparent);    color: var(--ink-sea); }
   .formula em { font-style: italic; font-family: var(--font-display); font-size: 1.05em; }
 
@@ -251,7 +251,7 @@
     font-weight: 700;
     font-size: 1.15rem;
   }
-  .row .val.violet { color: var(--ink-red); }
+  .row .val.red { color: var(--ink-red); }
   .row .val.sea    { color: var(--ink-sea); }
   .row .val.big {
     font-size: 1.4rem;

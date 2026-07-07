@@ -34,7 +34,7 @@
 
   <div class="readout" aria-live="polite">
     <div class="row">
-      <span class="swatch swatch-violet" aria-hidden="true"></span>
+      <span class="swatch swatch-red" aria-hidden="true"></span>
       <span class="name"><em>a</em></span>
       <span class="coord">({ax.toFixed(2)}, {ay.toFixed(2)})</span>
       <span class="mag">|{magA.toFixed(2)}|</span>
@@ -125,7 +125,7 @@
     width: 10px; height: 10px;
     border-radius: 2px;
   }
-  .swatch-violet { background: var(--ink-red); }
+  .swatch-red { background: var(--ink-red); }
   .swatch-sea    { background: var(--ink-sea); }
   .swatch-coral  { background: var(--ink-coral); }
 

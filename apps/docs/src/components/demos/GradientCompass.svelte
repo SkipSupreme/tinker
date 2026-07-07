@@ -10,7 +10,7 @@
    *
    * Pedagogical flow (per research brief §4.2):
    *   • Drag p anywhere on the contour plot.
-   *   • See ∇f(p) as a violet arrow (lives in input space, perpendicular to
+   *   • See ∇f(p) as a red arrow (lives in input space, perpendicular to
    *     the level curve through p).
    *   • Rotate the unit vector u via the angle slider.
    *   • Watch D_u f = ∇f · u change, tracing a cosine in the side plot.
@@ -105,7 +105,7 @@
       </Mafs>
       <dl class="sidebar">
         <div>
-          <dt><span class="dot violet"></span>∇<em>f</em>(<em>p</em>)</dt>
+          <dt><span class="dot red"></span>∇<em>f</em>(<em>p</em>)</dt>
           <dd>({grad[0].toFixed(2)}, {grad[1].toFixed(2)})</dd>
           <dd class="sub">|∇<em>f</em>| = {gradMag.toFixed(2)}</dd>
         </div>
@@ -247,7 +247,7 @@
     width: 10px; height: 10px;
     border-radius: 999px;
   }
-  .dot.violet { background: var(--ink-red); }
+  .dot.red { background: var(--ink-red); }
   .dot.coral  { background: var(--ink-coral); }
   .dot.sea    { background: var(--ink-sea); }
 

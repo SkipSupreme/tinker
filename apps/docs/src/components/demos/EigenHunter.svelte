@@ -72,7 +72,7 @@
 
   <dl class="readout" aria-live="polite">
     <div class="row">
-      <dt><span class="dot violet"></span><em>v</em></dt>
+      <dt><span class="dot red"></span><em>v</em></dt>
       <dd>({vx.toFixed(2)}, {vy.toFixed(2)})</dd>
     </div>
     <div class="row">
@@ -119,7 +119,7 @@
   .readout dt em { font-style: italic; font-family: var(--font-display); font-weight: 600; }
   .readout dd { margin: 0; font-variant-numeric: tabular-nums; color: var(--site-fg); }
   .dot { display: inline-block; width: 9px; height: 9px; border-radius: 999px; }
-  .dot.violet { background: var(--ink-red); }
+  .dot.red { background: var(--ink-red); }
   .dot.coral { background: var(--ink-coral); }
   .hero { padding-top: .35rem; border-top: 1px dashed color-mix(in srgb, var(--site-fg) 18%, transparent); margin-top: .15rem; transition: color 200ms ease; }
   .hero strong { color: var(--cta-hover); font-size: 1.1rem; }
