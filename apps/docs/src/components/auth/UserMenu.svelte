@@ -114,7 +114,7 @@
   .avatar-btn::after {
     content: "";
     position: absolute;
-    inset: -6px;
+    inset: -7px; /* padding box + 1px border: -7 yields 44px on the 32px avatar */
   }
   .avatar-btn img {
     width: 100%;

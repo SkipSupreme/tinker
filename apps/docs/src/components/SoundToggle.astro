@@ -71,7 +71,7 @@
   .sound-toggle::after {
     content: "";
     position: absolute;
-    inset: -4px;
+    inset: -5px; /* containing block is the padding box; 1px border means -5 yields 44px */
   }
   .icon { grid-area: 1 / 1; transition: opacity 120ms ease, transform 180ms ease; }
   .sound-toggle[data-muted="false"] .icon-on { opacity: 1; transform: scale(1); }

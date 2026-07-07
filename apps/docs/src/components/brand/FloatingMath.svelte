@@ -11,7 +11,7 @@
   const symbols = [
     { ch: 'π', color: 'var(--ink-teal)',   top: '6%',  left: '8%',  delay: '0s',   d: '6.2s' },
     { ch: '∫', color: 'var(--ink-orange)', top: '24%', left: '78%', delay: '1.4s', d: '7.0s' },
-    { ch: '∂', color: 'var(--ink-pink)',   top: '66%', left: '44%', delay: '2.8s', d: '5.4s' },
+    { ch: '∂', color: 'var(--ink-pink)',   top: '66%', left: '52%', delay: '2.8s', d: '5.4s' },
     { ch: 'Δ', color: 'var(--ink-teal)',   top: '6%',  left: '55%', delay: '0.6s', d: '6.8s' },
     { ch: '∑', color: 'var(--ink-orange)', top: '40%', left: '46%', delay: '3.2s', d: '5.8s' },
   ];
