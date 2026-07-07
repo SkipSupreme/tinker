@@ -226,18 +226,34 @@
     font-family: inherit;
   }
   input:focus { outline: 2px solid var(--site-focus); outline-offset: 2px; }
+  /* Primary CTA recipe from DESIGN.md: green is the only button color that
+     promises action; pressable shelf gives physical depth. */
   button[type="submit"] {
     padding: 0.7rem 1rem;
-    border: 1px solid var(--site-fg);
-    border-radius: var(--radius-md);
-    background: var(--site-fg);
-    color: var(--site-bg);
-    font-weight: 600;
+    border: none;
+    border-radius: var(--radius-pill, 999px);
+    background: var(--cta);
+    color: var(--cta-fg);
+    font-weight: 700;
     cursor: pointer;
-    transition: opacity 120ms ease, transform 120ms ease;
+    box-shadow: 0 4px 0 var(--cta-edge);
+    transition: opacity 120ms ease, transform 120ms ease,
+      background-color 120ms ease, box-shadow 120ms ease;
   }
-  button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
-  button[type="submit"]:not(:disabled):hover { transform: translateY(-1px); }
+  button[type="submit"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  button[type="submit"]:not(:disabled):hover {
+    transform: translateY(-1px);
+    background: var(--cta-hover);
+    box-shadow: 0 5px 0 var(--cta-edge);
+  }
+  button[type="submit"]:not(:disabled):active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 var(--cta-edge);
+  }
   .err {
     color: var(--site-error);
     font-size: 0.9rem;
