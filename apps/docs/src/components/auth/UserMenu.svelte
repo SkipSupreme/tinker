@@ -55,6 +55,7 @@
     <button
       class="avatar-btn"
       type="button"
+      aria-label="Account menu"
       aria-haspopup="menu"
       aria-expanded={open}
       onclick={() => (open = !open)}
