@@ -74,7 +74,7 @@ const moduleNodes = allModules.map((m) => {
 ---
 
 <Base title="Skill tree" description="Visual map of the Tinker curriculum, arc by arc.">
-  <main class="tree-shell">
+  <div class="tree-shell">
     <header class="tree-head">
       <h1>Skill tree</h1>
       <p class="lede">
@@ -83,7 +83,7 @@ const moduleNodes = allModules.map((m) => {
       </p>
     </header>
     <SkillTreeMap client:idle modules={moduleNodes} arcs={arcs} />
-  </main>
+  </div>
 </Base>
 
 <style>
